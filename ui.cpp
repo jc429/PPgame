@@ -1,22 +1,31 @@
 #include "ui.h"
 
 Mouse mouse;
-void UpdateMouse(){
-	mouse.clicked=0;
-	mouse.held=0;
-	mouse.released=0;
-	if(SDL_GetMouseState(&mouse.x,&mouse.y)){
-		if(mouse.prev==0){
-			mouse.clicked=1;
-		}else if(mouse.prev==1){
-			mouse.held=1;
-		}
-		mouse.prev = 1;
-	}else{
-		if(mouse.prev==1){
-			mouse.released=1;
-		}
-		mouse.prev = 0;
-	}
 
+void UpdateMouse(){
+	if(SDL_GetMouseState(&mouse.pos.x,&mouse.pos.y))
+		UpdateInput(&mouse.left,1);
+	else
+		UpdateInput(&mouse.left,0);
+	
+}
+
+
+void UpdateInput(Input *input, bool current){
+	input->pressed=0;
+	input->held=0;
+	input->released=0;
+	if(current){
+		if(input->prev==0){
+			input->pressed=1;
+		}else if(input->prev==1){
+			input->held=1;
+		}
+		input->prev = 1;
+	}else{
+		if(input->prev==1){
+			input->released=1;
+		}
+		input->prev = 0;
+	}
 }

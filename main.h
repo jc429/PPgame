@@ -3,3 +3,5 @@
 
 #include "graphics.h"
 #include "settings.h"
+#include "ui.h"
+#include "pmath.h"

@@ -10,13 +10,17 @@
 #define STARTFULLSCREEN 0
 
 //GAME_RES is for the in-game resolution, WINDOW_RES is for the resolution of the actual window
-#define GAME_RES_X 320
-#define GAME_RES_Y 240
+#define GAME_RES_X 640
+#define GAME_RES_Y 480
 #define WINDOW_RES_X 640
 #define WINDOW_RES_Y 480
+
+//the size of the game world, in pixels for now
+#define WORLD_W 1280
+#define WORLD_H	960
 
 //the maximum number of different sprites that can be loaded into the game
 #define SPRITES_MAX 255
 
 //the amount of delay between one frame and the next, in milliseconds
-#define FRAMEDELAY 50
+#define FRAMEDELAY 0

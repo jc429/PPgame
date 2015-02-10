@@ -2,6 +2,7 @@
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 #include "settings.h"
+#include "pmath.h"
 
 
 
@@ -15,20 +16,17 @@ typedef struct Sprite_T
   int used;					/*used by the maintanenc functions to keep track of how many times a single sprite is being used*/
 }Sprite;
 
-/*typedef struct BGLayer_T{
-	double movescale;		//how much this layer moves in relation to the platforms - 0 is no motion relative to the camera, 1 is no motion relative to the game level
-	int x,y,w,h;
-	int offx,offy;
-	char* layerpath;		//location of the bg layer image
-	SDL_Texture *layerIMG;
 
-} BGLayer;*/
 
 void InitWindow();
+void InitWorld();
 
 void NextFrame();
 void FrameDelay(Uint32 delay);
 
+void InitSpriteList();
+Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl);
+void DrawSprite(Sprite* spr, Vec2i pos);
 
 void UpdateCamera();
 
