@@ -18,7 +18,7 @@ extern SDL_Rect UICamera;
 int main (int argc, char* argv[]){
 	done = 0;
 	InitGame();
-	
+	InitTG();
 	do{
 		//poll inputs
 		//update game

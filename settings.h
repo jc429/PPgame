@@ -3,15 +3,15 @@
 #define DEBUG 1
 
 //GAMENAME = Game Window Title, ICONPATH = path to an .ico file
-#define GAMENAME "THERESAS BIRTHDAAY"
-#define ICONPATH ""
+#define GAMENAME "pow"
+#define GAMEICON "img/fieyerrr.ico"			// path to a .ico file
 
 //obvious
 #define STARTFULLSCREEN 0
 
 //GAME_RES is for the in-game resolution, WINDOW_RES is for the resolution of the actual window
-#define GAME_RES_X 640
-#define GAME_RES_Y 480
+#define GAME_RES_X 320
+#define GAME_RES_Y 240
 #define WINDOW_RES_X 640
 #define WINDOW_RES_Y 480
 
