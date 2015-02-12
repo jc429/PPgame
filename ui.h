@@ -4,6 +4,7 @@
 #include "SDL.h"
 #include "pmath.h"
 
+//This could apply to anything really; a key, a mouse button, a gamepad button, etc
 typedef struct Input_T{
 	bool prev;			/* was the button down last frame? */
 	bool pressed;		/* presently down, last frame up */
@@ -14,7 +15,7 @@ typedef struct Input_T{
 typedef struct {	/**< Mouse struct, tells us the state of the mouse on every frame*/
 	Vec2i pos;
 	Input left;
-	Input right;
+	Input right;	//Right click doesn't work yet
 } Mouse;
 
 void UpdateMouse();

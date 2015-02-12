@@ -3,6 +3,7 @@
 
 #include "SDL.h"
 
+//Custom 2 dimensional vector type (feat. operators)
 typedef struct Vec2_T{
 	int x;
 	int y;

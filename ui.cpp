@@ -2,6 +2,7 @@
 
 Mouse mouse;
 
+//Updates the mouse state (both buttons act as left for now)
 void UpdateMouse(){
 	if(SDL_GetMouseState(&mouse.pos.x,&mouse.pos.y))
 		UpdateInput(&mouse.left,1);
@@ -10,7 +11,7 @@ void UpdateMouse(){
 	
 }
 
-
+//Updates an Input struct based on what happened this frame and last frame
 void UpdateInput(Input *input, bool current){
 	input->pressed=0;
 	input->held=0;

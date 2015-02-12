@@ -2,7 +2,6 @@
 
 
 void InitGame();
-void InitPtrs();
 void PollEvents();
 void UpdateGame();
 void DrawGame();
@@ -18,9 +17,9 @@ extern SDL_Rect UICamera;
 int main (int argc, char* argv[]){
 	done = 0;
 	InitGame();
-	InitTG();
 	do{
-		//poll inputs
+		//The basic game loop:
+		//read inputs
 		//update game
 		//draw everything
 		PollEvents();
@@ -31,28 +30,29 @@ int main (int argc, char* argv[]){
 		NextFrame();
 
 	}while(!done);
+
 	exit(0);
-	return 0;
+	return 0;		//just for the compiler
 }
 
-void InitGame(){
+//put everything that needs to be run before the main game loop in here
+void InitGame(){		
 	SDL_Init(SDL_INIT_EVERYTHING);
 	IMG_Init(IMG_INIT_PNG);
-	InitPtrs();
 	InitWindow();
 	InitWorld();
 	InitSpriteList();
 
+	InitTG();		//test stuff feel free to remove
 
-//	SDL_ShowCursor(SDL_DISABLE);
-//	atexit(SDL_Quit);
+
+//	SDL_ShowCursor(SDL_DISABLE);	//turns off the cursor
+
+	if(!DEBUG)
+		atexit(SDL_Quit);
 }
 
-void InitPtrs(){
-	sdlWindow = NULL;
-	mainRenderer = NULL;
-}
-
+//This is how you get your inputs
 void PollEvents(){
 	SDL_Event e;
 	while(SDL_PollEvent(&e)){
@@ -60,15 +60,18 @@ void PollEvents(){
 			done = 1;
 			return;
 		}
+
 	}
 }
 
+//This is where the meat of the game will be
 void UpdateGame(){
 	UpdateCamera();
 
 	
 }
 
+//Put the Drawing functions for everything here 
 void DrawGame(){
 
 	TestGraphics(0);

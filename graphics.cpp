@@ -6,20 +6,23 @@
 
 using namespace std;
 
-SDL_Window *sdlWindow;
-SDL_Renderer *mainRenderer;
-SDL_Rect world;
-SDL_Rect mainCamera;
-SDL_Rect UICamera;
+SDL_Window *sdlWindow;			//The program window
+SDL_Renderer *mainRenderer;		//The main game renderer
+SDL_Rect world;					//Rect representing a 2D game world
+SDL_Rect mainCamera;			//Rect representing the game camera
+SDL_Rect UICamera;				//Rect representing a UI camera (unused for now)
 
-Sprite SpriteList[SPRITES_MAX];
-int NumSprites;
+Sprite SpriteList[SPRITES_MAX];	//A table of all sprites within the game
+int NumSprites;					//How many of those sprites are being used
 
 Uint32 NOW;		/*the current time since program started*/
 	
+
+////////////Testing stuff, feel free to delete/////////////
 static Sprite *testbmp;
 static Sprite *blob;
 static Sprite *testbg;
+//////////////////////////////////////////////////////////
 
 void InitWindow(){
 
@@ -31,16 +34,16 @@ void InitWindow(){
 		fullscreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 	sdlWindow = SDL_CreateWindow(GAMENAME,
-                          SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                          WINDOW_RES_X, WINDOW_RES_Y,
-                          fullscreenFlag | SDL_WINDOW_OPENGL);
+                          SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,		//These set the window position on the desktop
+                          WINDOW_RES_X, WINDOW_RES_Y,							//Change these in settings.h
+                          fullscreenFlag | SDL_WINDOW_OPENGL);					//Don't touch these unless you know what you're doing
 	SDL_Surface *icon = IMG_Load(GAMEICON);
 	SDL_SetWindowIcon(sdlWindow,icon);
-	SDL_FreeSurface(icon);
-	mainRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);
-	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother. (anti-aliasing)
-	SDL_RenderSetLogicalSize(mainRenderer, GAME_RES_X, GAME_RES_Y);
-	SDL_SetRenderDrawColor(mainRenderer, 0, 30, 30, 255);
+	SDL_FreeSurface(icon);	//MAKE SURE TO FREE EVERY SURFACE AFTER YOU'RE DONE USING IT - THIS LEAKS HELLA MEMORY IF YOU DON'T
+	mainRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);		//Creates the renderer so we can see graphics
+	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");		//Makes the scaled rendering look smoother. (anti-aliasing)
+	SDL_RenderSetLogicalSize(mainRenderer, GAME_RES_X, GAME_RES_Y);	//Sets the renderer's resolution
+	SDL_SetRenderDrawColor(mainRenderer, 0, 30, 30, 255);			//Sets the bg color of the renderer
 	SDL_RenderClear(mainRenderer);
 	SDL_RenderPresent(mainRenderer);
 }
@@ -50,16 +53,18 @@ void InitWorld(){
 	world.h = WORLD_H;
 }
 
+//Draws the current frame, then advances the game to the next frame
 void NextFrame(){
 //	Uint32 Then;
-	SDL_RenderPresent(mainRenderer);						/*and then update the screen*/
-	SDL_RenderClear(mainRenderer);
-//	Then = NOW;									/*these next few lines  are used to show how long each frame takes to update.  */
-	NOW = SDL_GetTicks();
+	SDL_RenderPresent(mainRenderer);	//Draws the frame to the screen
+	SDL_RenderClear(mainRenderer);		//Clears the renderer to prepare for the next frame
+//	Then = NOW;							/*these next few lines  are used to show how long each frame takes to update.  */
+	NOW = SDL_GetTicks();				//Update the time elapsed since program opening (unused)
 	/*fprintf(stdout,"Ticks passed this frame: %i\n", NOW - Then);*/
-	FrameDelay(FRAMEDELAY); /* 33 will make your frame rate about 30 frames per second.  If you want 60 fps then set it to about 17*/
+	FrameDelay(FRAMEDELAY);				//Change this in settings.h
 }
 
+//Keeps the framerate as consistent as possible
 void FrameDelay(Uint32 delay){
     static Uint32 pass = 100;
     Uint32 dif;
@@ -69,7 +74,8 @@ void FrameDelay(Uint32 delay){
     pass = SDL_GetTicks();
 }
 
-void InitSpriteList(){
+//Initializes the Sprite List
+void InitSpriteList(){		
 	int x;
 	NumSprites = 0;
 	memset(SpriteList,0,sizeof(Sprite) * SPRITES_MAX);
@@ -77,57 +83,47 @@ void InitSpriteList(){
 }
 
 /*Create a sprite from a file, the most common use for it.*/
-
 Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl){
-  int i;
-  SDL_Surface *temp;
-	
-  
-  /*first search to see if the requested sprite image is alreday loaded*/
-  //////////////////////////////////////////////FIX THIS
-  for(i = 0; i < NumSprites; i++)
-  {
-    if(strncmp(filename,SpriteList[i].filename,40)==0)
-    {
-      SpriteList[i].used++;
-      return &SpriteList[i];
-    }
-  }
-  /*makesure we have the room for a new sprite*/ 
-  if(NumSprites + 1 >= SPRITES_MAX)
-  {
-        fprintf(stderr, "Maximum Sprites Reached.\n");
-        exit(1);
-  }
-  /*if its not already in memory, then load it.*/
-  NumSprites++;
-  for(i = 0;i <= NumSprites;i++)
-  {
-    if(!SpriteList[i].used)break;
-  }
-  temp = IMG_Load(filename);
-  if(temp == NULL)
-  {
-    fprintf(stderr,"unable to load a vital sprite: %s\n",SDL_GetError());
-    exit(0);
-  }
-  SpriteList[i].image = SDL_CreateTextureFromSurface(mainRenderer,temp);
-  SDL_FreeSurface(temp);
-  /*sets a transparent color for blitting.*/
-//  SDL_SetColorKey(SpriteList[i].image, SDL_SRCCOLORKEY , SDL_MapRGB(SpriteList[i].image->format, 255,255,255));
-   /*then copy the given information to the sprite*/
-  strncpy_s(SpriteList[i].filename,filename,40);
-      /*now sprites don't have to be 16 frames per line, but most will be.*/
-  SpriteList[i].framesperline = fpl;
-  SpriteList[i].w = sizex;
-  SpriteList[i].h = sizey;
-  SpriteList[i].used++;
-  return &SpriteList[i];
+	int i;
+	SDL_Surface *temp; 
+	/*first search to see if the requested sprite image is already loaded*/
+	for(i = 0; i < NumSprites; i++){
+		if(strncmp(filename,SpriteList[i].filename,40)==0){
+			SpriteList[i].used++;
+			return &SpriteList[i];
+		}
+	}
+	/*makesure we have the room for a new sprite*/ 
+	if(NumSprites + 1 >= SPRITES_MAX){
+		fprintf(stderr, "Maximum Sprites Reached.\n");
+		exit(1);
+	}
+	/*if its not already in memory, then load it.*/
+	NumSprites++;
+	for(i = 0;i <= NumSprites;i++){
+		if(!SpriteList[i].used)break;
+	}
+	temp = IMG_Load(filename);
+	if(temp == NULL){
+		fprintf(stderr,"unable to load a vital sprite: %s\n",SDL_GetError());
+		exit(0);
+	}
+	SpriteList[i].image = SDL_CreateTextureFromSurface(mainRenderer,temp);
+	SDL_FreeSurface(temp);
+	/*sets a transparent color for blitting.*/
+	//  SDL_SetColorKey(SpriteList[i].image, SDL_SRCCOLORKEY , SDL_MapRGB(SpriteList[i].image->format, 255,255,255));
+	/*then copy the given information to the sprite*/
+	strncpy_s(SpriteList[i].filename,filename,40);
+	/*now sprites don't have to be 16 frames per line, but most will be.*/
+	SpriteList[i].framesperline = fpl;
+	SpriteList[i].w = sizex;
+	SpriteList[i].h = sizey;
+	SpriteList[i].used++;
+	return &SpriteList[i];
 }
 
+//Draws a sprite to the renderer
 void DrawSprite(Sprite* spr, Vec2i pos){
-
-	///this function is leaking lol
 	//	if(!RectOverlap) return; /*add a check that we're within camera bounds in once there's a gameobject system*/
 	SDL_Rect targetarea;
 	targetarea.x = pos.x-mainCamera.x;
@@ -138,11 +134,12 @@ void DrawSprite(Sprite* spr, Vec2i pos){
 	
 }
 
-
+//Maybe you want to move the camera during your game - Do that here
 void UpdateCamera(){
 	
 }
 
+//Function to test stuff - Feel free to delete
 void InitTG(){
 	blob = LoadSprite("sprites/blob.png",32,32,1);
 	testbmp = LoadSprite("sprites/happi.png",16,16,1);
@@ -150,14 +147,12 @@ void InitTG(){
 	
 }
 
+//Function to test stuff - Feel free to delete
 void TestGraphics(int x){
-	
-	
-	
+
 	if(testbmp->image == NULL) return;
 	if(testbg->image == NULL) return;
 	SDL_Rect  targetarea;
-
 
 	Vec2i a, b, c;
 	a.x = 20;
@@ -170,13 +165,9 @@ void TestGraphics(int x){
 	targetarea.y = 0;
 	targetarea.w = testbg->w;
 	targetarea.h = testbg->h;
-	
 
 	SDL_RenderCopy(mainRenderer,testbg->image,NULL,&targetarea);
 	
-	
-
 	DrawSprite(testbmp,c);
 	DrawSprite(blob,a);
-
 }
