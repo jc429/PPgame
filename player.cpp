@@ -29,14 +29,14 @@ Player* CreatePlayer(Player *p){
 	//Position
 	p->tile.x = 1;
 	p->tile.y = 3;
-	p->localposition.x = TILE_W*0.5;
-	p->localposition.y = TILE_H*0.5;
+	p->localposition.x = TILE_W>>1;
+	p->localposition.y = TILE_H>>1;
 
 	//Graphics
 	p->frame = 0;
 	p->sprite = LoadSprite("sprites/mad.png",32,32,4);
-	p->s_offset.x = p->sprite->w*0.5;
-	p->s_offset.y = p->sprite->h*0.5;
+	p->s_offset.x = p->sprite->w>>1;
+	p->s_offset.y = p->sprite->h>>1;
 
 	//Dialogue and misc
 	p->talking = false;
@@ -69,33 +69,37 @@ void PlayerMovement(Player *p){
 			p->facing.x = 0;
 			p->facing.y = 0;
 		}
-		if((p->inputs->input & 1<<7)&&!(p->inputs->input & 1<<6)){
+		if((p->inputs->input & PPINPUT_LEFT)&&!(p->inputs->input & PPINPUT_RIGHT)){
 			p->facing.x = -1;
-			if(InputBuffered(p->inputs, 7, INPUT_BUFFER)||InputBuffered(p->inputs, 5, INPUT_BUFFER)||InputBuffered(p->inputs, 4, INPUT_BUFFER))
+			if(InputBuffered(p->inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_DOWN, INPUT_BUFFER))
 				if(World[p->tile.x-1][p->tile.y]!=NULL)
 					if(World[p->tile.x-1][p->tile.y]->free)
-						p->tomove.x = -1;
+						if(abs(World[p->tile.x-1][p->tile.y]->height - World[p->tile.x][p->tile.y]->height)<=1) //if the tile we want to go to is within 1 height of our current tile 
+							p->tomove.x = -1;
 		}
-		else if((p->inputs->input & 1<<6)&&!(p->inputs->input & 1<<7)){
+		else if((p->inputs->input & PPINPUT_RIGHT)&&!(p->inputs->input & PPINPUT_LEFT)){
 			p->facing.x = 1;
-			if(InputBuffered(p->inputs, 6, INPUT_BUFFER)||InputBuffered(p->inputs, 5, INPUT_BUFFER)||InputBuffered(p->inputs, 4, INPUT_BUFFER))
+			if(InputBuffered(p->inputs, PPINPUT_RIGHT, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_DOWN, INPUT_BUFFER))
 				if(World[p->tile.x+1][p->tile.y]!=NULL)
 					if(World[p->tile.x+1][p->tile.y]->free)
-						p->tomove.x = 1;
+						if(abs(World[p->tile.x+1][p->tile.y]->height - World[p->tile.x][p->tile.y]->height)<=1)
+							p->tomove.x = 1;
 		}
-		if((p->inputs->input & 1<<5)&&!(p->inputs->input & 1<<4)){
+		if((p->inputs->input & PPINPUT_UP)&&!(p->inputs->input & PPINPUT_DOWN)){
 			p->facing.y = -1;
-			if(InputBuffered(p->inputs, 5, INPUT_BUFFER)||InputBuffered(p->inputs, 7, INPUT_BUFFER)||InputBuffered(p->inputs, 6, INPUT_BUFFER))
+			if(InputBuffered(p->inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_RIGHT, INPUT_BUFFER))
 				if((World[p->tile.x][p->tile.y-1]!=NULL)&&(World[p->tile.x+p->tomove.x][p->tile.y-1]!=NULL))
 					if((World[p->tile.x][p->tile.y-1]->free)&&(World[p->tile.x+p->tomove.x][p->tile.y-1]->free))
-						p->tomove.y = -1;
+						if(abs(World[p->tile.x][p->tile.y-1]->height - World[p->tile.x][p->tile.y]->height)<=1)
+							p->tomove.y = -1;
 		}
 		else if((p->inputs->input & 1<<4)&&!(p->inputs->input & 1<<5)){
 			p->facing.y = 1;
-			if(InputBuffered(p->inputs, 4, INPUT_BUFFER)||InputBuffered(p->inputs, 7, INPUT_BUFFER)||InputBuffered(p->inputs, 6, INPUT_BUFFER))
+			if(InputBuffered(p->inputs, PPINPUT_DOWN, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_RIGHT, INPUT_BUFFER))
 				if((World[p->tile.x][p->tile.y+1]!=NULL)&&(World[p->tile.x+p->tomove.x][p->tile.y+1]!=NULL))
 					if((World[p->tile.x][p->tile.y+1]->free)&&(World[p->tile.x+p->tomove.x][p->tile.y+1]->free))
-						p->tomove.y = 1;
+						if(abs(World[p->tile.x][p->tile.y+1]->height - World[p->tile.x][p->tile.y]->height)<=1)
+							p->tomove.y = 1;
 		}
 		if((p->tomove.x!=0)||(p->tomove.y!=0)){
 			p->moving=true;
@@ -109,7 +113,7 @@ void PlayerMovement(Player *p){
 }
 
 bool InputBuffered (InputNode *input, int button, int buf){
-	if(input->input & 1<<button){
+	if(input->input & button){
 		if(buf == 0)
 			return 1;
 		else{

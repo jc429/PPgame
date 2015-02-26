@@ -8,7 +8,6 @@
 #include "tile.h"
 
 
-
 typedef struct Player_T{
 	InputNode *inputs;
 

@@ -10,6 +10,7 @@
 #include "tile.h"
 #include "dialogue.h"
 #include "level.h"
+#include "audio.h"
 
 static enum{
 	MAIN_MENU,

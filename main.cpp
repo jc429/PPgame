@@ -25,7 +25,7 @@ Player *player;
 
 extern int framecheck;
 
-extern Textbox testbox; //the main dialogue box for now
+extern Textbox mainTextbox; //the main dialogue box for now
 extern bool dialogue;	//are we currently talking?
 
 int main (int argc, char* argv[]){
@@ -52,19 +52,29 @@ int main (int argc, char* argv[]){
 
 //put everything that needs to be run before the main game loop in here
 void InitGame(){		
-	SDL_Init(SDL_INIT_EVERYTHING);
+	if(SDL_Init(SDL_INIT_EVERYTHING))
+		exit(-1);
 	IMG_Init(IMG_INIT_PNG);
+	InitAudio();
 	InitWindow();
 	InitSpriteList();
+	InitMusicList();
+	InitSoundList();
 	InitFont();
+	InitTextbox(&mainTextbox);
 
 	/////////////////
-	InitTextbox(&testbox);
 //	InitTG();		//test stuff feel free to remove
-
+	char *lvpath = "cfg/test.txt";
 	Level *level = new Level;
-	if(LoadCFG(level,"cfg/test.txt")!=0)
+	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
 		InitWorld();
+	
+	Music *m = LoadMusic("sounds/GV.mp3",40);
+	Sound *s = LoadSound("sounds/gui.wav",35);	
+	//PlayMusic(m);
+	
+	//PlaySound(s);
 
 	//////////////////
 
@@ -97,10 +107,10 @@ void PollEvents(){
 	inputNode->input = curInput;
 	player->inputs = inputNode;
 
-	if((inputNode->input&1<<3)&&(~inputNode->prev->input & 1<<3)){
+	if((inputNode->input&PPINPUT_A)&&!(inputNode->prev->input & PPINPUT_A)){
 		dialogue = Toggle(dialogue);
 		player->talking = Toggle(player->talking);
-		SetMessage("Hellooooooo!\0",&testbox);
+		SetMessage("Helloooooo0o0o0o0oo0o0o0o0!",&mainTextbox);
 	}
 }
 
@@ -110,24 +120,24 @@ Uint8 PollInputs(){
 	if (keys[SDL_SCANCODE_ESCAPE])
 		done = 1;
 
-	if(keys[INPUT_PAUSE])
+	if(keys[PPKEY_PAUSE])
 		pause = 1;
 
-	if(keys[INPUT_LEFT])
+	if(keys[PPKEY_LEFT])
 		inputs |= 1<<7;
-	if(keys[INPUT_RIGHT])
+	if(keys[PPKEY_RIGHT])
 		inputs |= 1<<6;
-	if(keys[INPUT_UP])
+	if(keys[PPKEY_UP])
 		inputs |= 1<<5;
-	if(keys[INPUT_DOWN])
+	if(keys[PPKEY_DOWN])
 		inputs |= 1<<4;
-	if(keys[INPUT_A])
+	if(keys[PPKEY_A])
 		inputs |= 1<<3;
-	if(keys[INPUT_B])
+	if(keys[PPKEY_B])
 		inputs |= 1<<2;
-	if(keys[INPUT_X])
+	if(keys[PPKEY_X])
 		inputs |= 1<<1;
-	if(keys[INPUT_Y])
+	if(keys[PPKEY_Y])
 		inputs |= 1;
 	return inputs;
 }
@@ -147,11 +157,12 @@ void DrawGame(){
 
 	switch(GameState){
 	case OVERWORLD:
+	//	DrawWorld();
 		DrawTilesLower();
 		DrawPlayer(player);
 		DrawTilesUpper();
 		if(dialogue)
-			DrawTextbox(&testbox);
+			DrawTextbox(&mainTextbox);
 
 		break;
 	}

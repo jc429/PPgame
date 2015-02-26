@@ -10,6 +10,6 @@ void UpdateCamera(Camera *c){
 	if(c->trackPlayer)
 		c->position = c->target->worldposition;
 
-	c->viewport.x = c->position.x - (c->viewport.w*0.5);
-	c->viewport.y = c->position.y - (c->viewport.h*0.5);
+	c->viewport.x = c->position.x - (c->viewport.w>>1);
+	c->viewport.y = c->position.y - (c->viewport.h>>1);
 }

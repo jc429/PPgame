@@ -1,22 +1,44 @@
 #include "entity.h"
+#include <stdio.h>
 
+Entity EntList[MAX_ENTS];
+int numEnts;
 
+void InitEntList(){
+	int i;
+	for(i = 0;i < MAX_ENTS;i++){
 
-Entity* NewEntity(){
-	Entity *ent = new Entity;
+	}
+}
 
-
-
+Entity *NewEntity(){
+	int i;
+	if(numEnts+1 >= MAX_ENTS){
+		fprintf(stderr, "Too many Ents!\n");
+		//exit(1);
+		return NULL;
+	}
 	numEnts++;
-	EntList[numEnts] = ent;
-	return ent;
+	for(i = 0;i < MAX_ENTS;i++){
+		if(!EntList[i].used)
+			break;
+	}
 }
 
 void FreeEntity(Entity *ent){
-	for(int i = 0; i < ENTS_MAX; i++){
-		if(ent==EntList[i]){
-			free(EntList[i]);
-			numEnts--;
-		}
+	if(ent->used > 1) {
+		ent->used--;
+		return;
 	}
+	numEnts--;
+	ent->used--;
+	ent = NULL;
+}
+
+void ClearEntList(){
+	int i;
+	for(i = 0;i < MAX_ENTS;i++){
+
+	}
+	numEnts = 0;
 }

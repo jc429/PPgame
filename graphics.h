@@ -22,8 +22,7 @@ void FrameDelay(Uint32 delay);
 
 void InitSpriteList();
 
-
-
+void DrawWorld();
 
 
 void InitTG();

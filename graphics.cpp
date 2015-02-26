@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include "tile.h"
 #include "camera.h"
+#include "player.h"
 
 using namespace std;
 
@@ -15,8 +16,8 @@ SDL_Rect world;					//Rect representing a 2D game world
 Camera mainCamera;			//Rect representing the game camera
 Camera uiCamera;				//Rect representing a UI camera (unused for now)
 
-extern Tile* World[WORLD_W][WORLD_H];
-
+extern Tile *World[WORLD_W][WORLD_H];
+extern Player *player;
 
 int framecheck;
 
@@ -69,18 +70,30 @@ void InitWorld(){
 			World[i][j] = (Tile*)malloc(sizeof(Tile));
 			World[i][j]->position.x = i*TILE_W;
 			World[i][j]->position.y = j*TILE_H;
-			if((i != 0)&&(j != 0)&&(i+1 != WORLD_W)&&(j+1 != WORLD_H))
-				World[i][j]->free = true;
-			else
-				World[i][j]->free = false;
-	//		World[i][j]->lowerspr = (Sprite*)malloc(sizeof(Sprite));
-		//	World[i][j]->upperspr = (Sprite*)malloc(sizeof(Sprite));
 			World[i][j]->lowerspr = LoadSprite("sprites/grasstile.png",32,32,1);
 			World[i][j]->upperspr = NULL;
+			World[i][j]->height = 0;
+			if((i != 0)&&(j != 0)&&(i+1 != WORLD_W)&&(j+1 != WORLD_H))
+				World[i][j]->free = true;
+			else{
+				World[i][j]->free = false;
+				World[i][j]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+			}
+	//		World[i][j]->lowerspr = (Sprite*)malloc(sizeof(Sprite));
+		//	World[i][j]->upperspr = (Sprite*)malloc(sizeof(Sprite));
+			
 			World[i][j]->debugFill = LoadSprite("sprites/shade.png",32,32,1);
 		}
 	}
 	World[2][6]->free = false;
+	World[2][6]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+
+	World[5][2]->height = 1;
+	World[6][2]->height = 2;
+	World[7][2]->height = 3;
+	World[5][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[6][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
 }
 
 //Draws the current frame, then advances the game to the next frame
@@ -211,8 +224,52 @@ void DrawCursor(Vec2i pos){
 	tile.y -= mainCamera.viewport.y;
 	SDL_RenderDrawRect(mainRenderer, &tile);
 }
+/*
+void DrawWorld(){
+	int currentRow;
+	int currentLayer;
+	int numLayers = 2;
+	for(currentRow = 0; currentRow < WORLD_H; currentRow++){
+		for(currentLayer = 0; currentLayer < numLayers; currentLayer++){
+			DrawRow(currentRow,currentLayer);
+			if(currentLayer==0){
+				if((!player->tomove.y==1)&&(player->tile.y == currentRow)){
+					DrawPlayer(player);
+				}
+				else if((player->tomove.y==1)&&(player->tile.y+1 == currentRow)){
+					DrawPlayer(player);
+				}
+			}
+		}
+	}
+}
 
-//from tiles.h
+
+void DrawRow(int row, int layer){
+	for(int col = 0; col < WORLD_W; col++){
+		if (World[col][row] != NULL){
+			Vec2i loc = {col*TILE_W,row*TILE_H};
+			loc = World[col][row]->position;
+			if(layer == 0){
+				if(World[col][row]->lowerspr != NULL){
+					World[col][row]->lowerframe = DrawSprite(World[col][row]->lowerspr,World[col][row]->lowerframe,loc,&mainCamera);
+				}
+			}else if(layer ==1){
+				if(World[col][row]->upperspr != NULL){
+					World[col][row]->upperframe = DrawSprite(World[col][row]->upperspr,World[col][row]->upperframe,loc,&mainCamera);
+				}
+			}
+		}
+	}
+}
+
+*/
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//soon to be unused
 void DrawTilesLower(){
 	for(int i = 0; i < WORLD_W; i++){
 		for(int j = 0; j < WORLD_H; j++){
@@ -230,6 +287,7 @@ void DrawTilesLower(){
 		}
 	}
 }
+//soon to be unused
 void DrawTilesUpper(){
 	for(int i = 0; i < WORLD_W; i++){
 		for(int j = 0; j < WORLD_H; j++){
@@ -242,45 +300,5 @@ void DrawTilesUpper(){
 		}
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Function to test stuff - Feel free to delete
-void InitTG(){
-
-
-	blob = LoadSprite("sprites/blob.png",32,32,1);
-	//testbmp = LoadSprite("sprites/happi.png",16,16,1);
-	testbg = LoadSprite("sprites/bg.png",640,480,1);
-	
-}
-
-//Function to test stuff - Feel free to delete
-void TestGraphics(int x){
-	
-
-
-//	if(testbmp->image == NULL) return;
-	if(testbg->image == NULL) return;
-	SDL_Rect  targetarea;
-
-	Vec2i a, b, c;
-	a.x = 20;
-	b.x = 5;
-	a.y = 9;
-	b.y = 8;
-	c = a * b;
-	
-	targetarea.x = 0;
-	targetarea.y = 0;
-	targetarea.w = testbg->w;
-	targetarea.h = testbg->h;
-
-
-//Set Color of Rect with SDL_SetRenderDrawColor if needed
-
-
-	SDL_RenderCopy(mainRenderer,testbg->image,NULL,&targetarea);
-	
-	
-	
-
-}

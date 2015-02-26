@@ -12,7 +12,8 @@ typedef struct Textbox_T{
 
 	//Some sort of text struct
 
-	char *lines[4];
+	char *lines[LINE_COUNT];		//The textbox can hold 4 lines of 40 characters each
+	int cursor;			//For drawing text one character at a time - set to -1 to draw all text immediately
 }Textbox;
 
 void InitFont();
