@@ -16,8 +16,9 @@ static enum{
 	MAIN_MENU,
 	OPTIONS,
 	OVERWORLD,
-	DIALOGUE_OVERLAY,
+	COMBAT,				
+	DIALOGUE_OVERLAY,	//Maybe unnecessary?
 	DIALOGUE_FULL,
-	DATE
-}GameState;
+	DATE			
+}GameState; 
  

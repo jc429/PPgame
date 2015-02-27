@@ -1,6 +1,7 @@
 #include "level.h"
 
 extern Tile* World[WORLD_W][WORLD_H];
+SDL_Rect world;					//Rect representing a 2D game world
 
 int LoadCFG(Level *l, char* path){
 	char buf[255];
@@ -121,6 +122,7 @@ int LoadSpriteDef(Level *l,FILE *fileptr,char *buf){
 int LoadTileDef(Level *l,FILE *fileptr,char *buf){
 	int tileno = 0;
 	bool tilefree;
+	int height;
 	int lowers;
 	int uppers;
 	for(int i = 0; i < MAX_TILES;i++){
@@ -135,11 +137,12 @@ int LoadTileDef(Level *l,FILE *fileptr,char *buf){
 		if(l->tiles != NULL){
 			fscanf(fileptr,"%i",&tileno);
 			if(l->tiles[tileno]==NULL){
+				fscanf(fileptr,"%i",&height);
 				fscanf(fileptr,"%i",&tilefree);
 				fscanf(fileptr,"%i",&lowers);
 				fscanf(fileptr,"%i",&uppers);
 
-				l->tiles[tileno] = LoadTile(tilefree,l->sprites[lowers],l->sprites[uppers]);
+				l->tiles[tileno] = LoadTile(tilefree,height,l->sprites[lowers],l->sprites[uppers]);
 				if(uppers<0)
 					l->tiles[tileno]->upperspr = NULL;
 				if(lowers<0)
@@ -208,13 +211,53 @@ int SaveCFG(Level *l, char* path){
 	return 0;
 }
 
-Tile* LoadTile(bool fr, Sprite *lower, Sprite *upper){
+Tile* LoadTile(bool fr, int ht, Sprite *lower, Sprite *upper){
 	Tile *t = new Tile;
 	t->lowerframe = 0;
 	t->upperframe = 0;
 	t->free = fr;
+	t->height = ht;
 	t->lowerspr = lower;
 	t->upperspr = upper;
 	t->debugFill = upper;
 	return t;
+}
+
+void InitWorld(){
+	world.w = WORLD_W*TILE_W;
+	world.h = WORLD_H*TILE_H;
+
+	for(int i = 0; i < WORLD_W; i++){
+		for(int j = 0; j < WORLD_H; j++){
+			World[i][j] = (Tile*)malloc(sizeof(Tile));
+			World[i][j]->position.x = i*TILE_W;
+			World[i][j]->position.y = j*TILE_H;
+			World[i][j]->lowerspr = LoadSprite("sprites/grasstile.png",32,32,1);
+			World[i][j]->upperspr = NULL;
+			World[i][j]->height = 0;
+			if((i != 0)&&(j != 0)&&(i+1 != WORLD_W)&&(j+1 != WORLD_H))
+				World[i][j]->free = true;
+			else{
+				World[i][j]->free = false;
+				World[i][j]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+			}
+	//		World[i][j]->lowerspr = (Sprite*)malloc(sizeof(Sprite));
+		//	World[i][j]->upperspr = (Sprite*)malloc(sizeof(Sprite));
+			
+			World[i][j]->debugFill = LoadSprite("sprites/shade.png",32,32,1);
+		}
+	}
+	World[2][6]->free = false;
+	World[2][6]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+
+	World[5][2]->height = 1;
+	World[6][2]->height = 2;
+	World[7][2]->height = 3;
+	World[7][3]->height = 2;
+	World[7][4]->height = 1;
+	World[5][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[6][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][3]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][4]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
 }

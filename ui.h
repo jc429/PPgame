@@ -3,6 +3,8 @@
 
 #include "SDL.h"
 #include "pmath.h"
+#include "graphics.h"
+
 
 //This could apply to anything really; a key, a mouse button, a gamepad button, etc
 typedef struct Input_T{
@@ -20,6 +22,8 @@ typedef struct {	/**< Mouse struct, tells us the state of the mouse on every fra
 
 void UpdateMouse();
 void UpdateInput(Input *input, bool current);
+void DrawOverworldUI();
+void DrawCombatUI();
 
 
 #endif

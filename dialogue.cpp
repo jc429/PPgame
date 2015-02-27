@@ -41,8 +41,6 @@ void DrawTextbox(Textbox *t){
 	loc.x = t->box.x;
 	loc.y = t->box.y;
 	DrawSprite(t->spr,t->frame,loc,&uiCamera);
-	
-//	SetMessage("This is a test message34567890123456780.1234567890123456789\\234567890123456789.12345 Hey chump. Does everything work? 9.1234567890123 hella. 123456789012345",t);
 
 	DrawMessage(t);
 }

@@ -20,4 +20,6 @@ int LoadTileDef(Level *l,FILE *fileptr,char *buf);
 int LoadMapDef(Level *l,FILE *fileptr,char *buf);
 int SaveCFG(Level *l, char* path);
 
+void InitWorld();
+
 #endif

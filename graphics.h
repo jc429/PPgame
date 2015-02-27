@@ -15,15 +15,11 @@
 
 
 void InitWindow();
-void InitWorld();
 
 void NextFrame();
 void FrameDelay(Uint32 delay);
 
 void InitSpriteList();
-
-void DrawWorld();
-
 
 void InitTG();
 void TestGraphics(int x);

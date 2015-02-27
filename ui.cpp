@@ -1,6 +1,7 @@
 #include "ui.h"
 
 Mouse mouse;
+extern Camera uiCamera;
 
 //Updates the mouse state (both buttons act as left for now)
 void UpdateMouse(){
@@ -29,4 +30,12 @@ void UpdateInput(Input *input, bool current){
 		}
 		input->prev = 0;
 	}
+}
+
+void DrawOverworldUI(){
+
+}
+
+void DrawCombatUI(){
+
 }

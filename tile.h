@@ -23,7 +23,7 @@ typedef struct Tile_T{
 	Sprite *debugFill;		//just shows whether a sprite is occupied or not
 }Tile;
 
-Tile* LoadTile(bool fr, Sprite *lower, Sprite *upper);
+Tile* LoadTile(bool fr, int ht, Sprite *lower, Sprite *upper);
 void DrawTilesLower();
 void DrawTilesUpper();
 void DrawRow(int row, int layer);

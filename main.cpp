@@ -31,7 +31,7 @@ extern bool dialogue;	//are we currently talking?
 int main (int argc, char* argv[]){
 	done = 0;
 	InitGame();
-	GameState = OVERWORLD;
+
 	do{
 		//The basic game loop:
 		//read inputs
@@ -57,23 +57,24 @@ void InitGame(){
 	IMG_Init(IMG_INIT_PNG);
 	InitAudio();
 	InitWindow();
+	InitFont();
+
 	InitSpriteList();
 	InitMusicList();
 	InitSoundList();
-	InitFont();
+
 	InitTextbox(&mainTextbox);
 
 	/////////////////
-//	InitTG();		//test stuff feel free to remove
+	//test stuff feel free to remove
 	char *lvpath = "cfg/test.txt";
 	Level *level = new Level;
 	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
 		InitWorld();
 	
-	Music *m = LoadMusic("sounds/GV.mp3",40);
-	Sound *s = LoadSound("sounds/gui.wav",35);	
+	//Music *m = LoadMusic("sounds/GV.mp3",40);
+	//Sound *s = LoadSound("sounds/gui.wav",35);	
 	//PlayMusic(m);
-	
 	//PlaySound(s);
 
 	//////////////////
@@ -89,7 +90,10 @@ void InitGame(){
 		atexit(TTF_Quit);
 	}
 
-	GameState = MAIN_MENU;
+	if(DEBUG)
+		GameState = DEBUG_START_MODE;
+	else
+		GameState = START_MODE;
 }
 
 //This is how you get your inputs
@@ -120,6 +124,13 @@ Uint8 PollInputs(){
 	if (keys[SDL_SCANCODE_ESCAPE])
 		done = 1;
 
+	if(DEBUG){		//debug inputs
+		if(keys[SDL_SCANCODE_M])
+			GameState = OVERWORLD;
+		if(keys[SDL_SCANCODE_N])
+			GameState = COMBAT;
+	}
+
 	if(keys[PPKEY_PAUSE])
 		pause = 1;
 
@@ -144,9 +155,11 @@ Uint8 PollInputs(){
 
 //This is where the meat of the game will be
 void UpdateGame(){
-	UpdatePlayer(player);
-	
-	UpdateCamera(&mainCamera);
+	switch(GameState){
+	case OVERWORLD:
+		UpdatePlayer(player);
+		UpdateCamera(&mainCamera);
+	}
 }
 
 //Put the Drawing functions for everything here 
@@ -161,9 +174,17 @@ void DrawGame(){
 		DrawTilesLower();
 		DrawPlayer(player);
 		DrawTilesUpper();
+		DrawOverworldUI();
 		if(dialogue)
 			DrawTextbox(&mainTextbox);
+		break;
 
+	case COMBAT:
+	/*	DrawCombatBG();
+		DrawEnemies();
+		DrawAllies();
+		DrawCombatUI();
+		*/
 		break;
 	}
 }

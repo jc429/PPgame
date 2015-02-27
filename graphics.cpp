@@ -12,9 +12,8 @@ using namespace std;
 
 SDL_Window *sdlWindow;			//The program window
 SDL_Renderer *mainRenderer;		//The main game renderer
-SDL_Rect world;					//Rect representing a 2D game world
-Camera mainCamera;			//Rect representing the game camera
-Camera uiCamera;				//Rect representing a UI camera (unused for now)
+Camera mainCamera;				//the game's overworld camera
+Camera uiCamera;				//the UI camera
 
 extern Tile *World[WORLD_W][WORLD_H];
 extern Player *player;
@@ -58,9 +57,9 @@ void InitWindow(){
 	SDL_SetRenderDrawColor(mainRenderer, 250, 230, 230, 255);			//Sets the bg color of the renderer
 	SDL_RenderClear(mainRenderer);
 	SDL_RenderPresent(mainRenderer);
-	SDL_SetWindowFullscreen(sdlWindow,fullscreenFlag );
+	SDL_SetWindowFullscreen(sdlWindow,fullscreenFlag);
 }
-
+/*
 void InitWorld(){
 	world.w = WORLD_W*TILE_W;
 	world.h = WORLD_H*TILE_H;
@@ -94,7 +93,7 @@ void InitWorld(){
 	World[5][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
 	World[6][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
 	World[7][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
-}
+}*/
 
 //Draws the current frame, then advances the game to the next frame
 void NextFrame(){

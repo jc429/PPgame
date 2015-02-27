@@ -56,7 +56,6 @@ void UpdatePlayer(Player *p){
 }
 
 void PlayerMovement(Player *p){
-	
 	if(p->moving){
 		
 		p->facing = p->tomove;
@@ -81,9 +80,10 @@ void PlayerMovement(Player *p){
 			p->facing.x = 1;
 			if(InputBuffered(p->inputs, PPINPUT_RIGHT, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(p->inputs, PPINPUT_DOWN, INPUT_BUFFER))
 				if(World[p->tile.x+1][p->tile.y]!=NULL)
-					if(World[p->tile.x+1][p->tile.y]->free)
+					if(World[p->tile.x+1][p->tile.y]->free){
 						if(abs(World[p->tile.x+1][p->tile.y]->height - World[p->tile.x][p->tile.y]->height)<=1)
 							p->tomove.x = 1;
+					}
 		}
 		if((p->inputs->input & PPINPUT_UP)&&!(p->inputs->input & PPINPUT_DOWN)){
 			p->facing.y = -1;
