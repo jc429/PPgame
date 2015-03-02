@@ -19,7 +19,7 @@ inline bool RectOverlap(SDL_Rect a, SDL_Rect b){
 }
 
 //Checks if two Rectangles are touching (including tangentially)
-inline bool RectTouch(SDL_Rect a, SDL_Rect b){
+bool RectTouch(SDL_Rect a, SDL_Rect b){
 	return(((a.x+a.w) >= b.x) && (a.x <= (b.x+b.w)) &&
 			(a.y <= (b.y+b.h)) && ((a.y+a.h) >= b.y));
 }

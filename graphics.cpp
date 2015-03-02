@@ -14,6 +14,7 @@ SDL_Window *sdlWindow;			//The program window
 SDL_Renderer *mainRenderer;		//The main game renderer
 Camera mainCamera;				//the game's overworld camera
 Camera uiCamera;				//the UI camera
+Camera combatCamera;			//battle camea
 
 extern Tile *World[WORLD_W][WORLD_H];
 extern Player *player;
@@ -180,7 +181,7 @@ Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl){
 //Draws a sprite to the renderer
 int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
 	if(spr==NULL) return 0;
-	//	if(!RectOverlap) return; /*add a check that we're within camera bounds in once there's a gameobject system*/
+
 	SDL_Rect targetarea;
 	SDL_Rect src;
 	src.x = frame%spr->framesperline * spr->w;
@@ -192,10 +193,9 @@ int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
 	targetarea.y = pos.y-c->viewport.y;
 	targetarea.w = spr->w;
 	targetarea.h = spr->h;
-
 	
-
-	SDL_RenderCopy(mainRenderer,spr->image,&src,&targetarea);
+//	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
+		SDL_RenderCopy(mainRenderer,spr->image,&src,&targetarea);
 	
 	
 	if(framecheck == 1){
@@ -204,10 +204,69 @@ int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
 	return frame;
 }
 
-int AdvanceFrame(Sprite *spr, int frame){
+int AdvanceFrame(Sprite *spr, int frame){  //placeholder
 	frame++;
 	frame = frame%spr->framesperline;
 	return frame;
+}
+////
+Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop){
+	Animation *anim = new Animation;
+	anim->sprite = spr;
+	anim->curFrame = curFrame;
+	anim->seed = seed;
+	anim->length = len;
+	anim->playing = play;
+	anim->looping = loop;
+
+	anim->rotation = 0;
+	anim->mirror.x = 1;
+	anim->mirror.y = 1;
+
+	return anim;
+}
+
+void AdvanceAnimFrame(Animation *a){
+	if(a->playing==0) return;
+	if(a->looping!=0){
+		a->curFrame++;
+		a->curFrame = a->curFrame%a->length;
+	}else{
+		if(a->curFrame+1 < a->length)
+			a->curFrame++;
+	}
+}
+
+void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
+	if(anim==NULL) return;
+	if(anim->sprite==NULL) return;
+	SDL_RendererFlip flip;
+	SDL_Rect targetarea;
+	SDL_Rect src;
+
+	flip = SDL_FLIP_NONE;
+	if(anim->mirror.x!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_HORIZONTAL);
+	if(anim->mirror.y!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_VERTICAL);
+
+
+	src.x = anim->curFrame % anim->sprite->framesperline * anim->sprite->w;
+    src.y = anim->curFrame / anim->sprite->framesperline * anim->sprite->h;
+	src.w = anim->sprite->w;
+	src.h = anim->sprite->h;
+
+	targetarea.x = pos.x-c->viewport.x;
+	targetarea.y = pos.y-c->viewport.y;
+	targetarea.w = anim->sprite->w;
+	targetarea.h = anim->sprite->h;
+
+	if(framecheck == 1)
+		AdvanceAnimFrame(anim);
+//	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
+	//	SDL_RenderCopy(mainRenderer,anim->sprite->image,&src,&targetarea);
+	
+		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
 }
 
 void DrawTile(Vec2i pos){

@@ -82,8 +82,8 @@ void SetMessage(char *msg, Textbox *t){
 }
 
 void DrawMessage(Textbox *t){
-	SDL_Rect temp = {t->box.x,2+t->box.y,t->box.w,t->box.h*0.2};
-
+	SDL_Rect temp = {t->box.x,2+t->box.y,t->box.w,(int)(t->box.h*0.2)};
+	
 	if(t->cursor>=0){
 		if(t->cursor < (LINE_LENGTH*LINE_COUNT)){
 			++t->cursor;
@@ -124,7 +124,7 @@ void DrawLine(char *msg,SDL_Rect location){
 	if(msg == NULL) return;
 	SDL_Color color = {255,255,255,0};
 	//targetarea.w = 100;
-	SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg,color);
+	SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg,color); 
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(mainRenderer,temp);
 	SDL_Rect targetarea = {location.x+TEXTAREA_INSET,location.y+TEXTAREA_INSET,location.w-(2*TEXTAREA_INSET),location.h};
 	

@@ -14,7 +14,9 @@ typedef struct Camera_T{
 
 void UpdateCamera(Camera *c);
 
-int DrawSprite(Sprite* spr, int frame, Vec2i pos,Camera *c);
+int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c);
 int AdvanceFrame(Sprite *spr, int frame);
+
+void DrawAnimation(Animation *anim, Vec2i pos, Camera *c);
 
 #endif

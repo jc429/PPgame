@@ -33,10 +33,21 @@ Player* CreatePlayer(Player *p){
 	p->localposition.y = TILE_H>>1;
 
 	//Graphics
-	p->frame = 0;
-	p->sprite = LoadSprite("sprites/mad.png",32,32,4);
-	p->s_offset.x = p->sprite->w>>1;
-	p->s_offset.y = p->sprite->h>>1;
+	p->numAnims = 0;
+	p->animation = 0;
+	for(int i = 0; i < MAX_ANIMS; i++)
+		p->animlist[i]=NULL;
+	//////////////////////////////////////////////////////////////////
+	Sprite *s = LoadSprite("sprites/mad.png",32,32,4);
+	Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
+	p->animlist[0] = LoadAnimation(s,0,0,4,1,1);
+	p->animlist[1] = LoadAnimation(s2,0,0,2,1,0);
+
+	p->numAnims = 2;
+	////////////////////////////////////////////////////////////////////////
+	p->s_offset.x = p->animlist[p->animation]->sprite->w>>1;
+	p->s_offset.y = p->animlist[p->animation]->sprite->h>>1;
+
 
 	//Dialogue and misc
 	p->talking = false;
@@ -45,12 +56,13 @@ Player* CreatePlayer(Player *p){
 	//get us started on a tile
 	UpdateTile(p);
 	if(DEBUG)
-		fprintf(stdout,"%i %i \n",p->localposition.x,p->localposition.y);
+		fprintf(stdout,"Starting on %i %i \n",p->localposition.x,p->localposition.y);
 	return p;
 }
 
 void UpdatePlayer(Player *p){
-	
+//	p->animlist[p->animation]->mirror.x = p->facing.x;
+
 	if(!p->talking)
 		PlayerMovement(p);
 }
@@ -177,5 +189,10 @@ void DrawPlayer(Player *p){
 		DrawTile(p->tile);
 		DrawCursor(p->tile+p->facing);
 	}
-	p->frame = DrawSprite(p->sprite,p->frame,p->worldposition-p->s_offset,&mainCamera);
+	if(p->animation < 0)
+		p->animation = 0;
+	if(p->animation+1 > p->numAnims)
+		p->animation = p->numAnims-1;
+	DrawAnimation(p->animlist[p->animation],p->worldposition-p->s_offset,&mainCamera);
+//	p->frame = DrawSprite(p->sprite,p->frame,p->worldposition-p->s_offset,&mainCamera);
 }

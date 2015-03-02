@@ -57,7 +57,7 @@ static Vec2d operator - (Vec2d a, Vec2d b){
 inline bool PointInRect(int x, int y, SDL_Rect rect);
 inline bool PointOnRect(int x, int y, SDL_Rect rect);
 inline bool RectOverlap(SDL_Rect a, SDL_Rect b);
-inline bool RectTouch(SDL_Rect a, SDL_Rect b);
+bool RectTouch(SDL_Rect a, SDL_Rect b);
 inline bool RectFullyInRect(SDL_Rect a, SDL_Rect b);
 inline bool RectInRect(SDL_Rect a, SDL_Rect b);
 bool Toggle(bool b);

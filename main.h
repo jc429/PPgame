@@ -11,6 +11,7 @@
 #include "dialogue.h"
 #include "level.h"
 #include "audio.h"
+#include "combat.h"
 
 static enum{
 	MAIN_MENU,

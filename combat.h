@@ -2,6 +2,7 @@
 #define _COMBAT_
 
 #include "pmath.h"
+#include "graphics.h"
 
 typedef struct Stats_T{
 	int max_health;
@@ -47,5 +48,9 @@ typedef struct CombatEnt_T{
 }CombatEnt;
 
 void SetStats(CombatEnt *ent);
+
+void LoadCombatBG();
+void DrawCombatBG();
+
 
 #endif

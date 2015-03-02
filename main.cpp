@@ -71,6 +71,14 @@ void InitGame(){
 	Level *level = new Level;
 	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
 		InitWorld();
+
+	Entity *e = NewEntity();
+	e->talks = 1;
+	World[5][5]->contents = e;
+
+
+
+	LoadCombatBG();
 	
 	//Music *m = LoadMusic("sounds/GV.mp3",40);
 	//Sound *s = LoadSound("sounds/gui.wav",35);	
@@ -112,9 +120,15 @@ void PollEvents(){
 	player->inputs = inputNode;
 
 	if((inputNode->input&PPINPUT_A)&&!(inputNode->prev->input & PPINPUT_A)){
-		dialogue = Toggle(dialogue);
-		player->talking = Toggle(player->talking);
-		SetMessage("Helloooooo0o0o0o0oo0o0o0o0!",&mainTextbox);
+		if(World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]!=NULL){
+			if(World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]->contents!=NULL){
+				if(World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]->contents->talks){
+					dialogue = Toggle(dialogue);
+					player->talking = Toggle(player->talking);
+					SetMessage("Helloooooo0o0o0o0oo0o0o0o0!",&mainTextbox);
+				}
+			}
+		}
 	}
 }
 
@@ -129,6 +143,10 @@ Uint8 PollInputs(){
 			GameState = OVERWORLD;
 		if(keys[SDL_SCANCODE_N])
 			GameState = COMBAT;
+		if(keys[SDL_SCANCODE_L])
+			player->animation++;
+		if(keys[SDL_SCANCODE_K])
+			player->animation--;
 	}
 
 	if(keys[PPKEY_PAUSE])
@@ -180,8 +198,8 @@ void DrawGame(){
 		break;
 
 	case COMBAT:
-	/*	DrawCombatBG();
-		DrawEnemies();
+		DrawCombatBG();
+	/*	DrawEnemies();
 		DrawAllies();
 		DrawCombatUI();
 		*/

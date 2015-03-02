@@ -4,7 +4,7 @@
 
 #define FORCE_DEBUG_LEVEL 0
 
-#define DEBUG_START_MODE COMBAT
+#define DEBUG_START_MODE OVERWORLD
 /*{
 	MAIN_MENU,
 	OPTIONS,
@@ -44,6 +44,8 @@
 
 //the maximum number of different sprites that can be loaded into the game
 #define MAX_SPRITES 255
+//the max animations per entity
+#define MAX_ANIMS 32
 //max different tiles
 #define MAX_TILES 255
 //the maximum number of different sprites that can be loaded into the game
@@ -55,7 +57,7 @@
 
 //Gameplay stuff
 #define INPUTS_HISTORY 60			//number of frames of inputs to save (unused prob)
-#define INPUT_BUFFER 10				//number of frames to buffer a movement input (must be smaller than inputs history)
+#define INPUT_BUFFER 5				//number of frames to buffer a movement input (must be smaller than inputs history)
 
 //text stuff
 #define FONT_RES 48

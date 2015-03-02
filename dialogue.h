@@ -16,6 +16,11 @@ typedef struct Textbox_T{
 	int cursor;			//For drawing text one character at a time - set to -1 to draw all text immediately
 }Textbox;
 
+typedef struct Conversation_T{
+	Sprite *speakers[5]; //idk
+	Textbox *textbox;
+}Conversation;
+
 void InitFont();
 void InitTextbox(Textbox *t);
 void DrawTextbox(Textbox *t);

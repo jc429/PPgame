@@ -12,8 +12,26 @@ typedef struct Sprite_T{
 	int used;						/*used by the maintanence functions to keep track of how many times a single sprite is being used*/
 }Sprite;
 
+typedef struct Animation_T{
+	Sprite *sprite;
+	int curFrame;
+	int seed;
+	int length;
+	bool playing;
+	bool looping;
 
+	Vec2i center;
+	int rotation;
+	Vec2i mirror;
+
+	int speed; //not used yet - for aysnchronous animations i guess - maybe the amount of draw frames to wait before updating 
+}Animation;
+
+void InitSpriteList();
 Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl);
+Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop);
+
+void AdvanceAnimFrame(Animation *a);
 
 void DrawTile(Vec2i pos);
 void DrawCursor(Vec2i pos);

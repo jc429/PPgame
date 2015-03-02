@@ -220,6 +220,7 @@ Tile* LoadTile(bool fr, int ht, Sprite *lower, Sprite *upper){
 	t->lowerspr = lower;
 	t->upperspr = upper;
 	t->debugFill = upper;
+	t->contents = NULL;
 	return t;
 }
 

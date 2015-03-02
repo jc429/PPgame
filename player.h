@@ -19,13 +19,15 @@ typedef struct Player_T{
 	int movespeed;
 	bool moving;
 
-			
 
 	bool talking;
 
-	Sprite *sprite; 
-	int frame;
+/*	Sprite *sprite; 
+	int frame;*/
 	Vec2i s_offset;	
+	Animation *animlist[MAX_ANIMS]; //all animations this entity can have
+	int animation;					//current animation
+	int numAnims;					//number of animations this entity is currently using
 
 	SDL_Rect collider;
 } Player;

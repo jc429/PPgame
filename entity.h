@@ -14,8 +14,16 @@ typedef enum EntType{
 typedef struct Entity_T{
 	EntType type;
 	int used;
+	
+	bool talks;
 
 }Entity;
+
+class Ent{
+
+};
+
+
 
 void InitEntList();
 Entity* NewEntity();

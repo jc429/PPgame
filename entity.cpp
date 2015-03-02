@@ -23,6 +23,8 @@ Entity *NewEntity(){
 		if(!EntList[i].used)
 			break;
 	}
+	EntList[i].used++;
+	return &EntList[i];
 }
 
 void FreeEntity(Entity *ent){

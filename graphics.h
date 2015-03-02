@@ -19,7 +19,6 @@ void InitWindow();
 void NextFrame();
 void FrameDelay(Uint32 delay);
 
-void InitSpriteList();
 
 void InitTG();
 void TestGraphics(int x);

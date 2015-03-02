@@ -9,7 +9,7 @@ typedef struct Tile_T{
 	Vec2i position;			//world position
 	bool free;				//is the tile unoccupied?
 
-	Entity * contents;		//who or what is in this tile?
+	Entity *contents;		//who or what is in this tile?
 
 	int height;				/*entities can only move to a tile with a height of their current tile +/- 1, 
 							this will make for some really cool 3d-ish things i hope*/
