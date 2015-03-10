@@ -6,9 +6,68 @@ extern Tile *World[WORLD_W][WORLD_H];
 extern Camera mainCamera;
 
 
-Player* CreatePlayer(Player *p){
+Player::Player(){
+	
+	//Inputs
+	inputs = new InputNode;
+	inputs->input = 00000000;
+	inputs->prev = NULL;
 
-	p = (Player*) malloc(sizeof(Player));
+	//Facing
+	facing.x = 0;		//These should never both be zero
+	facing.y = 1;		//Face south to begin i guess
+
+	//Movement
+	tomove.x = 0;	
+	tomove.y = 0;
+	moving = false;
+	movelock = false;
+
+	//Speeds and stuff
+	movespeed = 2;
+	
+	//Position
+	tile.x = 1;
+	tile.y = 3;
+	localposition.x = TILE_W>>1;
+	localposition.y = TILE_H>>1;
+
+	//Graphics
+	numAnims = 0;
+	animation = 0;
+	for(int i = 0; i < MAX_ANIMS; i++)
+		animlist[i]=NULL;
+	//////////////////////////////////////////////////////////////////
+	Sprite *s = LoadSprite("sprites/mad.png",32,32,4);
+	Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
+	animlist[0] = LoadAnimation(s,0,0,4,1,1);
+	animlist[1] = LoadAnimation(s2,0,0,2,1,0);
+
+	numAnims = 2;
+	////////////////////////////////////////////////////////////////////////
+	s_offset.x = animlist[animation]->sprite->w>>1;
+	s_offset.y = animlist[animation]->sprite->h>>1;
+
+	//Dialogue and misc
+	talking = false;
+	passable = false;
+	type = Ent_Player;
+
+	//get us started on a tile
+	UpdateTile(this);
+	if(DEBUG)
+		fprintf(stdout,"Starting on %i %i \n",localposition.x,localposition.y);
+}
+
+Player::~Player(){
+	for(int i = 0; i < numAnims; i++){
+		FreeAnimation(animlist[i]);
+	}
+}
+
+/*
+Player* Player::CreatePlayer(){
+
 
 	//Inputs
 	p->inputs = new InputNode;
@@ -51,25 +110,24 @@ Player* CreatePlayer(Player *p){
 
 	//Dialogue and misc
 	p->talking = false;
-
+	p->type = Ent_Player;
 
 	//get us started on a tile
 	UpdateTile(p);
 	if(DEBUG)
 		fprintf(stdout,"Starting on %i %i \n",p->localposition.x,p->localposition.y);
 	return p;
-}
+}*/
 
 void UpdatePlayer(Player *p){
 //	p->animlist[p->animation]->mirror.x = p->facing.x;
 
-	if(!p->talking)
+	if((!p->talking)&&(!p->movelock))
 		PlayerMovement(p);
 }
 
 void PlayerMovement(Player *p){
 	if(p->moving){
-		
 		p->facing = p->tomove;
 		MoveToTile(p,World[p->tile.x][p->tile.y],World[p->tile.x+p->tomove.x][p->tile.y+p->tomove.y]);
 	}

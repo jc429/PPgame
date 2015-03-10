@@ -29,7 +29,9 @@ typedef struct Animation_T{
 
 void InitSpriteList();
 Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl);
+void FreeSprite(Sprite *spr);
 Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop);
+void FreeAnimation(Animation *a);
 
 void AdvanceAnimFrame(Animation *a);
 

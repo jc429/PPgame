@@ -16,9 +16,11 @@
 
 void InitWindow();
 
+void RenderCurrentFrame();
 void NextFrame();
 void FrameDelay(Uint32 delay);
 
+void DrawRect(SDL_Rect *rect, Camera *c);
 
 void InitTG();
 void TestGraphics(int x);

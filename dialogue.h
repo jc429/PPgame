@@ -4,31 +4,51 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include "settings.h"
+#include "ptext.h"
 
-typedef struct Textbox_T{
-	Sprite *spr;
-	int frame;
-	SDL_Rect box; 
 
-	//Some sort of text struct
-
-	char *lines[LINE_COUNT];		//The textbox can hold 4 lines of 40 characters each
-	int cursor;			//For drawing text one character at a time - set to -1 to draw all text immediately
-}Textbox;
 
 typedef struct Conversation_T{
 	Sprite *speakers[5]; //idk
 	Textbox *textbox;
 }Conversation;
 
+typedef struct Message_T{
+	char *text;
+	Menu *prompt;
+	int numFunctions;
+	void (*promptFunctions[MAX_PROMPT_CHOICES]);
+	struct Message_T *next;
+
+	bool active;
+
+	Message_T(){
+		text = NULL;
+		prompt = NULL;
+		next = NULL;
+		for(int i = 0; i < MAX_PROMPT_CHOICES; i++){
+			promptFunctions[i] = NULL;
+		}
+	};
+}Message;
+
 void InitFont();
-void InitTextbox(Textbox *t);
+void InitMainTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr);
+void LoadTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr, SDL_Rect r);
 void DrawTextbox(Textbox *t);
 
-void SetMessage(char *msg, Textbox *t);
+void CreateMessage(Message *msg, char* text);
+void SetPrompt(Message *msg, MenuType type, Vec2i loc);
+void SetAnswers(Message *msg, int num,  void(*func1)()=NULL, void(*func2)()=NULL, void(*func3)()=NULL, void(*func4)()=NULL, void(*func5)()=NULL, void(*func6)()=NULL);
+void SetText(char *text, Textbox *t, bool scroll, bool prompt = 0, Message *msg = NULL);
 
-void DrawMessage(Textbox *t);
+void DrawText(Textbox *t);
 void DrawLine(char *msg,SDL_Rect location);
 void RenderText();
+
+
+static bool _Dialogue;	//are we currently talking?
+
+static Message *_MessageStack;
 
 #endif

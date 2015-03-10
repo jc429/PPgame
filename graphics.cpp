@@ -96,11 +96,14 @@ void InitWorld(){
 	World[7][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
 }*/
 
-//Draws the current frame, then advances the game to the next frame
-void NextFrame(){
-//	Uint32 Then;
+//Draws the current frame
+void RenderCurrentFrame(){
 	SDL_RenderPresent(mainRenderer);	//Draws the frame to the screen
 	SDL_RenderClear(mainRenderer);		//Clears the renderer to prepare for the next frame
+}
+//advances the game to the next frame
+void NextFrame(){
+//	Uint32 Then;
 //	Then = NOW;							/*these next few lines  are used to show how long each frame takes to update.  */
 	NOW = SDL_GetTicks();				//Update the time elapsed since program opening (unused)
 	/*fprintf(stdout,"Ticks passed this frame: %i\n", NOW - Then);*/
@@ -178,6 +181,17 @@ Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl){
 	return &SpriteList[i];
 }
 
+void FreeSprite(Sprite *spr){
+	if(spr==NULL) return;
+	spr->used--;
+	if(spr->used <= 0){
+		strcpy_s(spr->filename,"\0");
+		if(spr->image != NULL)
+			SDL_DestroyTexture(spr->image);
+		spr->image = NULL;
+	}
+}
+
 //Draws a sprite to the renderer
 int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
 	if(spr==NULL) return 0;
@@ -226,6 +240,10 @@ Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play
 	return anim;
 }
 
+void FreeAnimation(Animation *a){
+	delete a;
+}
+
 void AdvanceAnimFrame(Animation *a){
 	if(a->playing==0) return;
 	if(a->looping!=0){
@@ -267,6 +285,12 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	//	SDL_RenderCopy(mainRenderer,anim->sprite->image,&src,&targetarea);
 	
 		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
+}
+
+void DrawRect(SDL_Rect *rect, Camera *c){
+	rect->x -= c->viewport.x;
+	rect->y -= c->viewport.y;
+	SDL_RenderDrawRect(mainRenderer, rect);
 }
 
 void DrawTile(Vec2i pos){
@@ -340,6 +364,10 @@ void DrawTilesLower(){
 					loc = World[i][j]->position;
 //					fprintf(stdout,"%i, %i \n",loc.x,loc.y);
 					World[i][j]->lowerframe = DrawSprite(World[i][j]->lowerspr,World[i][j]->lowerframe,loc,&mainCamera);
+					if(World[i][j]->contents!=NULL){
+						Entity *contents = World[i][j]->contents;
+						DrawAnimation(contents->animlist[contents->animation],contents->worldposition-contents->s_offset,&mainCamera);
+					}
 				}
 			}
 		}

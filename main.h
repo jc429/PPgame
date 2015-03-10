@@ -21,5 +21,9 @@ static enum{
 	DIALOGUE_OVERLAY,	//Maybe unnecessary?
 	DIALOGUE_FULL,
 	DATE			
-}GameState; 
+}_GameState; 
  
+static bool _GamePause;
+static bool _DrawPause;
+static bool _OverworldPause;
+static bool _BattlePause;

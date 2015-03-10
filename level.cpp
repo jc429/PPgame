@@ -193,7 +193,7 @@ int LoadMapDef(Level *l,FILE *fileptr,char *buf){
 }
 
 int SaveCFG(Level *l, char* path){
-	char buf[255];
+//	char buf[255];
 	int cur_line = 0;
 	FILE *fileptr = NULL;
 	fileptr = fopen(path,"w");

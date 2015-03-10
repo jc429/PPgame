@@ -24,7 +24,7 @@
 
 
 //Window stuff
-#define GAMENAME "Bone Me Up, Scotty"				// Title of your game window
+#define GAMENAME "Final Fantasy 3"				// Title of your game window
 #define GAMEICON "img/fieyerrr.ico"	// path to a .ico file (might not have to be .ico idk try it)
 #define STARTFULLSCREEN 0			// Starts the game in fullscreen if on
 
@@ -50,6 +50,14 @@
 #define MAX_TILES 255
 //the maximum number of different sprites that can be loaded into the game
 #define MAX_ENTS 255
+//max npcs loaded at once
+#define MAX_NPC 64
+//max party members (4?)
+#define MAX_PARTY 4
+//max enemies per battle
+#define MAX_ENEMIES 5
+//max techniques per char
+#define MAX_TECHS 8
 
 //the amount of delay between one frame and the next, in milliseconds
 #define FRAMEDELAY 16 //33				// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
@@ -58,6 +66,10 @@
 //Gameplay stuff
 #define INPUTS_HISTORY 60			//number of frames of inputs to save (unused prob)
 #define INPUT_BUFFER 5				//number of frames to buffer a movement input (must be smaller than inputs history)
+#define MAX_MENU_ITEMS 12
+#define MAX_PROMPT_CHOICES 6
+#define LOC_DEFAULT_PROMPT_X 250
+#define LOC_DEFAULT_PROMPT_Y 100
 
 //text stuff
 #define FONT_RES 48
