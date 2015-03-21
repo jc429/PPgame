@@ -49,6 +49,7 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 	}
 	SetText(NULL,t,0);
 	t->donewriting = true;
+	t->msg = NULL;
 }
 
 void DrawTextbox(Textbox *t){
@@ -64,13 +65,16 @@ void CreateMessage(Message *msg, char* text){
 	//msg = new Message;
 	msg->text = text;
 	msg->next = NULL;
+	msg->hasPrompt = 0;
 	msg->prompt = NULL;
 	msg->numFunctions = 0;
-	_MessageStack = &*msg;
+	_MessageStack = msg;
 }
 
 void SetPrompt(Message *msg, MenuType type, Vec2i loc){
+	msg->hasPrompt = 1;
 	msg->prompt = LoadMenu(type,loc);
+	
 }
 
 void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*func3)(), void(*func4)(), void(*func5)(), void(*func6)()){
@@ -87,18 +91,18 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	int ptr = 0;			//what character we're currently drawing up to
 	int offset = 0;			//offset for the lines
 	int i;
-	t->donewriting = false;
+	bool done = false;
 
 	if(scroll){
 		t->cursor = 0;
 	}
 	else{
 		t->cursor = -1;
-	//	t->donewriting = true;
+		done = true;
 	}
 	
 	for(i = 0; i < t->linect; i++){
-		if(t->donewriting){
+		if(done){
 			while(i < t->linect){
 				t->lines[i][0]='\0';
 				i++;
@@ -107,14 +111,14 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		}
 		char *line = t->lines[i];
 		if(text==NULL){
-			t->donewriting = true;
+			done = true;
 			continue;
 		}
 		while(ptr<LINE_LENGTH){
 			if(text[ptr+offset] == '\n')
 				break;
 			if(text[ptr+offset] == '\0'){
-				t->donewriting = true;
+				done = true;
 				break;
 			}
 			line[ptr] = text[ptr+offset];
@@ -129,8 +133,9 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		line[t->linelength] = '\0';
 		memcpy(t->lines[i],line,sizeof(char)*(t->linelength+1));
 	}
-	if((t->donewriting)&&(prompt)){
-		msg->active = true;
+//	if((t->donewriting)&&(prompt))
+	if(prompt){
+		t->msg = msg;
 	}
 }
 
@@ -141,6 +146,17 @@ void DrawText(Textbox *t){
 	if(t->cursor>=0){
 		if(t->cursor < (t->linelength*t->linect)){
 			++t->cursor;
+		}
+		else{
+
+			t->donewriting = true;
+			if(t->msg != NULL)
+				if(t->msg->hasPrompt)
+					if(t->msg->prompt != NULL){
+						SetMessagePrompts(t->msg);
+						t->msg->prompt->active = true;
+					}
+	
 		}
 		for(int i = 0; i < t->linect; i++){
 			if(t->cursor > t->linelength*(i+1)){
@@ -188,4 +204,10 @@ void DrawLine(char *msg,SDL_Rect location){
 	SDL_FreeSurface(temp);
 
 	SDL_DestroyTexture(texture);
+}
+
+void SetMessagePrompts(Message *msg){
+	for (int i = 0; i < msg->numFunctions; i++){ 
+		msg->prompt->items[i]->action = msg->promptFunctions[i] ;
+	}
 }

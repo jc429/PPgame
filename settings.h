@@ -66,6 +66,7 @@
 //Gameplay stuff
 #define INPUTS_HISTORY 60			//number of frames of inputs to save (unused prob)
 #define INPUT_BUFFER 5				//number of frames to buffer a movement input (must be smaller than inputs history)
+#define MAX_MENUS 6
 #define MAX_MENU_ITEMS 12
 #define MAX_PROMPT_CHOICES 6
 #define LOC_DEFAULT_PROMPT_X 250
@@ -92,7 +93,7 @@
 #define PPKEY_UP SDL_SCANCODE_W
 #define PPKEY_DOWN SDL_SCANCODE_S
 #define PPKEY_A SDL_SCANCODE_SPACE
-#define PPKEY_B SDL_SCANCODE_LSHIFT
+#define PPKEY_B SDL_SCANCODE_BACKSPACE
 #define PPKEY_X SDL_SCANCODE_RSHIFT
 #define PPKEY_Y SDL_SCANCODE_RETURN
 #define PPKEY_PAUSE SDL_SCANCODE_P

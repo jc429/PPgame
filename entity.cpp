@@ -50,7 +50,7 @@ void Entity::Talk(Textbox *t){
 }
 
  void InteractableObject::Talk(Textbox *t){
-	 SetText(flavortext->text,t,1);
+	SetText(flavortext->text,t,1,flavortext->hasPrompt,flavortext);
  }
 
 

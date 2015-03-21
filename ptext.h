@@ -12,8 +12,9 @@ typedef struct Textbox_T{
 	int linect;						//the number of lines this specific textbox holds
 	int linelength;					//the number of chars per line this textbox holds (default 40)
 	char *lines[LINE_COUNT];		//The textbox can hold a max of 4 lines of 40 characters each
-	int cursor;			//For drawing text one character at a time - set to -1 to draw all text immediately
+	int cursor;			//For drawing text one character at a time - set to -1 to draw all text 
 	bool donewriting;
+	struct Message_T *msg;
 }Textbox;
 
 typedef enum MenuType{
@@ -40,6 +41,10 @@ typedef struct MenuCursor_T{
 }MenuCursor;
 
 typedef struct Menu_T{
+	bool used;
+
+	bool active;
+
 	MenuType type;
 	SDL_Rect location;
 

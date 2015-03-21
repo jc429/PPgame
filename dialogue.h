@@ -15,9 +15,11 @@ typedef struct Conversation_T{
 
 typedef struct Message_T{
 	char *text;
+	
+	bool hasPrompt;
 	Menu *prompt;
 	int numFunctions;
-	void (*promptFunctions[MAX_PROMPT_CHOICES]);
+	void (*promptFunctions[MAX_PROMPT_CHOICES])();
 	struct Message_T *next;
 
 	bool active;
@@ -40,6 +42,8 @@ void DrawTextbox(Textbox *t);
 void CreateMessage(Message *msg, char* text);
 void SetPrompt(Message *msg, MenuType type, Vec2i loc);
 void SetAnswers(Message *msg, int num,  void(*func1)()=NULL, void(*func2)()=NULL, void(*func3)()=NULL, void(*func4)()=NULL, void(*func5)()=NULL, void(*func6)()=NULL);
+void SetMessagePrompts(Message *msg);
+
 void SetText(char *text, Textbox *t, bool scroll, bool prompt = 0, Message *msg = NULL);
 
 void DrawText(Textbox *t);
@@ -50,5 +54,8 @@ void RenderText();
 static bool _Dialogue;	//are we currently talking?
 
 static Message *_MessageStack;
+static int numMenus;
+
+
 
 #endif

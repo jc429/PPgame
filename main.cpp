@@ -22,7 +22,7 @@ InputNode *_Inputs;
 
 Tile* World[WORLD_W][WORLD_H];
 
-Player *player;
+Player *_Player;
 NPC *NPCList[MAX_NPC];
 
 extern int framecheck;
@@ -31,12 +31,15 @@ extern Textbox mainTextbox; //the main dialogue box for now
 //extern bool dialogue;	//are we currently talking?
 //extern bool inMenu;		//are we currently in a menu?
 
+Menu _MenuStack[MAX_MENUS];
+
+
 Menu *testMenu;
 
-Menu *currentMenu;
 
 int main (int argc, char* argv[]){
 	done = 0;
+
 	InitGame();
 
 	do{
@@ -72,6 +75,7 @@ void InitGame(){
 	InitMusicList();
 	InitSoundList();
 
+	numMenus = 0;
 /////////////////////
 
 	Sprite *mainTextSpr = LoadSprite("sprites/textbox.png",320,80,1);
@@ -85,11 +89,8 @@ void InitGame(){
 		InitWorld();
 
 	Vec2i menuloc = {250,10};
-	testMenu = OpenMenuYesNo(menuloc,CancelMenu,CancelMenu);
-	Animation *cursorAnim = LoadAnimation(LoadSprite("sprites/menucursor.png",32,16,1),0,0,2,1,1);
-	testMenu->cursor.anim = cursorAnim;
-	currentMenu = testMenu;
-	_InMenu = true;
+//	testMenu = OpenMenuYesNo(menuloc,CancelMenu,CancelMenu);
+
 
 /*
 	Entity *e = NewEntity();
@@ -124,8 +125,8 @@ void InitGame(){
 	//////////////////
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	player = new Player;
-	mainCamera.target = player;
+	_Player = new Player;
+	mainCamera.target = _Player;
 	mainCamera.trackPlayer = true;
 
 	_MessageStack = NULL;
@@ -153,19 +154,28 @@ void PollEvents(){
 	}
 	curInput = PollInputs();
 	InputNode *inputNode = new InputNode;
-	inputNode->prev = player->inputs;
+	inputNode->prev = _Player->inputs;
 	inputNode->input = curInput;
 	_Inputs = inputNode;
-	player->inputs = inputNode;
+	_Player->inputs = inputNode;
 
 	if((inputNode->input&PPINPUT_A)&&!(inputNode->prev->input & PPINPUT_A)){
-		if(World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]!=NULL){
-			if(World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]->contents!=NULL){
-				if(World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]->contents->talks){
-					_Dialogue = Toggle(_Dialogue);
-					player->talking = Toggle(player->talking);
-
-					World[player->tile.x+player->facing.x][player->tile.y+player->facing.y]->contents->Talk(&mainTextbox);
+		if(_Dialogue || _Player->talking){
+			if(mainTextbox.donewriting){
+				_Player->talking = false;
+				_Dialogue = false;
+			}
+		}
+		else{
+			if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]!=NULL){
+				if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents!=NULL){
+					if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->talks){
+						if(!_Player->talking && !_Dialogue){
+							_Dialogue = true;
+							_Player->talking = true;
+							World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->Talk(&mainTextbox);
+						}
+					}
 				}
 			}
 		}
@@ -221,15 +231,21 @@ void UpdateGame(){
 		return;
 	switch(_GameState){
 	case OVERWORLD:
-		UpdatePlayer(player);
+		UpdatePlayer(_Player);
 		UpdateCamera(&mainCamera);
 		break;
 	case COMBAT:
 		UpdateCombat();
 		break;
 	}
-	if(currentMenu!=NULL)
-		UpdateMenu(currentMenu);
+
+
+	int i;
+	for(i = MAX_MENUS-1; i >= 0; i--)
+		if(_MenuStack[i].used&&_MenuStack[i].active)	//only update the highest active menu, i.e. the one on top
+			break;
+	if(i>=0)											//dont update a menu that doesn't exist
+		UpdateMenu(&_MenuStack[i]);
 }
 
 //Put the Drawing functions for everything here 
@@ -248,16 +264,18 @@ void DrawGame(){
 	case OVERWORLD:
 	//	DrawWorld();
 		DrawTilesLower();
-		DrawPlayer(player);
+		DrawPlayer(_Player);
 		DrawTilesUpper();
 		DrawOverworldUI();
 		if(_Dialogue)
 			DrawTextbox(&mainTextbox);
-		if(_InMenu)
-			DrawMenu(currentMenu);
-		if(_MessageStack)
-			if(_MessageStack->active)
-				DrawMenu(_MessageStack->prompt);
+//		if(_InMenu)
+
+ 			for(int i = 0; i < MAX_MENUS; i++){
+				if(_MenuStack[i].used)
+					if(_MenuStack[i].active)
+						DrawMenu(&_MenuStack[i]);
+			}
 		break;
 
 	case COMBAT:

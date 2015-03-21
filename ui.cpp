@@ -6,7 +6,8 @@
 Mouse mouse;
 extern Camera uiCamera;
 extern InputNode *_Inputs;
-extern Menu *currentMenu;
+
+extern Menu _MenuStack[MAX_MENUS];
 
 //Updates the mouse state (both buttons act as left for now)
 void UpdateMouse(){
@@ -53,7 +54,7 @@ MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
 
 void FreeMenuItem(MenuItem *m){
 	FreeSprite(m->bgsprite);
-	delete(m->text);
+//	delete(m->text);
 //	delete(m);
 }
 
@@ -62,71 +63,84 @@ void SetMenuItemAction(MenuItem *m, void (*func)() ){
 }
 
 Menu *LoadMenu(MenuType type,Vec2i loc){
-	Menu *m = new Menu;
+	if(numMenus >= MAX_MENUS) 
+		return NULL;
+	int i;
+	for(i = 0; i < MAX_MENUS; i++){
+		if(!_MenuStack[i].used)
+			break;
+		else
+			if(i+1 == MAX_MENUS)
+				return NULL;
+	}
+
+	_MenuStack[i].used = true;
+	_MenuStack[i].active = false;
+
 	Textbox *yes,*no;
 	SDL_Rect itemRect;
-	
-	m->cursor.location = 0;
-	m->location.x = loc.x;
-	m->location.y = loc.y;
+	Animation *cursorAnim = LoadAnimation(LoadSprite("sprites/menucursor.png",32,16,1),0,0,2,1,1);	
+	_MenuStack[i].cursor.anim = cursorAnim;
+	_MenuStack[i].cursor.location = 0;
+	_MenuStack[i].location.x = loc.x;
+	_MenuStack[i].location.y = loc.y;
 
 	switch(type){
 	case MENU_YES_NO:
-		m->location.x = 250;
-		m->location.y = 100;
-		m->numItems = 2;
-		m->itemsPerRow = 1;
-		itemRect.x = m->location.x;
-		itemRect.y = m->location.y;
+		_MenuStack[i].location.x = 250;
+		_MenuStack[i].location.y = 100;
+		_MenuStack[i].numItems = 2;
+		_MenuStack[i].itemsPerRow = 1;
+		itemRect.x = _MenuStack[i].location.x;
+		itemRect.y = _MenuStack[i].location.y;
 		itemRect.w = 30;
 		itemRect.h = 80;
-		m->location = itemRect;
+		_MenuStack[i].location = itemRect;
 		yes = new Textbox;
 		no = new Textbox;
 		LoadTextbox(yes,1,3,NULL,itemRect);
-		m->items[0] = LoadMenuItem(itemRect,NULL,yes,"Yes");
+		_MenuStack[i].items[0] = LoadMenuItem(itemRect,NULL,yes,"Yes");
 		itemRect.y += 14;
 		LoadTextbox(no,1,3,NULL,itemRect);
-		m->items[1] = LoadMenuItem(itemRect,NULL,no,"No");
+		_MenuStack[i].items[1] = LoadMenuItem(itemRect,NULL,no,"No");
 		break;
 	case MENU_DEBUG:
-		m->location.x = 180;
-		m->location.y = 100;
-		m->numItems = 12;
-		m->itemsPerRow = 4;
-		itemRect.x = m->location.x;
-		itemRect.y = m->location.y;
+		_MenuStack[i].location.x = 180;
+		_MenuStack[i].location.y = 100;
+		_MenuStack[i].numItems = 12;
+		_MenuStack[i].itemsPerRow = 4;
+		itemRect.x = _MenuStack[i].location.x;
+		itemRect.y = _MenuStack[i].location.y;
 		itemRect.w = 30;
 		itemRect.h = 80;
-		m->location = itemRect;
-		for(int i = 0; i < 4; i++){
+		_MenuStack[i].location = itemRect;
+		for(int k = 0; k < 4; k++){
 			for(int j = 0; j < 4; j++){
 				yes = new Textbox;
-				itemRect.x = m->location.x + j*30;
-				itemRect.y = m->location.y + i*15;
+				itemRect.x = _MenuStack[i].location.x + j*30;
+				itemRect.y = _MenuStack[i].location.y + k*15;
 				LoadTextbox(yes,1,3,NULL,itemRect);
-				m->items[j + (4*i)] = LoadMenuItem(itemRect,NULL,yes,"Yes");
+				_MenuStack[i].items[j + (4*k)] = LoadMenuItem(itemRect,NULL,yes,"Yes");
 			}
 		}
-		m->cursor.location = 0;
+		_MenuStack[i].cursor.location = 0;
 		break;
 	default:
 		break;
 	}
-	return m;
+	return &_MenuStack[i];
 }
 
 void FreeMenu(Menu *m){
 	for(int i = 0; i < m->numItems; i++){
-		FreeMenuItem(m->items[i]);
+	//	FreeMenuItem(m->items[i]);
 	}
-	delete(m);
+	//m->numItems = 0;
+	//m->active = false;
+	m->used = false;
 }
 
 void UpdateMenu(Menu *m){
-	if((_Inputs->input & PPINPUT_A)&&!(_Inputs->prev->input & PPINPUT_A)){
-		m->items[m->cursor.location]->action();
-	}
 	if(((_Inputs->input&PPINPUT_LEFT)&&!(_Inputs->prev->input & PPINPUT_LEFT))||(InputBuffered(_Inputs,PPINPUT_LEFT,6*INPUT_BUFFER))){
 		DecrementCursor(m);	
 	}
@@ -149,6 +163,14 @@ void UpdateMenu(Menu *m){
 		else
 			m->cursor.location += m->itemsPerRow;
 	}
+	if((_Inputs->input & PPINPUT_B)&&!(_Inputs->prev->input & PPINPUT_B)){
+		if(m->items[m->cursor.location]->action != NULL)
+			m->items[m->cursor.location]->action();
+	}
+}
+
+void ClearMenus(){
+
 }
 
 void DrawMenu(Menu *m){
@@ -184,12 +206,15 @@ Menu *OpenMenuYesNo(Vec2i loc, void (*YesFunc)(),void (*NoFunc)()){
 	Menu *m = LoadMenu(MENU_YES_NO,loc);
 	SetMenuItemAction(m->items[0],YesFunc);
 	SetMenuItemAction(m->items[1],NoFunc);
-	currentMenu = m;
+	//currentMenu = m;
 	return m;
 }
 
 void CancelMenu(){
-	_InMenu = false;
-	FreeMenu(currentMenu);
-	currentMenu = NULL;
+	int i;
+	for(i = MAX_MENUS-1; i >= 0; i--)
+		if(_MenuStack[i].used&&_MenuStack[i].active)
+			break;
+	FreeMenu(&_MenuStack[i]);
+//	_MenuStack[i].used = false;
 }

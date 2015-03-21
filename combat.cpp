@@ -71,7 +71,7 @@ void AdvanceTurnPhase(){
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LoadEnemies(){
-		Vec2i pos = {50,50};
+		Vec2i pos = {150,50};
 	Sprite *bs = LoadSprite("sprites/enemy.png",56,50,1);
 	for(int i = 0; i < MAX_ENEMIES;i++){
 		CombatEnt *ent = new CombatEnt();
@@ -82,8 +82,8 @@ void LoadEnemies(){
 		ent->animation = 0;
 		ent->animlist[ent->numAnims] = LoadAnimation(bs,0,0,1,0,0);
 		ent->numAnims = 1;
-		ent->position.y = pos.y;
-		ent->position.x = 50+(pos.x*i);
+		ent->position.y = (pos.y*i);
+		ent->position.x = 10*i+pos.x;
 		Enemies[i] = ent;
 	}
 }
@@ -106,7 +106,7 @@ void DrawHPBar(CombatEnt *ent){
 }
 
 void LoadAllies(){
-	Vec2i pos = {50,150};
+	Vec2i pos = {50,50};
 	Sprite *bs = LoadSprite("sprites/mad.png",32,32,4);
 	for(int i = 0; i < MAX_PARTY;i++){
 		CombatEnt *ent = new CombatEnt();
@@ -117,8 +117,8 @@ void LoadAllies(){
 		ent->animation = 0;
 		ent->animlist[ent->numAnims] = LoadAnimation(bs,i,i,1,0,0);
 		ent->numAnims = 1;
-		ent->position.y = pos.y;
-		ent->position.x = 50+(pos.x*i);
+		ent->position.y = 20+(pos.y*i);
+		ent->position.x = pos.x;
 		Party[i] = ent;
 	}
 }

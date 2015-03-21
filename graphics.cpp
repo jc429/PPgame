@@ -17,7 +17,7 @@ Camera uiCamera;				//the UI camera
 Camera combatCamera;			//battle camea
 
 extern Tile *World[WORLD_W][WORLD_H];
-extern Player *player;
+extern Player *_Player;
 
 int framecheck;
 
@@ -315,11 +315,11 @@ void DrawWorld(){
 		for(currentLayer = 0; currentLayer < numLayers; currentLayer++){
 			DrawRow(currentRow,currentLayer);
 			if(currentLayer==0){
-				if((!player->tomove.y==1)&&(player->tile.y == currentRow)){
-					DrawPlayer(player);
+				if((!_Player->tomove.y==1)&&(_Player->tile.y == currentRow)){
+					DrawPlayer(_Player);
 				}
-				else if((player->tomove.y==1)&&(player->tile.y+1 == currentRow)){
-					DrawPlayer(player);
+				else if((_Player->tomove.y==1)&&(_Player->tile.y+1 == currentRow)){
+					DrawPlayer(_Player);
 				}
 			}
 		}
