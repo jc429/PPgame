@@ -51,6 +51,7 @@ void DrawLine(char *msg,SDL_Rect location);
 void RenderText();
 
 
+
 static bool _Dialogue;	//are we currently talking?
 
 static Message *_MessageStack;

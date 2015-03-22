@@ -16,6 +16,7 @@ Player::Player(){
 	//Facing
 	facing.x = 0;		//These should never both be zero
 	facing.y = 1;		//Face south to begin i guess
+	direction = ANIM_DIR_S;
 
 	//Movement
 	tomove.x = 0;	
@@ -34,19 +35,36 @@ Player::Player(){
 
 	//Graphics
 	numAnims = 0;
-	animation = 0;
+	animation = ANIM_CHAR_IDLE;
 	for(int i = 0; i < MAX_ANIMS; i++)
-		animlist[i]=NULL;
-	//////////////////////////////////////////////////////////////////
-	Sprite *s = LoadSprite("sprites/mad.png",32,32,4);
-	Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
-	animlist[0] = LoadAnimation(s,0,0,4,1,1);
-	animlist[1] = LoadAnimation(s2,0,0,2,1,0);
+		for(int j = 0; j < NUM_ANIM_DIRS; j++)
+			animlist[i][j]=NULL;
+	////////////////////////////////////////////////////////////////// there has to be a better way to do this
+	Sprite *s = LoadSprite("sprites/player.png",64,64,5);
+	///Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,5,5,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,5,5,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_NE] = LoadAnimation(s,5,5,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_N] = LoadAnimation(s,10,10,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_NW] = LoadAnimation(s,15,15,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_W] = LoadAnimation(s,15,15,1,1,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SW] = LoadAnimation(s,15,15,1,1,1);
+
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_S] = LoadAnimation(s,0,0,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_SE] = LoadAnimation(s,5,5,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_E] = LoadAnimation(s,5,5,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_NE] = LoadAnimation(s,5,5,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_N] = LoadAnimation(s,10,10,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_NW] = LoadAnimation(s,15,15,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_W] = LoadAnimation(s,15,15,4,1,1);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_SW] = LoadAnimation(s,15,15,4,1,1);
+	//animlist[1] = LoadAnimation(s2,0,0,2,1,0);
 
 	numAnims = 2;
 	////////////////////////////////////////////////////////////////////////
-	s_offset.x = animlist[animation]->sprite->w>>1;
-	s_offset.y = animlist[animation]->sprite->h>>1;
+	s_offset.x = animlist[animation][0]->sprite->w>>1;
+	s_offset.y = animlist[animation][0]->sprite->h>>1;
 
 	//Dialogue and misc
 	talking = false;
@@ -61,10 +79,15 @@ Player::Player(){
 
 Player::~Player(){
 	for(int i = 0; i < numAnims; i++){
-		FreeAnimation(animlist[i]);
+		for(int j = 0; j < NUM_ANIM_DIRS; j++)
+			FreeAnimation(animlist[i][j]);
 	}
 }
 
+void Player::Update(){
+
+
+}
 /*
 Player* Player::CreatePlayer(){
 
@@ -128,13 +151,17 @@ void UpdatePlayer(Player *p){
 
 void PlayerMovement(Player *p){
 	if(p->moving){
+		p->animation = ANIM_CHAR_WALK;
 		p->facing = p->tomove;
 		MoveToTile(p,World[p->tile.x][p->tile.y],World[p->tile.x+p->tomove.x][p->tile.y+p->tomove.y]);
 	}
 	else{
+		p->animation = ANIM_CHAR_IDLE;
 		p->tomove.x = 0;
 		p->tomove.y = 0;
-		if(p->inputs->input>>4 > 0){
+		if(p->inputs->input>>4 > 0){	
+			//if any directions are being held, reset our facing to 0,0 (nothing) so we can recalculate it
+			//otherwise just use the previous facing coordinates
 			p->facing.x = 0;
 			p->facing.y = 0;
 		}
@@ -172,11 +199,14 @@ void PlayerMovement(Player *p){
 							p->tomove.y = 1;
 		}
 		if((p->tomove.x!=0)||(p->tomove.y!=0)){
+			p->animation = ANIM_CHAR_WALK;
 			p->moving=true;
 			MoveToTile(p,World[p->tile.x][p->tile.y],World[p->tile.x+p->tomove.x][p->tile.y+p->tomove.y]);
 		}
 	}
-
+	
+	UpdateDirection(p);
+//	fprintf(stdout,"%i\n",p->direction);
 	
 	p->worldposition.x = p->tile.x*TILE_W+p->localposition.x;
 	p->worldposition.y = p->tile.y*TILE_H+p->localposition.y;
@@ -196,61 +226,106 @@ bool InputBuffered (InputNode *input, int button, int buf){
 		return 0;
 }
 
-void MoveToTile(Player *p, Tile *src, Tile *dest){
+void MoveToTile(Character *c, Tile *src, Tile *dest){
 	Vec2i movement;
 	movement.x = 0;
 	movement.y = 0;
 	if(src->position.x < dest->position.x)
-		movement.x = p->movespeed;
+		movement.x = c->movespeed;
 	else if(src->position.x > dest->position.x)
-		movement.x = -p->movespeed;
+		movement.x = -c->movespeed;
 	if(src->position.y < dest->position.y)
-		movement.y = p->movespeed;
+		movement.y = c->movespeed;
 	else if(src->position.y > dest->position.y)
-		movement.y = -p->movespeed;
+		movement.y = -c->movespeed;
 
-	p->localposition = p->localposition + movement;
+	c->localposition = c->localposition + movement;
 
 
-	if((std::abs(p->localposition.x)%TILE_W==0.5*TILE_W)&&(std::abs(p->localposition.y)%TILE_H==0.5*TILE_H)){
-		UpdateTile(p);
-		p->moving = false;
+	if((std::abs(c->localposition.x)%TILE_W==0.5*TILE_W)&&(std::abs(c->localposition.y)%TILE_H==0.5*TILE_H)){
+		UpdateTile(c);
+		c->moving = false;
 	}
 }
 
-void UpdateTile(Player *p){
-	World[p->tile.x][p->tile.y]->free = true;
-	if(p->localposition.x >= TILE_W){
-		p->tile.x++;
-		p->localposition.x -= TILE_W;
+void UpdateTile(Character *c){
+	World[c->tile.x][c->tile.y]->free = true;
+	if(c->localposition.x >= TILE_W){
+		c->tile.x++;
+		c->localposition.x -= TILE_W;
 	}
-	if(p->localposition.x < 0){
-		p->tile.x--;
-		p->localposition.x += TILE_W;
+	if(c->localposition.x < 0){
+		c->tile.x--;
+		c->localposition.x += TILE_W;
 	}
-	if(p->localposition.y >= TILE_H){
-		p->tile.y++;
-		p->localposition.y -= TILE_H;
+	if(c->localposition.y >= TILE_H){
+		c->tile.y++;
+		c->localposition.y -= TILE_H;
 	}
-	if(p->localposition.y < 0){
-		p->tile.y--;
-		p->localposition.y += TILE_H;
+	if(c->localposition.y < 0){
+		c->tile.y--;
+		c->localposition.y += TILE_H;
 	}
-	World[p->tile.x][p->tile.y]->free = false;
+	World[c->tile.x][c->tile.y]->free = false;
 	if(DEBUG)
-		std::cout<<p->tile.x<<", "<<p->tile.y<<std::endl;
+		std::cout<<c->tile.x<<", "<<c->tile.y<<std::endl;
 }
 
 void DrawPlayer(Player *p){
 
-	if(DEBUG){
+	if(DEBUG_DRAW_RECTS){
 		DrawTile(p->tile);
 		DrawCursor(p->tile+p->facing);
 	}
 	if(p->animation < 0)
-		p->animation = 0;
+		p->animation = (CharAnim)0;
 	if(p->animation+1 > p->numAnims)
-		p->animation = p->numAnims-1;
-	DrawAnimation(p->animlist[p->animation],p->worldposition-p->s_offset,&mainCamera);
-//	p->frame = DrawSprite(p->sprite,p->frame,p->worldposition-p->s_offset,&mainCamera);
+		p->animation =  (CharAnim)(p->numAnims-1);
+
+	DrawAnimation(p->animlist[p->animation][p->direction],p->worldposition-p->s_offset,&mainCamera);
+
+}
+
+void UpdateDirection(Character *c){
+	switch(c->facing.x){
+	case 0:
+		switch(c->facing.y){
+		case 0:
+			c->direction = ANIM_DIR_S;
+			break;
+		case 1:
+			c->direction = ANIM_DIR_S;
+			break;
+		case -1:
+			c->direction = ANIM_DIR_N;
+			break;
+		}
+		break;
+	case 1:
+		switch(c->facing.y){
+		case 0:
+			c->direction = ANIM_DIR_E;
+			break;
+		case 1:
+			c->direction = ANIM_DIR_SE;
+			break;
+		case -1:
+			c->direction = ANIM_DIR_NE;
+			break;
+		}
+		break;
+	case -1:
+		switch(c->facing.y){
+		case 0:
+			c->direction = ANIM_DIR_W;
+			break;
+		case 1:
+			c->direction = ANIM_DIR_SW;
+			break;
+		case -1:
+			c->direction = ANIM_DIR_NW;
+			break;
+		}
+		break;
+	}
 }

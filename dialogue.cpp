@@ -48,7 +48,7 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 		t->lines[i][0] = '\0';
 	}
 	SetText(NULL,t,0);
-	t->donewriting = true;
+	t->donewriting = false;
 	t->msg = NULL;
 }
 
@@ -68,7 +68,7 @@ void CreateMessage(Message *msg, char* text){
 	msg->hasPrompt = 0;
 	msg->prompt = NULL;
 	msg->numFunctions = 0;
-	_MessageStack = msg;
+//	_MessageStack = msg;
 }
 
 void SetPrompt(Message *msg, MenuType type, Vec2i loc){
@@ -98,7 +98,7 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	}
 	else{
 		t->cursor = -1;
-		done = true;
+	//	done = true;
 	}
 	
 	for(i = 0; i < t->linect; i++){
@@ -134,38 +134,53 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		memcpy(t->lines[i],line,sizeof(char)*(t->linelength+1));
 	}
 //	if((t->donewriting)&&(prompt))
-	if(prompt){
+	//if(prompt){
 		t->msg = msg;
-	}
+	//}
+	t->donewriting = false;
 }
 
 void DrawText(Textbox *t){
 	SDL_Rect temp = {t->box.x,2+t->box.y,t->box.w,(int)(t->box.h*0.2)};
+	if(t->linect == 1){
+		temp.h = t->box.h;
+	}
 
+	if(t->donewriting == true){
+		if(t->msg != NULL)
+			if(t->msg->hasPrompt)
+				if(t->msg->prompt != NULL){
+					SetMessagePrompts(t->msg);
+					t->msg->prompt->active = true;
+				}
+	}
 
-	if(t->cursor>=0){
-		if(t->cursor < (t->linelength*t->linect)){
-			++t->cursor;
-		}
-		else{
-
-			t->donewriting = true;
-			if(t->msg != NULL)
-				if(t->msg->hasPrompt)
-					if(t->msg->prompt != NULL){
-						SetMessagePrompts(t->msg);
-						t->msg->prompt->active = true;
-					}
+	if((t->cursor>=0)&&(t->cursor + 1 < (t->linelength*t->linect))){
 	
-		}
+		++t->cursor;		
+		
+
 		for(int i = 0; i < t->linect; i++){
+			char *line = (char*)malloc(sizeof(char)*(t->linelength+1));
+			memcpy(line,t->lines[i],sizeof(char)*(t->linelength+1));
+
+			
+		
 			if(t->cursor > t->linelength*(i+1)){
 				DrawLine(t->lines[i],temp);
 				temp.y += 2+temp.h;
 			}
 			else{
-				char *line = (char*)malloc(sizeof(char)*(t->linelength+1));
-				memcpy(line,t->lines[i],sizeof(char)*(t->linelength+1));
+				
+				while((line[t->cursor - (t->linelength*i)] == ' ')||(line[t->cursor - (t->linelength*i)] == '\0')){
+					//fprintf(stdout,"Space at %i\n",t->cursor);
+					++t->cursor;
+				}
+				if(t->cursor >= (t->linelength*t->linect)){		
+					t->donewriting = true;
+				//	break;
+				}
+
 				for(int j = (t->cursor - (t->linelength*i)); j < t->linelength; j++){
 					if(j<0) 
 						j = 0;
@@ -184,6 +199,7 @@ void DrawText(Textbox *t){
 			DrawLine(t->lines[i],temp);
 			temp.y += 2+temp.h;
 		}
+		t->donewriting = true;
 	}
 }
 
@@ -198,7 +214,7 @@ void DrawLine(char *msg,SDL_Rect location){
 
 	SDL_RenderCopy(mainRenderer,texture,NULL,&targetarea);
 
-//	if(DEBUG)
+//	if(DEBUG_DRAW_RECTS)
 //		SDL_RenderDrawRect(mainRenderer, &targetarea);
 
 	SDL_FreeSurface(temp);
@@ -209,5 +225,12 @@ void DrawLine(char *msg,SDL_Rect location){
 void SetMessagePrompts(Message *msg){
 	for (int i = 0; i < msg->numFunctions; i++){ 
 		msg->prompt->items[i]->action = msg->promptFunctions[i] ;
+	}
+}
+
+void AdvanceText(){
+	if(mainTextbox.msg->next != NULL){
+		mainTextbox.msg = mainTextbox.msg->next;
+		SetText(mainTextbox.msg->text,&mainTextbox,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
 	}
 }

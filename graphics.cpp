@@ -248,9 +248,11 @@ void AdvanceAnimFrame(Animation *a){
 	if(a->playing==0) return;
 	if(a->looping!=0){
 		a->curFrame++;
-		a->curFrame = a->curFrame%a->length;
+		if(a->curFrame >= (a->seed + a->length))
+			a->curFrame -= a->length;
+//		a->curFrame = (a->curFrame%a->length)+a->seed;
 	}else{
-		if(a->curFrame+1 < a->length)
+		if(a->curFrame+1 < (a->length+a->seed))
 			a->curFrame++;
 	}
 }
@@ -366,7 +368,7 @@ void DrawTilesLower(){
 					World[i][j]->lowerframe = DrawSprite(World[i][j]->lowerspr,World[i][j]->lowerframe,loc,&mainCamera);
 					if(World[i][j]->contents!=NULL){
 						Entity *contents = World[i][j]->contents;
-						DrawAnimation(contents->animlist[contents->animation],contents->worldposition-contents->s_offset,&mainCamera);
+						DrawAnimation(contents->animlist[contents->animation][contents->direction],contents->worldposition-contents->s_offset,&mainCamera);
 					}
 				}
 			}

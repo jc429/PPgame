@@ -1,4 +1,5 @@
 #include "pmath.h"
+#include <random>
 
 //Checks if a point is within a Rectangle (excluding touching edges)
 inline bool PointInRect(int x, int y, SDL_Rect rect){
@@ -34,6 +35,25 @@ inline bool RectFullyInRect(SDL_Rect a, SDL_Rect b){
 inline bool RectInRect(SDL_Rect a, SDL_Rect b){
 	return ((a.x>=b.x)&&((a.x+a.w)<=(b.x+b.w))&&
 			(a.y>=b.y)&&((a.y+a.h)<=(b.y+b.h)));
+}
+
+
+int RandomInt(int min, int max){ //returns a random integer, from min to max (non-inclusive)
+	double r;		// a decimal between 0 and 1
+	int range;		//the range between the two numbers
+	int random;		//our random number
+
+	range = (max) - min;
+
+	r = ((double) rand() / (RAND_MAX));
+
+	random = (r * range) + min;
+
+	return random; 
+}
+
+int RandomIntInclusive(int min, int max){//returns a random integer, from min to max (inclusive)
+	return RandomInt(min, max+1);
 }
 
 bool Toggle(bool b){

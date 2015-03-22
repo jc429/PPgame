@@ -6,6 +6,23 @@
 #include "sprites.h"
 #include "dialogue.h"
 
+#define NUM_ANIM_DIRS 8
+
+typedef enum AnimDir{
+	ANIM_DIR_S = 0,
+	ANIM_DIR_SW = 1,
+	ANIM_DIR_W = 2,
+	ANIM_DIR_NW = 3,
+	ANIM_DIR_N = 4,
+	ANIM_DIR_NE = 5,
+	ANIM_DIR_E = 6,
+	ANIM_DIR_SE = 7,
+};
+
+typedef enum EntAnim{
+	ANIM_ENT_DEFAULT = 0,
+};
+
 typedef enum EntType{
 	Ent_Player,
 	Ent_NPC,
@@ -34,14 +51,17 @@ public:
 	
 	//graphics stuff
 	Vec2i s_offset;	
-	Animation *animlist[MAX_ANIMS]; //all animations this entity can have
-	int animation;					//current animation
+	Animation *animlist[MAX_ANIMS][NUM_ANIM_DIRS]; //all animations this entity can have
+	AnimDir direction;				//direction facing (default: south)
+	int animation;				//current animation
 	int numAnims;					//number of animations this entity is currently using
 
 	bool talks;
 	bool passable;
 
+	virtual void Update();
 	virtual void Talk(Textbox *t);
+
 };
 
 class InteractableObject: public Entity{
@@ -49,7 +69,8 @@ public:
 	Message *flavortext;
 //	char* flavortext;
 
-	 void Talk(Textbox *t);
+	void Update();
+	void Talk(Textbox *t);
 
 	InteractableObject(int xpos, int ypos);
 	~InteractableObject();
@@ -62,5 +83,6 @@ Entity* NewEntity();
 void FreeEntity();
 void ClearEntList();
 
+void AddToWorld(Entity *e, int xpos, int ypos);
 
 #endif

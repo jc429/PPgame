@@ -1,4 +1,5 @@
 #include "main.h"
+//#include <vector>
 
 
 void InitGame();
@@ -32,7 +33,7 @@ extern Textbox mainTextbox; //the main dialogue box for now
 //extern bool inMenu;		//are we currently in a menu?
 
 Menu _MenuStack[MAX_MENUS];
-
+//std::vector<Menu_T> MenuStack;
 
 Menu *testMenu;
 
@@ -98,22 +99,43 @@ void InitGame(){
 	World[5][5]->contents = e;
 	*/
 	InteractableObject *sign = new InteractableObject(5,5);
-	InteractableObject *sign2 = new InteractableObject(11,3);
 	sign->flavortext = new Message;
-	sign->flavortext->text = "Hey there I'm a shitty sign!                Smoke weed every day";
+	sign->flavortext->text = "Hey there I'm a shitty sign!                                                                Smoke weed every day             aeiou aeiou aeiou aeiou aeiou";
+	sign->flavortext->next = new Message;
+	CreateMessage(sign->flavortext->next, "Only losers read the back of the sign.");
+	sign->flavortext->next->next = new Message;
+	CreateMessage(sign->flavortext->next->next, ".... Loser.");
+
+	Message *massage = new Message;
+	CreateMessage(massage, "Ball...");
+	massage->next = new Message;
+	CreateMessage(massage->next, "...is life.");
+
+	NPC *npc = new NPC(2,6);
+	NPC *npc2 = new NPC(4,8);
 	
+	GiveNPCMessage(npc,massage);
+
+	massage = new Message;
+	CreateMessage(massage, "Life...");
+	massage->next = new Message;
+	CreateMessage(massage->next, "...is ball.");
+
+	GiveNPCMessage(npc2,massage);
+
 	Vec2i promptloc;
 	promptloc.x = LOC_DEFAULT_PROMPT_X;
 	promptloc.y = LOC_DEFAULT_PROMPT_Y;
 
-	CreateMessage(sign2->flavortext,"Where are you from?");
-	SetPrompt(sign2->flavortext,MENU_YES_NO,promptloc);
-	SetAnswers(sign2->flavortext,2,CancelMenu,CancelMenu);
+
 	
-	World[11][3]->contents = sign2;
-	World[11][3]->free = sign2->passable;
-	World[5][5]->contents = sign;
-	World[5][5]->free = sign->passable;
+	InteractableObject *sign2 = new InteractableObject(8,3);
+	CreateMessage(sign2->flavortext,"Where are you from?");
+	sign2->flavortext->next = new Message;
+	CreateMessage(sign2->flavortext->next,"You're from....yes?                      That's nonsense.");
+	SetPrompt(sign2->flavortext,MENU_YES_NO,promptloc);
+	SetAnswers(sign2->flavortext,2,AdvanceAndCancel,CancelMenu);
+
 
 	LoadCombatBG();
 	
@@ -159,11 +181,22 @@ void PollEvents(){
 	_Inputs = inputNode;
 	_Player->inputs = inputNode;
 
-	if((inputNode->input&PPINPUT_A)&&!(inputNode->prev->input & PPINPUT_A)){
+	if((inputNode->input & PPINPUT_A)&&!(inputNode->prev->input & PPINPUT_A)){
 		if(_Dialogue || _Player->talking){
 			if(mainTextbox.donewriting){
-				_Player->talking = false;
-				_Dialogue = false;
+				if(mainTextbox.msg){
+					if(!mainTextbox.msg->next){
+						_Player->talking = false;
+						_Dialogue = false;
+					}else{
+					//	if(!mainTextbox.msg->hasPrompt){
+							AdvanceText();
+						//}
+					}
+				}else{
+					_Player->talking = false;
+					_Dialogue = false;
+				}
 			}
 		}
 		else{

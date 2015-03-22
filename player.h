@@ -8,6 +8,11 @@
 #include "tile.h"
 #include "entity.h"
 
+typedef enum CharAnim{
+	ANIM_CHAR_IDLE = 0,
+	ANIM_CHAR_WALK = 1,
+};
+
 class Character: public Entity{
 public:
 	//world position and movement stuff
@@ -15,6 +20,9 @@ public:
 	Vec2i tomove;			//where we're moving, in tiles
 	int movespeed;
 	bool moving;
+
+	//animation stuff 
+//	CharAnim animation;
 
 	//conversation stuff
 	bool talking;
@@ -31,14 +39,22 @@ public:
 	Player();
 	~Player();
 
-	
+	void Update();
 };
 
 
 class NPC: public Character{
-	
 public:
-	NPC *CreateNPC();
+	bool rotates; //does this NPC turn when they speak?
+	Message *msg;	//any dialogue they have gets stored here 
+	int actiontimer;	//counts down to 0 then does an something (maybe) 
+
+
+	NPC (int xpos, int ypos);
+	~NPC();
+
+	void Update();
+	void Talk(Textbox *t);
 };
 
 /*   keeping for reference 
@@ -73,9 +89,12 @@ void DrawPlayer(Player *p);
 
 void PlayerMovement(Player *p);
 bool InputBuffered (InputNode *input, int button, int buf);
-void MoveToTile(Player *p, Tile *src, Tile *dest);
-void UpdateTile(Player *p);
 
 
+void MoveToTile(Character *c, Tile *src, Tile *dest);
+void UpdateTile(Character *c);
+void UpdateDirection(Character *c);
+
+void GiveNPCMessage(NPC *npc, Message *msg);
 
 #endif

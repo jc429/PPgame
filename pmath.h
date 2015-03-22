@@ -60,6 +60,10 @@ inline bool RectOverlap(SDL_Rect a, SDL_Rect b);
 bool RectTouch(SDL_Rect a, SDL_Rect b);
 inline bool RectFullyInRect(SDL_Rect a, SDL_Rect b);
 inline bool RectInRect(SDL_Rect a, SDL_Rect b);
+
+int RandomInt(int min, int max);
+int RandomIntInclusive(int min, int max);
+
 bool Toggle(bool b);
 
 #endif
