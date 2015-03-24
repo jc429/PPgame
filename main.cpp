@@ -38,6 +38,8 @@ Menu _MenuStack[MAX_MENUS];
 Menu *testMenu;
 
 
+bool _Dialogue;	//are we currently talking?
+
 int main (int argc, char* argv[]){
 	done = 0;
 
@@ -79,62 +81,23 @@ void InitGame(){
 	numMenus = 0;
 /////////////////////
 
-	Sprite *mainTextSpr = LoadSprite("sprites/textbox.png",320,80,1);
-	InitMainTextbox(&mainTextbox,4,40,mainTextSpr);
+	InitMainTextbox(&mainTextbox,4,40,LoadSprite("sprites/textbox.png",320,80,1));
 
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//test stuff feel free to remove
+	//test stuff goes between the squiggles
+	
+//	char *yamlpath = "cfg/test.yaml";
+//	TestFile(yamlpath);
+
+//	What(); fuck libyaml
+
+
 	char *lvpath = "cfg/test.txt";
 	Level *level = new Level;
 	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
 		InitWorld();
 
-	Vec2i menuloc = {250,10};
-//	testMenu = OpenMenuYesNo(menuloc,CancelMenu,CancelMenu);
-
-
-/*
-	Entity *e = NewEntity();
-	e->talks = 1;
-	World[5][5]->contents = e;
-	*/
-	InteractableObject *sign = new InteractableObject(5,5);
-	sign->flavortext = new Message;
-	sign->flavortext->text = "Hey there I'm a shitty sign!                                                                Smoke weed every day             aeiou aeiou aeiou aeiou aeiou";
-	sign->flavortext->next = new Message;
-	CreateMessage(sign->flavortext->next, "Only losers read the back of the sign.");
-	sign->flavortext->next->next = new Message;
-	CreateMessage(sign->flavortext->next->next, ".... Loser.");
-
-	Message *massage = new Message;
-	CreateMessage(massage, "Ball...");
-	massage->next = new Message;
-	CreateMessage(massage->next, "...is life.");
-
-	NPC *npc = new NPC(2,6);
-	NPC *npc2 = new NPC(4,8);
-	
-	GiveNPCMessage(npc,massage);
-
-	massage = new Message;
-	CreateMessage(massage, "Life...");
-	massage->next = new Message;
-	CreateMessage(massage->next, "...is ball.");
-
-	GiveNPCMessage(npc2,massage);
-
-	Vec2i promptloc;
-	promptloc.x = LOC_DEFAULT_PROMPT_X;
-	promptloc.y = LOC_DEFAULT_PROMPT_Y;
-
-
-	
-	InteractableObject *sign2 = new InteractableObject(8,3);
-	CreateMessage(sign2->flavortext,"Where are you from?");
-	sign2->flavortext->next = new Message;
-	CreateMessage(sign2->flavortext->next,"You're from....yes?                      That's nonsense.");
-	SetPrompt(sign2->flavortext,MENU_YES_NO,promptloc);
-	SetAnswers(sign2->flavortext,2,AdvanceAndCancel,CancelMenu);
+	LoadDialogue();
 
 
 	LoadCombatBG();
@@ -144,7 +107,6 @@ void InitGame(){
 	//PlayMusic(m);
 	//PlaySound(s);
 
-	//////////////////
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	_Player = new Player;
@@ -179,40 +141,10 @@ void PollEvents(){
 	inputNode->prev = _Player->inputs;
 	inputNode->input = curInput;
 	_Inputs = inputNode;
-	_Player->inputs = inputNode;
+		
+	DeleteInputNode(inputNode, INPUTS_HISTORY);
 
-	if((inputNode->input & PPINPUT_A)&&!(inputNode->prev->input & PPINPUT_A)){
-		if(_Dialogue || _Player->talking){
-			if(mainTextbox.donewriting){
-				if(mainTextbox.msg){
-					if(!mainTextbox.msg->next){
-						_Player->talking = false;
-						_Dialogue = false;
-					}else{
-					//	if(!mainTextbox.msg->hasPrompt){
-							AdvanceText();
-						//}
-					}
-				}else{
-					_Player->talking = false;
-					_Dialogue = false;
-				}
-			}
-		}
-		else{
-			if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]!=NULL){
-				if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents!=NULL){
-					if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->talks){
-						if(!_Player->talking && !_Dialogue){
-							_Dialogue = true;
-							_Player->talking = true;
-							World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->Talk(&mainTextbox);
-						}
-					}
-				}
-			}
-		}
-	}
+	
 }
 
 Uint8 PollInputs(){

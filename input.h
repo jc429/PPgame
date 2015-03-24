@@ -6,4 +6,7 @@ struct InputNode {
   InputNode *prev;
 };
 
+void DeleteInputNode(InputNode *node,int steps);
+
+
 #endif

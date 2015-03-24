@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "dialogue.h"
 #include "graphics.h"
+#include "input.h"
 
 //bool inMenu;		//are we currently in a menu?
 Mouse mouse;
@@ -38,6 +39,14 @@ void UpdateInput(Input *input, bool current){
 }
 
 
+void DeleteInputNode(InputNode *node,int steps){
+	if(steps <= 0)
+		delete(node);
+	else{
+		if(node->prev != NULL)
+			DeleteInputNode(node->prev, steps-1);
+	}
+}
 
 
 

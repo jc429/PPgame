@@ -50,9 +50,9 @@ void DrawText(Textbox *t);
 void DrawLine(char *msg,SDL_Rect location);
 void RenderText();
 
+void LoadDialogue();
 
 
-static bool _Dialogue;	//are we currently talking?
 
 static Message *_MessageStack;
 static int numMenus;

@@ -26,7 +26,12 @@ void InitCombat(){
 	Sprite *ctspr = LoadSprite("sprites/combox.png",320,40,1);
 	InitMainTextbox(&combatTextbox,2,40,ctspr);
 
-	SetText("Smoke 420 weed blaze it 6969 xxDeviant_FishXxxX Theresa Smells",&combatTextbox,0);
+	Message *combatmsg = new Message;
+	CreateMessage(combatmsg,"Welcome to battle mode");
+	SetText(combatmsg->text,&combatTextbox,0);
+
+	Vec2i loc = {0,0};
+//	LoadMenu(MENU_BATTLE,loc);
 }
 
 void EnterCombat(){

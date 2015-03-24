@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "ui.h"
 #include "pmath.h"
+#include "pfile.h"
 #include "player.h"
 #include "camera.h"
 #include "tile.h"

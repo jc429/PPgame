@@ -4,7 +4,10 @@
 
 extern Tile *World[WORLD_W][WORLD_H];
 extern Camera mainCamera;
-
+extern Player *_Player;
+extern Textbox mainTextbox; //the main dialogue box for now
+extern InputNode *_Inputs;
+extern bool _Dialogue;	//are we currently talking?
 
 Player::Player(){
 	
@@ -88,62 +91,43 @@ void Player::Update(){
 
 
 }
-/*
-Player* Player::CreatePlayer(){
 
-
-	//Inputs
-	p->inputs = new InputNode;
-	p->inputs->input = 00000000;
-	p->inputs->prev = NULL;
-
-	//Facing
-	p->facing.x = 0;		//These should never both be zero
-	p->facing.y = 1;		//Face south to begin i guess
-
-	//Movement
-	p->tomove.x = 0;	
-	p->tomove.y = 0;
-	p->moving = false;
-	//Speeds and stuff
-	p->movespeed = 2;
-	
-	//Position
-	p->tile.x = 1;
-	p->tile.y = 3;
-	p->localposition.x = TILE_W>>1;
-	p->localposition.y = TILE_H>>1;
-
-	//Graphics
-	p->numAnims = 0;
-	p->animation = 0;
-	for(int i = 0; i < MAX_ANIMS; i++)
-		p->animlist[i]=NULL;
-	//////////////////////////////////////////////////////////////////
-	Sprite *s = LoadSprite("sprites/mad.png",32,32,4);
-	Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
-	p->animlist[0] = LoadAnimation(s,0,0,4,1,1);
-	p->animlist[1] = LoadAnimation(s2,0,0,2,1,0);
-
-	p->numAnims = 2;
-	////////////////////////////////////////////////////////////////////////
-	p->s_offset.x = p->animlist[p->animation]->sprite->w>>1;
-	p->s_offset.y = p->animlist[p->animation]->sprite->h>>1;
-
-
-	//Dialogue and misc
-	p->talking = false;
-	p->type = Ent_Player;
-
-	//get us started on a tile
-	UpdateTile(p);
-	if(DEBUG)
-		fprintf(stdout,"Starting on %i %i \n",p->localposition.x,p->localposition.y);
-	return p;
-}*/
 
 void UpdatePlayer(Player *p){
-//	p->animlist[p->animation]->mirror.x = p->facing.x;
+	p->inputs = _Inputs;
+	if((p->inputs->input & PPINPUT_A)&&!(p->inputs->prev->input & PPINPUT_A)){
+		if(_Dialogue || _Player->talking){
+			if(mainTextbox.donewriting){
+				if(mainTextbox.msg){
+					if(!mainTextbox.msg->next){
+						_Player->talking = false;
+						_Dialogue = false;
+					}else{
+						if(!mainTextbox.msg->hasPrompt){
+							AdvanceText();
+						}
+					}
+				}else{
+					_Player->talking = false;
+					_Dialogue = false;
+				}
+			}
+		}
+		else{
+			if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]!=NULL){
+				if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents!=NULL){
+					if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->talks){
+						if(!_Player->talking && !_Dialogue){
+							_Dialogue = true;
+							_Player->talking = true;
+							World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->Talk(&mainTextbox);
+						}
+					}
+				}
+			}
+		}
+	}
+
 
 	if((!p->talking)&&(!p->movelock))
 		PlayerMovement(p);

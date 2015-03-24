@@ -50,7 +50,7 @@
 #define FRAMESPERDRAW	15				//how many game frames to wait before updating player animations (for smooth movement but less sprites needed)
 
 //Gameplay stuff
-#define INPUTS_HISTORY 60			//number of frames of inputs to save (unused prob)
+#define INPUTS_HISTORY 10			//number of frames of inputs to save (unused prob)
 #define INPUT_BUFFER 5				//number of frames to buffer a movement input (must be smaller than inputs history)
 #define MAX_MENUS 6
 #define MAX_MENU_ITEMS 12

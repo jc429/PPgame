@@ -188,6 +188,7 @@ void DrawText(Textbox *t){
 						break;
 					}else
 						line[j] = ' ';
+					//line[(t->cursor - (t->linelength*i))] = '@';
 				}
  				DrawLine(line,temp);
 				temp.y += 2+temp.h;
@@ -233,4 +234,57 @@ void AdvanceText(){
 		mainTextbox.msg = mainTextbox.msg->next;
 		SetText(mainTextbox.msg->text,&mainTextbox,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
 	}
+}
+
+void LoadDialogue(){		//I don't like loading all of the possible dialogue on the map at once, I want to replace this
+
+	
+
+	Vec2i promptloc;
+	promptloc.x = LOC_DEFAULT_PROMPT_X;
+	promptloc.y = LOC_DEFAULT_PROMPT_Y;
+
+	InteractableObject *sign = new InteractableObject(5,5);
+	sign->flavortext = new Message;
+	CreateMessage(sign->flavortext,"Hey there I'm a shitty sign!                                                                Smoke weed every day             aeiou aeiou aeiou aeiou aeiou");
+	sign->flavortext->next = new Message;
+	CreateMessage(sign->flavortext->next, "Only losers read the back of the sign.");
+	sign->flavortext->next->next = new Message;
+	CreateMessage(sign->flavortext->next->next, ".... Loser.");
+
+	Message *massage = new Message;
+	CreateMessage(massage, "Ball...");
+	massage->next = new Message;
+	CreateMessage(massage->next, "...is life.");
+
+	NPC *npc = new NPC(2,6);
+	NPC *npc2 = new NPC(4,8);
+	NPC *npc3 = new NPC(9,8);
+	
+	GiveNPCMessage(npc,massage);
+
+	massage = new Message;
+	CreateMessage(massage, "Life...");
+	massage->next = new Message;
+	CreateMessage(massage->next, "...is ball.");
+
+	GiveNPCMessage(npc2,massage);
+
+	massage = new Message;
+	CreateMessage(massage,"Where are you from?");
+	massage->next = new Message;
+	CreateMessage(massage->next,"...What kind of answer is that!?");
+	SetPrompt(massage,MENU_YES_NO,promptloc);
+	SetAnswers(massage,2,AdvanceAndCancel,CancelMenu);
+
+	GiveNPCMessage(npc3,massage);
+
+	
+	InteractableObject *sign2 = new InteractableObject(8,3);
+	CreateMessage(sign2->flavortext,"Am I... A sign?");
+	sign2->flavortext->next = new Message;
+	CreateMessage(sign2->flavortext->next,"...What the hell!?");
+	SetPrompt(sign2->flavortext,MENU_YES_NO,promptloc);
+	SetAnswers(sign2->flavortext,2,AdvanceAndCancel,CancelMenu);
+
 }

@@ -51,6 +51,8 @@ Menu *LoadMenu(MenuType type,Vec2i loc){
 	_MenuStack[i].cursor.location = 0;
 	_MenuStack[i].location.x = loc.x;
 	_MenuStack[i].location.y = loc.y;
+	
+	bg = LoadSprite("sprites/menubg.png",32,16,1);
 
 	switch(type){
 	case MENU_YES_NO:
@@ -65,12 +67,38 @@ Menu *LoadMenu(MenuType type,Vec2i loc){
 		_MenuStack[i].location = itemRect;
 		yes = new Textbox;
 		no = new Textbox;
-		bg = LoadSprite("sprites/menubg.png",32,16,1);
 		LoadTextbox(yes,1,3,NULL,itemRect);
 		_MenuStack[i].items[0] = LoadMenuItem(itemRect,bg,yes,"Yes");
-		itemRect.y += 24;
+		itemRect.y += 18;
 		LoadTextbox(no,1,3,NULL,itemRect);
 		_MenuStack[i].items[1] = LoadMenuItem(itemRect,bg,no,"No");
+		break;
+	case MENU_BATTLE:
+		_MenuStack[i].location.x = 170;
+		_MenuStack[i].location.y = 120;
+		_MenuStack[i].numItems = 4;
+		_MenuStack[i].itemsPerRow = 2;
+		itemRect.x = _MenuStack[i].location.x;
+		itemRect.y = _MenuStack[i].location.y;
+		itemRect.w = 60;
+		itemRect.h = 16;
+		yes = new Textbox;
+		bg = LoadSprite("sprites/battlemenubg.png",64,16,1);
+		char* menulist[4];
+		menulist[0] = "Attack";
+		menulist[1] = "Item";
+		menulist[2] = "Cry";
+		menulist[3] = "Flee";
+		for(int k = 0; k < 2; k++){
+			for(int j = 0; j < 2; j++){
+				yes = new Textbox;
+				itemRect.x = _MenuStack[i].location.x + j*65;
+				itemRect.y = _MenuStack[i].location.y + k*17;
+				LoadTextbox(yes,1,6,NULL,itemRect);
+				_MenuStack[i].items[j + (2*k)] = LoadMenuItem(itemRect,bg,yes,menulist[j + (2*k)]);
+			}
+		}
+		
 		break;
 	case MENU_DEBUG:
 		_MenuStack[i].location.x = 180;
