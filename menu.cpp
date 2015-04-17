@@ -3,17 +3,20 @@
 #include "graphics.h"
 
 extern Camera uiCamera;
-extern Menu _MenuStack[MAX_MENUS];
 extern InputNode *_Inputs;
+Menu *_CurrentMenu;
+vector<struct Menu_T*> _MenuStack;
+extern vector<struct Menu_T*> _CombatMenuStack;
 
 MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
-	MenuItem * m = new MenuItem();
+	MenuItem *m = new MenuItem;
 	m->bounds.x = box.x;
 	m->bounds.y = box.y;
 	m->bounds.w = box.w;
 	m->bounds.h = box.h;
 	m->bgsprite = spr;
 	m->text = t;
+	m->text->box.y -= 6;
 	SetText(text,m->text,0);
 	return m;
 }
@@ -24,66 +27,99 @@ void FreeMenuItem(MenuItem *m){
 //	delete(m);
 }
 
-void SetMenuItemAction(MenuItem *m, void (*func)() ){
+void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
 	m->action = func;
+	if(name)
+		strcpy(m->text->lines[0],name);
 }
 
-Menu *LoadMenu(MenuType type,Vec2i loc){
-	if(numMenus >= MAX_MENUS) 
-		return NULL;
-	int i;
-	for(i = 0; i < MAX_MENUS; i++){
-		if(!_MenuStack[i].used)
-			break;
-		else
-			if(i+1 == MAX_MENUS)
-				return NULL;
+Menu *LoadMenu(MenuType type,Vec2i *loc){
+	Menu *m = new Menu();
+	Textbox *textboxes[8];
+	for(int i = 0; i < 8; i++){
+		textboxes[i] = NULL;
 	}
 
-	_MenuStack[i].used = true;
-	_MenuStack[i].active = false;
-
-	Textbox *yes,*no;
-	Sprite *bg;
+	Sprite *bg = NULL;
 	SDL_Rect itemRect;
-	Animation *cursorAnim = LoadAnimation(LoadSprite("sprites/menucursor.png",32,16,1),0,0,2,1,1);	
-	_MenuStack[i].cursor.anim = cursorAnim;
-	_MenuStack[i].cursor.location = 0;
-	_MenuStack[i].location.x = loc.x;
-	_MenuStack[i].location.y = loc.y;
+	Sprite *cursorSpr = NULL;
+
+	m->cursor.location = 0;
+	if(loc != NULL){
+		SetRect(m->location,loc);
+	}
 	
-	bg = LoadSprite("sprites/menubg.png",32,16,1);
+	m->spr = LoadSprite(SPATH_PANEL_DEF,4,4,3);
+	//bg = LoadSprite(SPATH_MENU_BG,32,16,1);
+	m->type = type;
 
 	switch(type){
-	case MENU_YES_NO:
-		_MenuStack[i].location.x = 250;
-		_MenuStack[i].location.y = 100;
-		_MenuStack[i].numItems = 2;
-		_MenuStack[i].itemsPerRow = 1;
-		itemRect.x = _MenuStack[i].location.x;
-		itemRect.y = _MenuStack[i].location.y;
-		itemRect.w = 30;
-		itemRect.h = 16;
-		_MenuStack[i].location = itemRect;
-		yes = new Textbox;
-		no = new Textbox;
-		LoadTextbox(yes,1,3,NULL,itemRect);
-		_MenuStack[i].items[0] = LoadMenuItem(itemRect,bg,yes,"Yes");
-		itemRect.y += 18;
-		LoadTextbox(no,1,3,NULL,itemRect);
-		_MenuStack[i].items[1] = LoadMenuItem(itemRect,bg,no,"No");
+	case MENU_PAUSE:
+		m->location.x = 10;
+		m->location.y = 10;
+		m->numItems = 6;
+		m->itemsPerRow = 1;
+		SetRect(itemRect,m->location.x,m->location.y,60,16);
+		m->location = itemRect;
+		
+		bg = NULL;
+		//bg = LoadSprite(SPATH_MENU_BG_COMBAT,64,16,1);
+		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_LARGE,64,16,1);
+
+		for(int i = 0; i < m->numItems; i++){
+			textboxes[i] = new Textbox();
+			LoadTextbox(textboxes[i],1,6,NULL,itemRect);
+			m->items[i] = LoadMenuItem(itemRect,bg,textboxes[i]);
+			if(i + 1 < m->numItems){
+				itemRect.y += 16;
+				m->location.h += 16;
+			}
+		}
+
+
 		break;
-	case MENU_BATTLE:
-		_MenuStack[i].location.x = 170;
-		_MenuStack[i].location.y = 120;
-		_MenuStack[i].numItems = 4;
-		_MenuStack[i].itemsPerRow = 2;
-		itemRect.x = _MenuStack[i].location.x;
-		itemRect.y = _MenuStack[i].location.y;
+	case MENU_YES_NO:
+		if(loc == NULL){
+			SetRect(m->location,250,116);
+		}
+		m->numItems = 2;
+		m->itemsPerRow = 1;
+
+		SetRect(itemRect,m->location.x,m->location.y,30,16);
+		m->location = itemRect;
+
+		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_SMALL,32,16,1);
+
+		textboxes[0] = new Textbox();
+		LoadTextbox(textboxes[0],1,3,NULL,itemRect);
+		m->items[0] = LoadMenuItem(itemRect,bg,textboxes[0],"Yes");
+
+		itemRect.y += 18;
+		m->location.h += 18;
+
+		textboxes[1] = new Textbox();
+		LoadTextbox(textboxes[1],1,3,NULL,itemRect);
+		m->items[1] = LoadMenuItem(itemRect,bg,textboxes[1],"No");
+		break;
+	case MENU_BATTLE:		////////////////////////////////////////////////////////
+		m->location.x = 190;
+		m->location.y = 164;
+		m->numItems = 4;
+		m->itemsPerRow = 2;
+		itemRect.x = m->location.x;
+		itemRect.y = m->location.y;
 		itemRect.w = 60;
 		itemRect.h = 16;
-		yes = new Textbox;
-		bg = LoadSprite("sprites/battlemenubg.png",64,16,1);
+
+		m->location = itemRect;
+		m->location.w += 64;
+		m->location.h += 16;
+
+
+		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_LARGE,64,16,1);
+
+		textboxes[0] = new Textbox;
+		//bg = LoadSprite(SPATH_MENU_BG_COMBAT,64,16,1);
 		char* menulist[4];
 		menulist[0] = "Attack";
 		menulist[1] = "Item";
@@ -91,40 +127,23 @@ Menu *LoadMenu(MenuType type,Vec2i loc){
 		menulist[3] = "Flee";
 		for(int k = 0; k < 2; k++){
 			for(int j = 0; j < 2; j++){
-				yes = new Textbox;
-				itemRect.x = _MenuStack[i].location.x + j*65;
-				itemRect.y = _MenuStack[i].location.y + k*17;
-				LoadTextbox(yes,1,6,NULL,itemRect);
-				_MenuStack[i].items[j + (2*k)] = LoadMenuItem(itemRect,bg,yes,menulist[j + (2*k)]);
+				textboxes[0] = new Textbox;
+				itemRect.x = m->location.x + j*64;
+				itemRect.y = m->location.y + k*16;
+				LoadTextbox(textboxes[0],1,6,NULL,itemRect);
+				m->items[j + (2*k)] = LoadMenuItem(itemRect,NULL,textboxes[0],menulist[j + (2*k)]);
 			}
 		}
 		
 		break;
-	case MENU_DEBUG:
-		_MenuStack[i].location.x = 180;
-		_MenuStack[i].location.y = 100;
-		_MenuStack[i].numItems = 12;
-		_MenuStack[i].itemsPerRow = 4;
-		itemRect.x = _MenuStack[i].location.x;
-		itemRect.y = _MenuStack[i].location.y;
-		itemRect.w = 30;
-		itemRect.h = 16;
-		_MenuStack[i].location = itemRect;
-		for(int k = 0; k < 4; k++){
-			for(int j = 0; j < 4; j++){
-				yes = new Textbox;
-				itemRect.x = _MenuStack[i].location.x + j*30;
-				itemRect.y = _MenuStack[i].location.y + k*15;
-				LoadTextbox(yes,1,3,NULL,itemRect);
-				_MenuStack[i].items[j + (4*k)] = LoadMenuItem(itemRect,NULL,yes,"Yes");
-			}
-		}
-		_MenuStack[i].cursor.location = 0;
-		break;
 	default:
+		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_SMALL,32,16,1);
 		break;
 	}
-	return &_MenuStack[i];
+	m->cursor.anim_active = LoadAnimation(cursorSpr,0,0,2,1,1,18);
+	m->cursor.anim_inactive = LoadAnimation(cursorSpr,0,0,1,1,1,18);
+	m->cursor.anim = m->cursor.anim_active;
+	return m;
 }
 
 void FreeMenu(Menu *m){
@@ -137,13 +156,13 @@ void FreeMenu(Menu *m){
 }
 
 void UpdateMenu(Menu *m){
-	if(((_Inputs->input&PPINPUT_LEFT)&&!(_Inputs->prev->input & PPINPUT_LEFT))||(InputBuffered(_Inputs,PPINPUT_LEFT,6*INPUT_BUFFER))){
+	if((InputPressed(PPINPUT_LEFT))||(InputBuffered(_Inputs,PPINPUT_LEFT,3*INPUT_BUFFER))){
 		DecrementCursor(m);	
 	}
-	if(((_Inputs->input&PPINPUT_RIGHT)&&!(_Inputs->prev->input & PPINPUT_RIGHT))||(InputBuffered(_Inputs,PPINPUT_RIGHT,6*INPUT_BUFFER))){
+	if((InputPressed(PPINPUT_RIGHT))||(InputBuffered(_Inputs,PPINPUT_RIGHT,3*INPUT_BUFFER))){
 		IncrementCursor(m);
 	}
-	if(((_Inputs->input&PPINPUT_UP)&&!(_Inputs->prev->input & PPINPUT_UP))||(InputBuffered(_Inputs,PPINPUT_UP,6*INPUT_BUFFER))){
+	if((InputPressed(PPINPUT_UP))||(InputBuffered(_Inputs,PPINPUT_UP,3*INPUT_BUFFER))){
 		int numRows = m->numItems/m->itemsPerRow;
 		if((m->cursor.location - m->itemsPerRow) < 0){
 			m->cursor.location += m->itemsPerRow*(numRows-1);
@@ -151,7 +170,7 @@ void UpdateMenu(Menu *m){
 		else
 			m->cursor.location -= m->itemsPerRow;		
 	}
-	if(((_Inputs->input&PPINPUT_DOWN)&&!(_Inputs->prev->input & PPINPUT_DOWN))||(InputBuffered(_Inputs,PPINPUT_DOWN,6*INPUT_BUFFER))){
+	if((InputPressed(PPINPUT_DOWN))||(InputBuffered(_Inputs,PPINPUT_DOWN,3*INPUT_BUFFER))){
 		int numRows = m->numItems/m->itemsPerRow;
 		if((m->cursor.location + m->itemsPerRow) >= m->numItems){
 			m->cursor.location -= m->itemsPerRow*(numRows-1);
@@ -159,7 +178,7 @@ void UpdateMenu(Menu *m){
 		else
 			m->cursor.location += m->itemsPerRow;
 	}
-	if((_Inputs->input & PPINPUT_A)&&!(_Inputs->prev->input & PPINPUT_A)){
+	if(InputPressed(PPINPUT_A)){
 		if(m->items[m->cursor.location]->action != NULL)
 			m->items[m->cursor.location]->action();
 	}
@@ -182,37 +201,159 @@ void DrawMenu(Menu *m){
 	Vec2i loc;
 	loc.x = m->location.x;
 	loc.y = m->location.y;
+	DrawMenuSprite(m);
+
 	for(int i = 0; i < m->numItems; i++){
 		loc.x = m->items[i]->bounds.x;
-		loc.y = m->items[i]->bounds.y+6;
+		loc.y = m->items[i]->bounds.y;
 	
 		DrawSprite(m->items[i]->bgsprite,0,loc,&uiCamera);
 		DrawTextbox(m->items[i]->text);
 	}
-	loc.x = m->items[m->cursor.location]->text->box.x;
-	loc.y = m->items[m->cursor.location]->text->box.y + 6;
+	loc.x = m->items[m->cursor.location]->bounds.x;
+	loc.y = m->items[m->cursor.location]->bounds.y;
 	DrawAnimation(m->cursor.anim,loc,&uiCamera);
 }
 
-Menu *OpenMenuYesNo(Vec2i loc, void (*YesFunc)(),void (*NoFunc)()){
-	_InMenu = true;
+void DrawMenuSprite(Menu *m){
+
+	DrawPanel(m->location,m->spr);
+}
+
+
+Menu *LoadMenuYesNo(Vec2i *loc, char *yes, char *no, void (*YesFunc)(),void (*NoFunc)()){
+	//_InMenu = true;
 	Menu *m = LoadMenu(MENU_YES_NO,loc);
-	SetMenuItemAction(m->items[0],YesFunc);
-	SetMenuItemAction(m->items[1],NoFunc);
-	//currentMenu = m;
+	SetMenuItemAction(m->items[0],SelectAnswer1,yes);
+	SetMenuItemAction(m->items[1],SelectAnswer2,no);
+	if(*YesFunc != NULL)
+		SetMenuItemAction(m->items[0],YesFunc);
+	if(*NoFunc != NULL)
+		SetMenuItemAction(m->items[1],NoFunc);
 	return m;
 }
 
-void CancelMenu(){
-	int i;
-	for(i = MAX_MENUS-1; i >= 0; i--)
-		if(_MenuStack[i].used&&_MenuStack[i].active)
-			break;
-//	FreeMenu(&_MenuStack[i]);
-	_MenuStack[i].active = false;
+Menu *LoadCustomMenu(int numItems, char *op1, char *op2, char *op3, char *op4, char *op5, char *op6){
+	if(numItems > 6)
+		numItems = 6;
+	if(numItems < 0)
+		numItems = 0;
+	Menu *m;
+
+	Textbox *textboxes[8];
+	SDL_Rect itemRect;
+	Vec2i loc;
+	SetVec2i(loc,250,150 - (numItems * 18));
+	switch(numItems){
+	case 6:
+		m = LoadMenu(MENU_CUSTOM_6,&loc);
+		break;
+	case 5:
+		m = LoadMenu(MENU_CUSTOM_5,&loc);
+		break;
+	case 4:
+		m = LoadMenu(MENU_CUSTOM_4,&loc);
+		break;
+	case 3:
+		m = LoadMenu(MENU_CUSTOM_3,&loc);
+		break;
+	default:
+		m = LoadMenu(MENU_CUSTOM_2,&loc);
+		break;
+	}
+
+	SetRect(m->location,loc.x,loc.y,30,16);
+	itemRect = m->location;
+	for(int i = 0; i < 8; i++)
+		textboxes[i] = NULL;
+	for(int i = 0; i < numItems; i++){
+		textboxes[i] = new Textbox();
+		LoadTextbox(textboxes[i],1,3,NULL,itemRect);
+		m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],op1);
+
+		if(i + 1 < numItems){
+			itemRect.y += 18;
+			m->location.h += 18;
+		}
+	}
+	m->numItems = numItems;
+	m->itemsPerRow = 1;
+	switch(numItems){
+	case 6:
+		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
+		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
+		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
+		SetMenuItemAction(m->items[3],SelectAnswer4,op4);
+		SetMenuItemAction(m->items[4],SelectAnswer5,op5);
+		SetMenuItemAction(m->items[5],SelectAnswer6,op6);
+		break;
+	case 5:
+		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
+		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
+		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
+		SetMenuItemAction(m->items[3],SelectAnswer4,op4);
+		SetMenuItemAction(m->items[4],SelectAnswer5,op5);
+		break;
+	case 4:
+		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
+		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
+		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
+		SetMenuItemAction(m->items[3],SelectAnswer4,op4);
+		break;
+	case 3:
+		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
+		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
+		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
+		break;
+	default:
+		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
+		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
+		break;
+	}
+	return m;
 }
 
-void AdvanceAndCancel(){
-	AdvanceText();
+void OpenMenu(Menu *m){
+	m->active = true;
+	m->cursor.location = 0;
+	if(InCombat()){
+	//	_CombatMenuStack.push_back(m);
+	}else
+		_MenuStack.push_back(m);
+}
+
+
+
+void CancelMenu(){
+	if(InCombat()){
+/*		_CombatMenuStack.back()->active = false;
+		_CombatMenuStack.pop_back();*/
+	}else{
+		_MenuStack.back()->active = false;
+		_MenuStack.pop_back();
+	}
+}
+
+void AdvanceAndCancel(int steps){
+	AdvanceText(steps);
 	CancelMenu();
+}
+
+void SelectAnswer1(){
+	AdvanceAndCancel(0);
+}
+void SelectAnswer2(){
+	AdvanceAndCancel(1);
+}
+void SelectAnswer3(){
+	AdvanceAndCancel(2);
+}
+void SelectAnswer4(){
+	AdvanceAndCancel(3);
+}
+void SelectAnswer5(){
+	AdvanceAndCancel(4);
+}
+void SelectAnswer6(){
+	AdvanceAndCancel(5);
 }

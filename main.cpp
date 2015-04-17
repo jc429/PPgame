@@ -1,10 +1,10 @@
 #include "main.h"
-//#include <vector>
-
+#include <vector>
+using std::vector;
 
 void InitGame();
 void PollEvents();
-Uint8 PollInputs();
+Uint16 PollInputs();
 void UpdateGame();
 void DrawGame();
 
@@ -17,8 +17,8 @@ extern Camera mainCamera;
 extern Camera uiCamera;
 
 //This and last frame's inputs
-Uint8 curInput;		//LRUDABXY
-Uint8 prevInput;	
+Uint16 curInput;		//00000000LRUDABXY
+Uint16 prevInput;	
 InputNode *_Inputs;
 
 Tile* World[WORLD_W][WORLD_H];
@@ -32,16 +32,29 @@ extern Textbox mainTextbox; //the main dialogue box for now
 //extern bool dialogue;	//are we currently talking?
 //extern bool inMenu;		//are we currently in a menu?
 
-Menu _MenuStack[MAX_MENUS];
+extern GameScene *_CurrentScene;
+extern vector<GameScene*> _SceneStack;
+extern GameState _GameState;
+
+
+extern Menu *_CurrentMenu;
+extern vector<struct Menu_T*> _MenuStack;
+//Menu _MenuStack[MAX_MENUS];
 //std::vector<Menu_T> MenuStack;
 
-Menu *testMenu;
-
+void OpenPauseMenu();
+Menu *pauseMenu;
 
 bool _Dialogue;	//are we currently talking?
 
 int main (int argc, char* argv[]){
 	done = 0;
+
+	/*if(DEBUG_BREAK){
+		DEBUG_BREAK_FUNC();
+		while(true);
+	}*/
+
 
 	InitGame();
 
@@ -77,25 +90,25 @@ void InitGame(){
 	InitSpriteList();
 	InitMusicList();
 	InitSoundList();
+	InitChunkList();
+
 
 	numMenus = 0;
 /////////////////////
+	
+	InitCombat();
 
-	InitMainTextbox(&mainTextbox,4,40,LoadSprite("sprites/textbox.png",320,80,1));
+	InitMainTextbox(&mainTextbox,4,40,LoadSprite(SPATH_MAIN_TEXTBOX,320,80,1));
+	pauseMenu = LoadPauseMenu();
 
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//test stuff goes between the squiggles
 	
-//	char *yamlpath = "cfg/test.yaml";
-//	TestFile(yamlpath);
 
-//	What(); fuck libyaml
+	What(); 
 
-
-	char *lvpath = "cfg/test.txt";
-	Level *level = new Level;
-	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
-		InitWorld();
+	_CurrentScene = new Overworld();
+	
 
 	LoadDialogue();
 
@@ -138,55 +151,63 @@ void PollEvents(){
 	}
 	curInput = PollInputs();
 	InputNode *inputNode = new InputNode;
-	inputNode->prev = _Player->inputs;
+	inputNode->prev = _Inputs;//_Player->inputs;
 	inputNode->input = curInput;
-	_Inputs = inputNode;
-		
+	_Inputs = inputNode;	
 	DeleteInputNode(inputNode, INPUTS_HISTORY);
 
-	
-}
-
-Uint8 PollInputs(){
-	Uint8 inputs = 00000000;
-	const Uint8 *keys = SDL_GetKeyboardState(NULL);
-	if (keys[SDL_SCANCODE_ESCAPE])
-		done = 1;
-
-	if(DEBUG){		//debug inputs
-		if(keys[SDL_SCANCODE_M]&&_GameState==COMBAT)
-			_GameState = OVERWORLD;
-		if(keys[SDL_SCANCODE_N]){
-			if(_GameState==OVERWORLD){
+	if(DEBUG){
+		if(_Inputs->input & 1<<14){
+			if(_GameState == OVERWORLD){
 				EnterCombat();
-				_GameState = COMBAT;
 			}
 		}
-		if(keys[SDL_SCANCODE_L])
-			DecrementCursor(testMenu);
-		if(keys[SDL_SCANCODE_K])
-			IncrementCursor(testMenu);
+		if(_Inputs->input & 1<<15){
+			if(_GameState == COMBAT){
+				ExitCombat();
+			}
+		}
 	}
 
-	if(keys[PPKEY_PAUSE])
+}
+
+Uint16 PollInputs(){
+	Uint16 inputs = 0;
+	const Uint8 *keys = SDL_GetKeyboardState(NULL);
+	if(DEBUG)
+		if (keys[SDL_SCANCODE_ESCAPE])
+			done = 1;
+
+	if(DEBUG){		//debug inputs
+		if(keys[SDL_SCANCODE_M])
+			inputs |= 1<<15;
+		if(keys[SDL_SCANCODE_N]){
+			inputs |= 1<<14;		
+		}
+	}
+
+	if(keys[PPKEY_PAUSE]){
 		pause = 1;
+	}
+	if(keys[PPKEY_START])
+		inputs |= PPINPUT_START;
 
 	if(keys[PPKEY_LEFT])
-		inputs |= 1<<7;
+		inputs |= PPINPUT_LEFT;
 	if(keys[PPKEY_RIGHT])
-		inputs |= 1<<6;
+		inputs |= PPINPUT_RIGHT;
 	if(keys[PPKEY_UP])
-		inputs |= 1<<5;
+		inputs |= PPINPUT_UP;
 	if(keys[PPKEY_DOWN])
-		inputs |= 1<<4;
+		inputs |= PPINPUT_DOWN;
 	if(keys[PPKEY_A])
-		inputs |= 1<<3;
+		inputs |= PPINPUT_A;
 	if(keys[PPKEY_B])
-		inputs |= 1<<2;
+		inputs |= PPINPUT_B;
 	if(keys[PPKEY_X])
-		inputs |= 1<<1;
+		inputs |= PPINPUT_X;
 	if(keys[PPKEY_Y])
-		inputs |= 1;
+		inputs |= PPINPUT_Y;
 	return inputs;
 }
 
@@ -194,23 +215,23 @@ Uint8 PollInputs(){
 void UpdateGame(){
 	if(_GamePause)
 		return;
-	switch(_GameState){
-	case OVERWORLD:
-		UpdatePlayer(_Player);
-		UpdateCamera(&mainCamera);
-		break;
-	case COMBAT:
-		UpdateCombat();
-		break;
+	//
+	if(!_SceneStack.empty()){
+		_GameState = _SceneStack.back()->type;
+		_SceneStack.back()->Update();
 	}
+	//
+	
+	
 
 
-	int i;
+	/*int i;
 	for(i = MAX_MENUS-1; i >= 0; i--)
 		if(_MenuStack[i].used&&_MenuStack[i].active)	//only update the highest active menu, i.e. the one on top
 			break;
 	if(i>=0)											//dont update a menu that doesn't exist
 		UpdateMenu(&_MenuStack[i]);
+		*/
 }
 
 //Put the Drawing functions for everything here 
@@ -218,38 +239,168 @@ void DrawGame(){
 	if(_GamePause)
 		return;
 	if(_DrawPause) {
-		//fprintf(stdout,"%i \n",_DrawPause);
 		return;
 	}
 	framecheck+=1;
-	if(framecheck>FRAMESPERDRAW)
-		framecheck=0;
+	framecheck %= 360; //reset the framecheck after 10 seconds of drawing because what animation would ever play slower than that
+/*	if(framecheck>FRAMESPERDRAW)
+		framecheck=0;*/
 
-	switch(_GameState){
-	case OVERWORLD:
-	//	DrawWorld();
-		DrawTilesLower();
-		DrawPlayer(_Player);
-		DrawTilesUpper();
-		DrawOverworldUI();
-		if(_Dialogue)
-			DrawTextbox(&mainTextbox);
-//		if(_InMenu)
+	if(!_SceneStack.empty()){
+		for(int i = 0; i < (int)_SceneStack.size(); i++){
+			_SceneStack[i]->Draw();
 
- 			for(int i = 0; i < MAX_MENUS; i++){
-				if(_MenuStack[i].used)
-					if(_MenuStack[i].active)
-						DrawMenu(&_MenuStack[i]);
-			}
-		break;
-
-	case COMBAT:
-		DrawCombatBG();
-		DrawEnemies();
-		DrawAllies();
-		DrawCombatUI();
-		break;
+		}
 	}
+		
+	
+	
 
 	RenderCurrentFrame();
+}
+
+
+bool InCombat(){
+	return (_SceneStack.back()->type == COMBAT);
+}
+
+void EnterCombat(){
+	_CurrentScene = new CombatTransition();
+}
+
+void ExitCombat(){
+	StopMusic();
+	_SceneStack.pop_back();
+}
+
+void LoadLevel(){
+	Chunk *ch = LoadChunk("testfiles/chunk1.json");
+	for(int i = 0; i < ch->size.x; i++){
+		for(int j = 0; j < ch->size.y; j++){
+			World[i][j] = &ch->tiles[i][j];
+		}
+	}
+	/*
+	char *lvpath = "testfiles/map.txt";
+	Level *level = new Level;
+	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
+		InitWorld();*/
+}
+
+void Overworld::Update(){
+	if(InputPressed(PPINPUT_B))
+		if(!_Dialogue){
+			if(_MenuStack.empty())
+				OpenPauseMenu();
+			else
+				if(_MenuStack.back()->type == MENU_PAUSE)
+					CancelMenu();
+
+		}
+	UpdateWorld();
+	if(!_MenuStack.empty()){
+		_CurrentMenu = _MenuStack.back();
+		UpdateMenu(_MenuStack.back());
+	}else{
+		UpdatePlayer(_Player);
+	}
+	UpdateCamera(&mainCamera);
+	
+}
+
+void Overworld::Draw(){
+	//DrawWorld();
+	DrawWorld();
+	if(DEBUG_DRAW_RECTS){
+		DrawFacingCursor(_Player->tile+_Player->facing);
+	}
+
+	DrawOverworldUI();
+	if(_Dialogue)
+		DrawTextbox(&mainTextbox);
+	if(!_MenuStack.empty()){
+		for(int i = 0; i < (int)_MenuStack.size(); i++){
+			DrawMenu(_MenuStack[i]);
+		}
+	}
+}
+
+Combat::Combat(){
+	type = COMBAT;
+	_SceneStack.push_back(this);
+	SetupCombat();
+}
+
+Combat::~Combat(){
+	_SceneStack.pop_back();
+}
+
+void Combat::Update(){
+	UpdateCombat();
+	
+}
+
+void Combat::Draw(){
+	DrawCombatBG();
+	DrawEnemies();
+	DrawAllies();
+	DrawCombatUI();
+}
+
+CombatTransition::CombatTransition(){
+	type = CUTSCENE;
+	Sprite *spr = LoadSprite(SPATH_COMBAT_ENTER,320,240,1);
+	startanim = LoadAnimation(spr,0,0,10,1,0,3);
+	spr = LoadSprite(SPATH_COMBAT_EXIT,320,240,1);
+	endanim = LoadAnimation(spr,0,0,10,1,0,3);
+	anim = startanim;
+	timer = 58;
+	this->combat_entered = false;
+	_SceneStack.push_back(this);
+}
+
+CombatTransition::~CombatTransition(){
+	_SceneStack.pop_back();
+}
+
+void CombatTransition::Update(){
+	if(timer > 0)
+		timer--;
+	if(timer == 29){
+		this->combat_entered = true;
+		StartCombat();
+	}
+	if(timer == 28)
+		anim = endanim;
+	if(timer == 0){
+		if(combat_entered)
+			delete(this);
+	}
+}
+
+void CombatTransition::Draw(){
+	Vec2i loc = {0,0};
+	DrawAnimation(this->anim,loc,&uiCamera);
+}
+
+void StartCombat(){
+	_CurrentScene = new Combat();
+}
+
+Menu *LoadPauseMenu(){
+	char* names[6] =  {"Party ","Items ","FIGHT ","Save  ","Options","Exit "};
+	Menu *m = LoadMenu(MENU_PAUSE);
+	for(int i = 0; i < m->numItems; i++){
+		SetMenuItemAction(m->items[i],CancelMenu,names[i]);
+	}
+	SetMenuItemAction(m->items[2],LaunchCombat);
+	return m;
+}
+
+void OpenPauseMenu(){
+	OpenMenu(pauseMenu);
+}
+
+void LaunchCombat(){
+	_CurrentScene = new CombatTransition();
 }

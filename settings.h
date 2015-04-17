@@ -1,6 +1,5 @@
 #include "debug.h"
 
-
 #define START_MODE OVERWORLD
 
 //music toggles
@@ -46,11 +45,11 @@
 #define MAX_TECHS 8
 
 //the amount of delay between one frame and the next, in milliseconds
-#define FRAMEDELAY 16 //33				// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
-#define FRAMESPERDRAW	15				//how many game frames to wait before updating player animations (for smooth movement but less sprites needed)
+#define FRAMEDELAY 16 // working based on 16	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
+#define FRAMESPERDRAW	6				//how many game frames to wait before updating player animations (for smooth movement but less sprites needed)
 
 //Gameplay stuff
-#define INPUTS_HISTORY 10			//number of frames of inputs to save (unused prob)
+#define INPUTS_HISTORY 30			//number of frames of inputs to save (unused prob)
 #define INPUT_BUFFER 5				//number of frames to buffer a movement input (must be smaller than inputs history)
 #define MAX_MENUS 6
 #define MAX_MENU_ITEMS 12
@@ -79,9 +78,11 @@
 #define PPKEY_UP SDL_SCANCODE_W
 #define PPKEY_DOWN SDL_SCANCODE_S
 #define PPKEY_A SDL_SCANCODE_SPACE
-#define PPKEY_B SDL_SCANCODE_BACKSPACE
+#define PPKEY_B SDL_SCANCODE_LSHIFT
 #define PPKEY_X SDL_SCANCODE_RSHIFT
-#define PPKEY_Y SDL_SCANCODE_RETURN
+#define PPKEY_Y SDL_SCANCODE_RCTRL
+#define PPKEY_START SDL_SCANCODE_RETURN
+//debug pause idk 
 #define PPKEY_PAUSE SDL_SCANCODE_P
 
 #define PPINPUT_LEFT	1<<7
@@ -92,9 +93,9 @@
 #define PPINPUT_B		1<<2
 #define PPINPUT_X		1<<1
 #define PPINPUT_Y		1
+#define PPINPUT_START	1<<8
 
+#define PPINPUT_FACE_ANY (PPINPUT_A|PPINPUT_B|PPINPUT_X|PPINPUT_Y)
+#define PPINPUT_DIR_ANY (PPINPUT_UP|PPINPUT_DOWN|PPINPUT_LEFT|PPINPUT_RIGHT)
 
-#define PPINPUT_FACE_ANY PPINPUT_A|PPINPUT_B|PPINPUT_X|PPINPUT_Y
-#define PPINPUT_DIR_ANY PPINPUT_UP|PPINPUT_DOWN|PPINPUT_LEFT|PPINPUT_RIGHT
-
-#define PPINPUT_TEXT_ADVANCE PPINPUT_A|PPINPUT_B
+#define PPINPUT_TEXT_ADVANCE (PPINPUT_A|PPINPUT_B)

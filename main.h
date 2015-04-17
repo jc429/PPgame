@@ -2,7 +2,7 @@
 #include "SDL.h"
 
 #include "graphics.h"
-#include "settings.h"
+#include "global.h"
 #include "ui.h"
 #include "pmath.h"
 #include "pfile.h"
@@ -13,16 +13,9 @@
 #include "level.h"
 #include "audio.h"
 #include "combat.h"
-
-static enum{
-	MAIN_MENU,
-	OPTIONS,
-	OVERWORLD,
-	COMBAT,				
-	DIALOGUE_OVERLAY,	//Maybe unnecessary?
-	DIALOGUE_FULL,
-	DATE			
-}_GameState; 
+#include "gamestate.h"
+#include "world.h"
+ 
  
 static bool _GamePause;
 static bool _DrawPause;

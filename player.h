@@ -1,7 +1,7 @@
 #ifndef _PLAYER_
 #define _PLAYER_
 
-#include "settings.h"
+#include "global.h"
 #include "pmath.h"
 #include "input.h"
 #include "sprites.h"
@@ -24,8 +24,6 @@ public:
 	//animation stuff 
 //	CharAnim animation;
 
-	//conversation stuff
-	bool talking;
 
 
 	
@@ -38,8 +36,9 @@ public:
 
 	Player();
 	~Player();
-
+	
 	void Update();
+	void Draw();
 };
 
 
@@ -50,10 +49,11 @@ public:
 	int actiontimer;	//counts down to 0 then does an something (maybe) 
 
 
-	NPC (int xpos, int ypos);
+	NPC (int xpos, int ypos, char *entName = NULL);
 	~NPC();
 
 	void Update();
+	void Draw();
 	void Talk(Textbox *t);
 };
 
@@ -83,14 +83,17 @@ typedef struct Player_T{
 } Player;*/
 
 
-//Player *CreatePlayer(Player *p);
+NPC **LoadEntitiesCFG(char *path);
+
+
+
 void UpdatePlayer(Player *p);
 void DrawPlayer(Player *p);
 
 void PlayerMovement(Player *p);
-bool InputBuffered (InputNode *input, int button, int buf);
 
-
+void StepOutOfTile(Character *c,Tile *tile);
+void StepIntoTile(Character *c,Tile *tile);
 void MoveToTile(Character *c, Tile *src, Tile *dest);
 void UpdateTile(Character *c);
 void UpdateDirection(Character *c);

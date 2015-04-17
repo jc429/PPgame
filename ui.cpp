@@ -49,6 +49,34 @@ void DeleteInputNode(InputNode *node,int steps){
 }
 
 
+bool InputPressed(Uint8 input,InputNode *node){
+	if(node == NULL)
+		node = _Inputs;
+	return ((node->input & input)&&!(node->prev->input & input));
+}
+
+bool InputReleased(Uint8 input,InputNode *node){
+	if(node == NULL)
+		node = _Inputs;
+	return (!(node->input & input)&&(node->prev->input & input));
+}
+
+bool InputBuffered (InputNode *input, int button, int buf){
+	if(buf > INPUTS_HISTORY)
+		buf = INPUTS_HISTORY;
+	if(input->input & button){
+		if(buf == 0)
+			return 1;
+		else{
+			if(input->prev != NULL)
+				return (InputBuffered(input->prev,button,buf-1));
+			else
+				return 0;
+		}
+	}else
+		return 0;
+}
+
 
 void DrawOverworldUI(){
 

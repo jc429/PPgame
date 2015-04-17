@@ -1,6 +1,8 @@
 #ifndef _SPRITES_
 #define _SPRITES_
 
+#include "sprite_paths.h"
+#include "global.h"
 #include "pmath.h"
 
 typedef struct Sprite_T{
@@ -24,18 +26,34 @@ typedef struct Animation_T{
 	int rotation;
 	Vec2i mirror;
 
-	int speed; //not used yet - for aysnchronous animations i guess - maybe the amount of draw frames to wait before updating 
+	void (*onFinish)();	//finish function called when an animation reaches its end (non-looping) or enters a new cycle (looping)
+	int delay; //amount of draw frames to wait before updating to next frame - higher number = slower
 }Animation;
+
+#define NUM_ANIM_DIRS 8
+typedef enum AnimDir{
+	ANIM_DIR_S = 0,
+	ANIM_DIR_SW = 1,
+	ANIM_DIR_W = 2,
+	ANIM_DIR_NW = 3,
+	ANIM_DIR_N = 4,
+	ANIM_DIR_NE = 5,
+	ANIM_DIR_E = 6,
+	ANIM_DIR_SE = 7,
+};
 
 void InitSpriteList();
 Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl);
 void FreeSprite(Sprite *spr);
-Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop);
+
+Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop = true, int delay = FRAMESPERDRAW, void(*finish)() = NULL);
 void FreeAnimation(Animation *a);
 
 void AdvanceAnimFrame(Animation *a);
 
 void DrawTile(Vec2i pos);
-void DrawCursor(Vec2i pos);
+void DrawFacingCursor(Vec2i pos);
+void DrawPanel(SDL_Rect rect, Sprite *spr);
+
 
 #endif

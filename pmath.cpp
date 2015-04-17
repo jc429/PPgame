@@ -37,6 +37,34 @@ inline bool RectInRect(SDL_Rect a, SDL_Rect b){
 			(a.y>=b.y)&&((a.y+a.h)<=(b.y+b.h)));
 }
 
+void SetVec2i(Vec2i &v, int x, int y){
+	v.x = x;
+	v.y = y;
+}
+
+void SetVec2i(Vec2i &dest, Vec2i *src){
+	dest.x = src->x;
+	dest.y = src->y;
+}
+
+void SetRect(SDL_Rect &r, int x, int y, int w, int h){
+	r.x = x;
+	r.y = y;
+	if(w) r.w = w;
+	if(h) r.h = h;
+}
+
+void SetRect(SDL_Rect &dest, SDL_Rect *src){
+	dest.x = src->x;
+	dest.y = src->y;
+	dest.w = src->w;
+	dest.h = src->h;
+}
+
+void SetRect(SDL_Rect &dest, Vec2i *src){
+	dest.x = src->x;
+	dest.y = src->y;
+}
 
 int RandomInt(int min, int max){ //returns a random integer, from min to max (non-inclusive)
 	double r;		// a decimal between 0 and 1

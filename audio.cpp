@@ -11,9 +11,9 @@ int numSongs;
 
 
 void InitAudio(){
-	int flags=MIX_INIT_OGG|MIX_INIT_MOD|MIX_INIT_MP3;
+	int flags=/*MIX_INIT_OGG|MIX_INIT_MOD|*/MIX_INIT_MP3;
 	int initted=Mix_Init(flags);
-	if(initted&flags != flags) {
+	if((initted&flags) != flags) {
 		printf("Mix_Init: Failed to init required ogg and mod support!\n");
 		printf("Mix_Init: %s\n", Mix_GetError());
 		// handle error
@@ -34,6 +34,7 @@ void InitAudio(){
 
 void PlaySound(Sound *s){
 	if(s==NULL) return;
+	if(DEBUG && DEBUG_MUTE) return;
 	if(SOUNDS_ON){
 		int ch = 1;
 		Mix_PlayChannel(ch,s->sound,-1);
@@ -42,11 +43,20 @@ void PlaySound(Sound *s){
 
 void PlayMusic(Music *m){
 	if(m==NULL) return;
+	if(DEBUG && DEBUG_MUTE) return;
 	if(MUSIC_ON){
 		Mix_PlayMusic(m->song,-1);
 	}
 }
 
+void StopSound(Sound *s){
+	
+}
+
+void StopMusic(Music *m){
+	if(Mix_PlayingMusic())
+		Mix_HaltMusic();
+}
 
 void InitMusicList(){
 	int i;

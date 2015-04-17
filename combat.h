@@ -1,84 +1,60 @@
 #ifndef _COMBAT_
 #define _COMBAT_
 
+//handles general combat stuff, like updating and drawing everything
+
 #include "pmath.h"
 #include "graphics.h"
-#include "ui.h"
+#include "combat_ent.h"
+#include "combat_ui.h"
+
+enum ActionType{
+	ACT_ATTACK,
+	ACT_BLOCK,
+	ACT_ITEM,
+	ACT_DEBUG,
+};
+
+typedef struct CombatAction_T{
+	CombatEnt *ent;
+	CombatEnt *target;
+	ActionType type;
+	char text[255];		//the line of dialogue associated with an action
+	void (*Action)(CombatEnt* owner, CombatEnt *target);
+}CombatAction;
+
+typedef struct CombatEffect_T{
+	Animation *anim;
+	Vec2i location;
+}CombatEffect;
 
 
+typedef enum BattlePhase_T{
+	BATTLE_START,
+	BATTLE_MID,
+	BATTLE_END
+}BattlePhase;
 
-typedef struct Stats_T{
-	int max_health;
-	int max_stamina;
-
-	int strength;
-	int phys_def;
-	int magic;
-	int mag_def;
-
-	int agility;
-	int dexterity;
-	int luck;
-	int intelligence;
-	int willpower;
-	int charisma;
-
-	int quality;
-	int humor;
-	int style;
-	int grace;
-	int spookiness;
-	int cheesiness;
-	int legs;
-}Stats;
-
-typedef enum Status_T{
-	S_FINE		= 0,
-	S_DEAD		= 1,
-	S_BURN		= 2,
-	S_STUN		= 4,
-	S_SLEEP		= 8,
-	S_POISON	= 16,
-	S_FREEZE	= 32,
-	S_DESPAIR	= 64,
-	S_BLIND		= 128,
-	S_STYLED	= 256,
-
-}Status;
-
-typedef struct Technique_T{
-	int techID;
-	char* displayName;
-	char* description;
-}Technique;
-
-typedef struct CombatEnt_T{
-	int level;
-	int exp;
-
-	int health;
-	int stamina;
-
-	bool ally;				//good or bad?
-	
-	Stats stats_base;		//base stats, i.e. the ones that go up with each level and stuff
-	Stats stats_mod;		//temporary stat modifiers, reset at battle end or w/e. added or subtracted to base stats
-	Stats growths;			//growth rates, stored as int/100 probably. used for level ups
+typedef enum TurnPhase_T{
+	ACTION_SELECT,
+	ACTING,
+	RESOLUTION,
+}TurnPhase;
 
 
-	Vec2i position;
-	Vec2i s_offset;					//sprite offset
-	Animation *animlist[MAX_ANIMS]; //all animations this entity can have
-	int animation;					//current animation
-	int numAnims;
+void QueueAction(CombatAction* action);
+void ExecuteQueue();
+void ExecuteAction(CombatAction* action);
+//Possible Actions
+void TestAction(CombatEnt* owner, CombatEnt *target);
+void UseItem(CombatEnt* owner, CombatEnt *target);
+void Attack(CombatEnt* owner, CombatEnt *target);
 
-	Technique *TechniqueList[MAX_TECHS];
-	Status status;
-}CombatEnt;
-
-void SetStats(CombatEnt *ent);
 
 void InitCombat();
+
+void SetupCombat();
+
 void EnterCombat();
 void ExitCombat();
 void UpdateCombat();
@@ -86,14 +62,25 @@ void UpdateTurn();
 void AdvanceBattlePhase();
 void AdvanceTurnPhase();
 
-void LoadEnemies();
-void LoadAllies();
 
+//loading/unloading
 void LoadCombatBG();
+
+
+//drawing
 void DrawCombatBG();
-void DrawEnemies();
-void DrawAllies();
 void DrawHPBar(CombatEnt *ent);
+void DrawBattleTimer();
+void DrawEffectStack();
+void DrawActionStack();
 void DrawCombatUI();
+
+
+//combat menu functions
+void InitiateAttack();
+void QueuePlayerAttack();
+void QueueAttack(CombatEnt *owner, CombatEnt *target);
+void Flee();
+
 
 #endif

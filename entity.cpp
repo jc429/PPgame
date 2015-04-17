@@ -1,5 +1,6 @@
 #include "entity.h"
 #include "tile.h"
+#include "graphics.h"
 
 #include <stdio.h>
 
@@ -7,9 +8,12 @@ Entity EntList[MAX_ENTS];
 int numEnts;
 
 extern Tile* World[WORLD_W][WORLD_H];
-
+extern Camera mainCamera;
 
 void Entity::Update(){
+	return;
+}
+void Entity::Draw(){
 	return;
 }
 void Entity::Talk(Textbox *t){
@@ -17,6 +21,7 @@ void Entity::Talk(Textbox *t){
 }
 
 void AddToWorld(Entity *e, int xpos, int ypos){
+	if(World[xpos][ypos] == NULL) return;
 	World[xpos][ypos]->contents = e;
 	World[xpos][ypos]->free = e->passable;
 }
@@ -24,7 +29,12 @@ void AddToWorld(Entity *e, int xpos, int ypos){
 InteractableObject::InteractableObject(int xpos, int ypos){
 	talks = true;
 	passable = false;
-	flavortext = new Message;
+	flavortext = NewMessage();
+
+	//name = NULL;
+
+
+	
 
 	//Position
 	tile.x = xpos;
@@ -42,21 +52,46 @@ InteractableObject::InteractableObject(int xpos, int ypos){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	//////////////////////////////////////////////////////////////////
-	Sprite *s = LoadSprite("sprites/sign.png",32,32,1);
-	animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
-	numAnims = 1;
-	////////////////////////////////////////////////////////////////////////
-	s_offset.x = animlist[animation][0]->sprite->w>>1;
-	s_offset.y = animlist[animation][0]->sprite->h>>1;
+	
 
 	//Dialogue and misc
 	type = Ent_IntObj;
 
 	//get us started on a tile
 	AddToWorld(this, xpos, ypos);
+	
+//	if(DEBUG)
+	//	fprintf(stdout,"Starting on %i %i \n",localposition.x,localposition.y);
+}
 
-	if(DEBUG)
-		fprintf(stdout,"Starting on %i %i \n",localposition.x,localposition.y);
+InteractableObject *LoadSign(int xpos, int ypos){
+	InteractableObject *ent = new InteractableObject(xpos,ypos);
+	strcpy(ent->name,"Sign");
+	Sprite *s = LoadSprite(SPATH_SIGN_GENERIC,32,32,1);
+	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
+	ent->numAnims = 1;
+	////////////////////////////////////////////////////////////////////////
+	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
+	ent->s_offset.y = ent->animlist[ent->animation][0]->sprite->h>>1;
+	ent->s_offset.y += 8;
+	ent->s_offset.y += World[ent->tile.x][ent->tile.y]->structure->height <<2;
+
+	return ent;
+}
+
+InteractableObject *LoadEgg(int xpos, int ypos){
+	InteractableObject *ent = new InteractableObject(xpos,ypos);
+	strcpy(ent->name,"Egg");
+	Sprite *s = LoadSprite("sprites/egg-over.png",64,64,1);
+	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
+	ent->numAnims = 1;
+	////////////////////////////////////////////////////////////////////////
+	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
+	ent->s_offset.y = ent->animlist[ent->animation][0]->sprite->h>>1;
+	ent->s_offset.y += 8;
+	ent->s_offset.y += World[ent->tile.x][ent->tile.y]->structure->height <<2;
+
+	return ent;
 }
 
 InteractableObject::~InteractableObject(){
@@ -68,9 +103,11 @@ InteractableObject::~InteractableObject(){
 
 void InteractableObject::Update(){
 
-
 }
 
+void InteractableObject::Draw(){
+	DrawAnimation(animlist[animation][direction],worldposition-s_offset,&mainCamera);
+}
 
 void InteractableObject::Talk(Textbox *t){
 	SetText(flavortext->text,t,1,flavortext->hasPrompt,flavortext);

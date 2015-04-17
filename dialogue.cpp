@@ -1,7 +1,11 @@
 #include "graphics.h"
 #include "dialogue.h"
+#include "pstring.h"
 #include "audio.h"
+
 #include <stdio.h>
+#include <iostream>
+
 
 
 extern SDL_Renderer *mainRenderer;
@@ -28,10 +32,15 @@ void InitMainTextbox(Textbox *t,int numLines, int lineLen,Sprite *spr){
 	r.y = GAME_RES_Y - spr->h;
 	r.w = TEXTAREA_W;
 	r.h = TEXTAREA_H;
-	LoadTextbox(t,numLines,lineLen,spr,r);
+	LoadTextbox(t,numLines,lineLen,spr,r,1);
+	
+	SDL_Rect s = {10,(GAME_RES_Y - spr->h)-18,128,16};
+	t->speakerbox = new Textbox();
+	LoadTextbox(t->speakerbox,1,16,NULL,s,0);
+
 }
 
-void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rect){
+void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rect, bool hasArrow){
 	if(numLines > LINE_COUNT)
 		numLines = LINE_COUNT;
 	t->linect = numLines;
@@ -41,6 +50,16 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 	
 	t->spr = spr;
 	t->box = rect;
+
+	t->speakerbox = NULL;
+	
+	if(hasArrow){
+		t->usesArrow = true;
+		t->arrow = LoadAnimation(LoadSprite(SPATH_TEXTBOX_ARROW,8,8,2),0,0,2,1,1,18);	
+		t->arrowpos.x = t->box.x + t->box.w - 16;
+		t->arrowpos.y = t->box.y + t->box.h - 16;
+	}else
+		t->usesArrow = false;
 
 	t->cursor = 0;
 	for(int i = 0; i < t->linect; i++){
@@ -52,28 +71,95 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 	t->msg = NULL;
 }
 
-void DrawTextbox(Textbox *t){
+
+
+void DrawTextbox(Textbox *t, int offset_x, int offset_y){
+	t->box.x += offset_x;
+	t->box.y += offset_y;
 	Vec2i loc;
 	loc.x = t->box.x;
 	loc.y = t->box.y;
 	DrawSprite(t->spr,t->frame,loc,&uiCamera);
-
+	
 	DrawText(t);
+
+	if(t->msg && t->msg->hasSpeaker){
+		if(t->msg->speaker != NULL){
+			SetText( t->msg->speaker->name,t->speakerbox,0);
+			DrawPanel(t->speakerbox->box,LoadSprite(SPATH_PANEL_DEF,4,4,3));
+			DrawTextbox(t->speakerbox,0,-6);
+		}
+	}
+
+	t->box.x -= offset_x;
+	t->box.y -= offset_y;
 }
 
-void CreateMessage(Message *msg, char* text){
-	//msg = new Message;
-	msg->text = text;
-	msg->next = NULL;
+Message *NewMessage(){
+	Message *msg = new Message;
+	msg->text[0] = '\0';
+	msg->numChildren = 0;
+	for(int i = 0; i < MAX_PROMPT_CHOICES; i++)
+		msg->next[i] = NULL;	
+	msg->hasPrompt = 0;
+	msg->prompt = NULL;
+	msg->numFunctions = 0;
+	return msg;
+}
+
+void CreateMessage(Message *msg, char* text, class Entity *speaker){
+	if(msg != NULL)
+		delete(msg);
+	msg = NewMessage();
+
+	strcpy(msg->text,text);
 	msg->hasPrompt = 0;
 	msg->prompt = NULL;
 	msg->numFunctions = 0;
 //	_MessageStack = msg;
+
+	SetSpeaker(msg,speaker);
 }
 
-void SetPrompt(Message *msg, MenuType type, Vec2i loc){
+void SetSpeaker(Message *msg, class Entity *ent){
+	if(ent != NULL){
+		msg->speaker = ent;
+		msg->hasSpeaker = true;
+	}else{
+		msg->speaker = NULL;
+		msg->hasSpeaker = false;
+	}
+	for(int i = 0; i < 6; i++){
+		if(msg->next[i] != NULL){
+			SetSpeaker(msg->next[i], ent);
+		}	
+	}
+}
+
+void CreateMonologue(Message *msg, Entity *speaker, int numMessages, ...){
+	va_list args;
+	char* text;
+	speaker->talks = true;
+	if(msg == NULL)
+		msg = NewMessage();
+	va_start(args,numMessages);
+	for(int i = 0; i < numMessages; i++){
+		text = va_arg(args,char*);
+		CreateMessage(msg,text,speaker);
+		if(i + 1 < numMessages){
+			msg->next[0] = NewMessage();
+			msg = msg->next[0];
+		}
+	}
+	va_end(args);
+}
+
+void SetPrompt(Message *msg, MenuType type, Vec2i *loc){
 	msg->hasPrompt = 1;
-	msg->prompt = LoadMenu(type,loc);
+	if(type == MENU_YES_NO)
+		msg->prompt = LoadMenuYesNo(loc);
+	else 
+		msg->prompt = LoadMenu(type,loc);
 	
 }
 
@@ -93,6 +179,8 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	int i;
 	bool done = false;
 
+	char* parsed_text = ParseText(text);
+
 	if(scroll){
 		t->cursor = 0;
 	}
@@ -102,6 +190,10 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	}
 	
 	for(i = 0; i < t->linect; i++){
+		char *line = t->lines[i];
+		if(parsed_text==NULL){
+			done = true;
+		}
 		if(done){
 			while(i < t->linect){
 				t->lines[i][0]='\0';
@@ -109,35 +201,84 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 			}
 			break;
 		}
-		char *line = t->lines[i];
-		if(text==NULL){
-			done = true;
-			continue;
-		}
-		while(ptr<LINE_LENGTH){
-			if(text[ptr+offset] == '\n')
+		
+		while(ptr < t->linelength){
+			if(parsed_text[ptr+offset] == '\n')
 				break;
-			if(text[ptr+offset] == '\0'){
+			if(parsed_text[ptr+offset] == '\0'){
 				done = true;
 				break;
 			}
-			line[ptr] = text[ptr+offset];
+			line[ptr] = parsed_text[ptr+offset];
 			ptr++;
 		}
-		while(ptr<LINE_LENGTH){
+		while(ptr < t->linelength){
 			line[ptr] = ' ';
 			ptr++;
 		}
 		offset += t->linelength;
 		ptr = 0;
 		line[t->linelength] = '\0';
-		memcpy(t->lines[i],line,sizeof(char)*(t->linelength+1));
+		memcpy(t->lines[i],line,sizeof(char)*(t->linelength));
 	}
 //	if((t->donewriting)&&(prompt))
 	//if(prompt){
 		t->msg = msg;
 	//}
 	t->donewriting = false;
+}
+
+char* ParseText(char *text){
+	if(text == NULL) return NULL;
+	static char parse_key[32];
+	memset(&parse_key[0], 0, sizeof(parse_key));
+	int parsecursor = 0;
+	int textcursor = 0;
+	char newText[255];
+	strcpy(newText,text);
+
+	for(;;textcursor++){
+		if(newText[textcursor] == '%'){
+			int subcursor = 0;
+			do{
+				parse_key[subcursor] = text[subcursor+textcursor];
+				subcursor++;
+			}while(newText[subcursor+textcursor] != '%');
+			parse_key[subcursor]= '%';
+			subcursor++;
+			strcpy(newText,CutString(newText,textcursor,subcursor));
+			if(strcmp(parse_key,"%ENAME%")==0)
+				strcpy(newText,InjectString(newText,"ENRAGED EGG",textcursor));
+			if(strcmp(parse_key,"%PNAME%")==0)
+				strcpy(newText,InjectString(newText,"ENRAGED EGG",textcursor));
+			return ParseText(newText);
+		}
+		if(newText[textcursor] == '\0') {
+			printf(parse_key);
+			break;
+		}
+	}
+	return newText;
+}
+
+char *InjectString(char *text,char *str, int location){
+	char newText[255];
+	strncpy(newText,text,location);
+	newText[location] = '\0';
+	strcat(newText,str);
+	strcat(newText,text+location);
+
+	return newText;
+}
+
+char *CutString(char *text, int location, int length){
+	while(text[location] != '\0') {
+		text[location] = text[location + length];
+		location++;
+	}
+	text[location] = '\0';
+
+	return text;
 }
 
 void DrawText(Textbox *t){
@@ -147,16 +288,20 @@ void DrawText(Textbox *t){
 	}
 
 	if(t->donewriting == true){
+		if(t->usesArrow)
+			DrawAnimation(t->arrow,t->arrowpos,&uiCamera);
 		if(t->msg != NULL)
 			if(t->msg->hasPrompt)
 				if(t->msg->prompt != NULL){
 					SetMessagePrompts(t->msg);
-					t->msg->prompt->active = true;
+					if(!t->msg->prompt->active)
+						OpenMenu(t->msg->prompt);
 				}
 	}
 
 	if((t->cursor>=0)&&(t->cursor + 1 < (t->linelength*t->linect))){
 	
+
 		++t->cursor;		
 		
 
@@ -164,7 +309,12 @@ void DrawText(Textbox *t){
 			char *line = (char*)malloc(sizeof(char)*(t->linelength+1));
 			memcpy(line,t->lines[i],sizeof(char)*(t->linelength+1));
 
-			
+
+			while((line[t->cursor - (t->linelength*i)] == ' ')||(line[t->cursor - (t->linelength*i)] == '\0')){
+				//THIS BREAKS SOMETIMES?
+				//fprintf(stdout,"Space at %i\n",t->cursor);
+				++t->cursor;
+			}
 		
 			if(t->cursor > t->linelength*(i+1)){
 				DrawLine(t->lines[i],temp);
@@ -172,10 +322,7 @@ void DrawText(Textbox *t){
 			}
 			else{
 				
-				while((line[t->cursor - (t->linelength*i)] == ' ')||(line[t->cursor - (t->linelength*i)] == '\0')){
-					//fprintf(stdout,"Space at %i\n",t->cursor);
-					++t->cursor;
-				}
+				
 				if(t->cursor >= (t->linelength*t->linect)){		
 					t->donewriting = true;
 				//	break;
@@ -229,11 +376,26 @@ void SetMessagePrompts(Message *msg){
 	}
 }
 
-void AdvanceText(){
-	if(mainTextbox.msg->next != NULL){
-		mainTextbox.msg = mainTextbox.msg->next;
+void SetMessageEndFunction(Message *msg, void (*func)()){
+	msg->atEnd = func;
+}
+
+void AdvanceText(int steps){
+	if(mainTextbox.msg->next[steps] != NULL){
+		mainTextbox.msg = mainTextbox.msg->next[steps];
 		SetText(mainTextbox.msg->text,&mainTextbox,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
 	}
+}
+
+Message *AskQuestion(char* q, char* a1, char* a2){
+	Message *msg = NewMessage();
+	CreateMessage(msg,q);
+	msg->next[0] = NewMessage();
+	CreateMessage(msg->next[0],a1);
+	msg->next[1] = NewMessage();
+	CreateMessage(msg->next[1],a2);
+	SetPrompt(msg,MENU_YES_NO);
+	return msg;
 }
 
 void LoadDialogue(){		//I don't like loading all of the possible dialogue on the map at once, I want to replace this
@@ -244,47 +406,52 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 	promptloc.x = LOC_DEFAULT_PROMPT_X;
 	promptloc.y = LOC_DEFAULT_PROMPT_Y;
 
-	InteractableObject *sign = new InteractableObject(5,5);
-	sign->flavortext = new Message;
-	CreateMessage(sign->flavortext,"Hey there I'm a shitty sign!                                                                Smoke weed every day             aeiou aeiou aeiou aeiou aeiou");
-	sign->flavortext->next = new Message;
-	CreateMessage(sign->flavortext->next, "Only losers read the back of the sign.");
-	sign->flavortext->next->next = new Message;
-	CreateMessage(sign->flavortext->next->next, ".... Loser.");
+	InteractableObject *sign = LoadSign(5,5);
+	//SetSpeaker(sign->flavortext,sign);
+//dynamic_cast < Entity* > ( sign ));
 
-	Message *massage = new Message;
-	CreateMessage(massage, "Ball...");
-	massage->next = new Message;
-	CreateMessage(massage->next, "...is life.");
-
-	NPC *npc = new NPC(2,6);
-	NPC *npc2 = new NPC(4,8);
-	NPC *npc3 = new NPC(9,8);
+	CreateMonologue(sign->flavortext,sign,3,"Hi.","I love you.", "Like, comment, and subscribe for more.");
 	
-	GiveNPCMessage(npc,massage);
+//	Message *massage = OpenDialogue("testfiles/test.json");
+	
+/*	Message *massage = new Message;
+	CreateMessage(massage, "Ball...");
+	massage->next[0] = new Message;
+	CreateMessage(massage->next[0], "...is life.");
+	*/
+	NPC **npclist;
+	npclist = LoadEntitiesCFG("testfiles/chunk1-npc.json");
+	NPC *npc2 = new NPC(4,8,"Zach");
+	NPC *npc3 = new NPC(9,8,"Pete");
 
-	massage = new Message;
-	CreateMessage(massage, "Life...");
-	massage->next = new Message;
-	CreateMessage(massage->next, "...is ball.");
+	std::cout<<OUTPUT(npc2->name);
+//	GiveNPCMessage(npclist[0],massage);
 
-	GiveNPCMessage(npc2,massage);
+	npc2->msg = NewMessage();
+	CreateMonologue(npc2->msg,npc2,2,"Ball...","...is life.");
+//	GiveNPCMessage(npc2,npc2->msg);
+//	GiveNPCMessage(npc2,massage);
 
-	massage = new Message;
-	CreateMessage(massage,"Where are you from?");
-	massage->next = new Message;
-	CreateMessage(massage->next,"...What kind of answer is that!?");
-	SetPrompt(massage,MENU_YES_NO,promptloc);
-	SetAnswers(massage,2,AdvanceAndCancel,CancelMenu);
+	Message *massage = AskQuestion("Where are you from?","Yes? You're from Yes???","No? You have to be from somewhere...");
+//	SetAnswers(massage,2,SelectAnswer1,SelectAnswer2);
 
 	GiveNPCMessage(npc3,massage);
 
 	
-	InteractableObject *sign2 = new InteractableObject(8,3);
-	CreateMessage(sign2->flavortext,"Am I... A sign?");
-	sign2->flavortext->next = new Message;
-	CreateMessage(sign2->flavortext->next,"...What the hell!?");
-	SetPrompt(sign2->flavortext,MENU_YES_NO,promptloc);
-	SetAnswers(sign2->flavortext,2,AdvanceAndCancel,CancelMenu);
+	InteractableObject *sign2 = LoadSign(8,3);
+
+
+	CreateMessage(sign2->flavortext,"Am I... A sign?",sign2);
+	sign2->flavortext->next[0] = NewMessage();
+	CreateMessage(sign2->flavortext->next[0],"...What the hell!?",sign2);
+	sign2->flavortext->next[1] = NewMessage();
+	CreateMessage(sign2->flavortext->next[1],"Oh, okay. Thank God.",sign2);
+	SetPrompt(sign2->flavortext,MENU_YES_NO);
+//	SetAnswers(sign2->flavortext,2,SelectAnswer1,SelectAnswer2);
+
+
+	InteractableObject *egg = LoadEgg(6,1);
+	CreateMessage(egg->flavortext,". . .",egg);
+	SetMessageEndFunction(egg->flavortext, LaunchCombat);
 
 }

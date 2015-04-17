@@ -1,9 +1,10 @@
 #ifndef _AUDIO_
 #define _AUDIO_
-////look at attacker and VWP
+
+#include "audio_paths.h"
 
 
-#include "settings.h"
+#include "global.h"
 
 #include "SDL.h"
 #include "SDL_mixer.h"
@@ -26,6 +27,8 @@ void InitAudio();
 
 void PlaySound(Sound *s);
 void PlayMusic(Music *m);
+void StopSound(Sound *s);
+void StopMusic(Music *m = NULL);
 
 void InitMusicList();
 Music *LoadMusic(char filename[20],int volume);

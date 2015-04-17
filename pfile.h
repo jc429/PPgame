@@ -3,13 +3,12 @@
 #ifndef _PFILE_
 #define _PFILE_
 
-#include <libyaml\yaml.h>
 #include <stdio.h>
 
 void TestFile(char *path);
 
 void What();
 
-
+void LoadChunkCFG();
 
 #endif

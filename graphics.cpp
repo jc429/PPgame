@@ -34,6 +34,9 @@ static Sprite *blob;
 static Sprite *testbg;
 //////////////////////////////////////////////////////////
 
+
+/////////~~~~~~~WINDOW AND RENDERER AND FRAME STUFF~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 void InitWindow(){
 	
 	mainCamera.viewport.w = GAME_RES_X;
@@ -55,50 +58,17 @@ void InitWindow(){
 	mainRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);		//Creates the renderer so we can see graphics
 	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");		//Makes the scaled rendering look smoother. (anti-aliasing)
 	SDL_RenderSetLogicalSize(mainRenderer, GAME_RES_X, GAME_RES_Y);	//Sets the renderer's resolution
-	SDL_SetRenderDrawColor(mainRenderer, 250, 230, 230, 255);			//Sets the bg color of the renderer
+	SDL_SetRenderDrawColor(mainRenderer, 0, 0, 0, 255);			//Sets the bg color of the renderer
 	SDL_RenderClear(mainRenderer);
 	SDL_RenderPresent(mainRenderer);
 	SDL_SetWindowFullscreen(sdlWindow,fullscreenFlag);
 }
-/*
-void InitWorld(){
-	world.w = WORLD_W*TILE_W;
-	world.h = WORLD_H*TILE_H;
-
-	for(int i = 0; i < WORLD_W; i++){
-		for(int j = 0; j < WORLD_H; j++){
-			World[i][j] = (Tile*)malloc(sizeof(Tile));
-			World[i][j]->position.x = i*TILE_W;
-			World[i][j]->position.y = j*TILE_H;
-			World[i][j]->lowerspr = LoadSprite("sprites/grasstile.png",32,32,1);
-			World[i][j]->upperspr = NULL;
-			World[i][j]->height = 0;
-			if((i != 0)&&(j != 0)&&(i+1 != WORLD_W)&&(j+1 != WORLD_H))
-				World[i][j]->free = true;
-			else{
-				World[i][j]->free = false;
-				World[i][j]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
-			}
-	//		World[i][j]->lowerspr = (Sprite*)malloc(sizeof(Sprite));
-		//	World[i][j]->upperspr = (Sprite*)malloc(sizeof(Sprite));
-			
-			World[i][j]->debugFill = LoadSprite("sprites/shade.png",32,32,1);
-		}
-	}
-	World[2][6]->free = false;
-	World[2][6]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
-
-	World[5][2]->height = 1;
-	World[6][2]->height = 2;
-	World[7][2]->height = 3;
-	World[5][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
-	World[6][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
-	World[7][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
-}*/
 
 //Draws the current frame
 void RenderCurrentFrame(){
 	SDL_RenderPresent(mainRenderer);	//Draws the frame to the screen
+	
+	SDL_SetRenderDrawColor(mainRenderer, 0, 0, 0, 255);			//resets the bg color of the renderer
 	SDL_RenderClear(mainRenderer);		//Clears the renderer to prepare for the next frame
 }
 //advances the game to the next frame
@@ -132,6 +102,8 @@ void UpdateFrame(Entity *e){
 	}
 }
 */
+
+/////~~~~~~~~~~~SPRITES & ANIMATIONS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 //Initializes the Sprite List
 void InitSpriteList(){		
@@ -192,9 +164,65 @@ void FreeSprite(Sprite *spr){
 	}
 }
 
+int AdvanceFrame(Sprite *spr, int frame){  //placeholder
+	frame++;
+	frame = frame%spr->framesperline;
+	return frame;
+}
+////
+Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop, int delay, void(*finish)()){
+	Animation *anim = new Animation;
+	anim->sprite = spr;
+	anim->curFrame = curFrame;
+	anim->seed = seed;
+	anim->length = len;
+	anim->playing = play;
+	anim->looping = loop;
+	anim->onFinish = finish;
+	anim->delay = delay;
+
+	anim->rotation = 0;
+	anim->mirror.x = 1;
+	anim->mirror.y = 1;
+
+	return anim;
+}
+
+void FreeAnimation(Animation *a){
+	if(a == NULL) return;
+	FreeSprite(a->sprite);
+	delete a;
+}
+
+void AdvanceAnimFrame(Animation *a){
+	if(a->playing==0) return;
+	a->curFrame++;
+	if(a->curFrame >= (a->seed + a->length)){
+		if(a->onFinish != NULL)
+			a->onFinish;
+		if(a->looping)
+			a->curFrame -= a->length;
+		else
+			a->curFrame --;
+		
+	}
+/*	if(a->looping!=0){
+		a->curFrame++;
+		if(a->curFrame >= (a->seed + a->length))
+			a->curFrame -= a->length;
+
+	}else{
+		if(a->curFrame+1 < (a->length+a->seed))
+			a->curFrame++;
+	}*/
+}
+
+//~~~~~~~~~~~~~~YAR THERE BE DRAWIN' BELOW HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 //Draws a sprite to the renderer
 int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
-	if(spr==NULL) return 0;
+	if(spr == NULL) return 0;
+	if(spr->image == NULL) return 0;
 
 	SDL_Rect targetarea;
 	SDL_Rect src;
@@ -211,51 +239,13 @@ int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
 //	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
 		SDL_RenderCopy(mainRenderer,spr->image,&src,&targetarea);
 	
-	
+	/*
 	if(framecheck == 1){
 		frame = AdvanceFrame(spr,frame);
-	}
+	}*/
 	return frame;
 }
 
-int AdvanceFrame(Sprite *spr, int frame){  //placeholder
-	frame++;
-	frame = frame%spr->framesperline;
-	return frame;
-}
-////
-Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop){
-	Animation *anim = new Animation;
-	anim->sprite = spr;
-	anim->curFrame = curFrame;
-	anim->seed = seed;
-	anim->length = len;
-	anim->playing = play;
-	anim->looping = loop;
-
-	anim->rotation = 0;
-	anim->mirror.x = 1;
-	anim->mirror.y = 1;
-
-	return anim;
-}
-
-void FreeAnimation(Animation *a){
-	delete a;
-}
-
-void AdvanceAnimFrame(Animation *a){
-	if(a->playing==0) return;
-	if(a->looping!=0){
-		a->curFrame++;
-		if(a->curFrame >= (a->seed + a->length))
-			a->curFrame -= a->length;
-//		a->curFrame = (a->curFrame%a->length)+a->seed;
-	}else{
-		if(a->curFrame+1 < (a->length+a->seed))
-			a->curFrame++;
-	}
-}
 
 void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	if(anim==NULL) return;
@@ -281,47 +271,209 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	targetarea.w = anim->sprite->w;
 	targetarea.h = anim->sprite->h;
 
-	if(framecheck == 1)
+	if(framecheck%anim->delay == 0){
 		AdvanceAnimFrame(anim);
+	}
 //	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
 	//	SDL_RenderCopy(mainRenderer,anim->sprite->image,&src,&targetarea);
 	
 		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
 }
 
-void DrawRect(SDL_Rect *rect, Camera *c){
+void DrawRect(SDL_Rect *rect, Camera *c, Uint32 color){
 	rect->x -= c->viewport.x;
 	rect->y -= c->viewport.y;
+	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
 	SDL_RenderDrawRect(mainRenderer, rect);
+}
+
+void DrawRectFill(SDL_Rect *rect, Camera *c, Uint32 color){
+	rect->x -= c->viewport.x;
+	rect->y -= c->viewport.y;
+	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
+	SDL_RenderFillRect(mainRenderer, rect);
 }
 
 void DrawTile(Vec2i pos){
 	SDL_Rect tile = {pos.x*TILE_W,pos.y*TILE_H,TILE_W,TILE_H}; // Just some random rect
-	tile.x -= mainCamera.viewport.x;
-	tile.y -= mainCamera.viewport.y;
-	SDL_RenderDrawRect(mainRenderer, &tile);
+
+	tile.y -= World[pos.x][pos.y]->structure->height<<2;
+	DrawRect(&tile,&mainCamera);
 }
 
-void DrawCursor(Vec2i pos){
+void DrawFacingCursor(Vec2i pos){
 	SDL_Rect tile = {pos.x*TILE_W+0.4*TILE_W,pos.y*TILE_H+0.4*TILE_H,TILE_W*0.2,TILE_H*0.2}; // Just some random rect
-	tile.x -= mainCamera.viewport.x;
-	tile.y -= mainCamera.viewport.y;
-	SDL_RenderDrawRect(mainRenderer, &tile);
+	if(World[pos.x][pos.y] != NULL)
+		tile.y -= World[pos.x][pos.y]->structure->height<<2;
+	DrawRect(&tile,&mainCamera);
 }
-/*
-void DrawWorld(){
-	int currentRow;
+
+
+void DrawPanel(SDL_Rect rect, Sprite *spr){
+	Vec2i tile_size;
+	Vec2i loc;
+	SetVec2i(tile_size,spr->w,spr->h);
+	SetVec2i(loc,rect.x,rect.y);
+	loc = loc - tile_size;
+	DrawSprite(spr,0,loc,&uiCamera);
+	loc.x += tile_size.x;
+	while((loc.x) <= (rect.x + rect.w)){		
+		DrawSprite(spr,1,loc,&uiCamera);
+		loc.x += tile_size.x;
+	}
+	DrawSprite(spr,2,loc,&uiCamera);
+	loc.x = rect.x - tile_size.x;
+	loc.y += tile_size.y;
+
+	while(loc.y < (rect.y + rect.h)){
+		DrawSprite(spr,3,loc,&uiCamera);
+		loc.x += tile_size.x;
+		while((loc.x) <= (rect.x + rect.w)){		
+			DrawSprite(spr,4,loc,&uiCamera);
+			loc.x += tile_size.x;
+		}
+		DrawSprite(spr,5,loc,&uiCamera);
+		loc.x = rect.x - tile_size.x;
+		loc.y += tile_size.y;
+	}
+
+	DrawSprite(spr,6,loc,&uiCamera);
+	loc.x += tile_size.x;
+	while((loc.x) <= (rect.x + rect.w)){		
+		DrawSprite(spr,7,loc,&uiCamera);
+		loc.x += tile_size.x;
+	}
+	DrawSprite(spr,8,loc,&uiCamera);
+
+}
+
+//////			World Drawing
+
+void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking down are drawn beneath the tile they're walking into
+	int row;
+	static Entity *ents_drawn[MAX_ENTS];
+	static int num_ents;
+
+	for(int i = 0; i < MAX_ENTS; i++){
+		ents_drawn[i] = NULL;
+	}
+	num_ents = 0;
+
 	int currentLayer;
-	int numLayers = 2;
-	for(currentRow = 0; currentRow < WORLD_H; currentRow++){
+	int numLayers = 1;
+
+	for(row = 0; row < WORLD_H; row++){
 		for(currentLayer = 0; currentLayer < numLayers; currentLayer++){
-			DrawRow(currentRow,currentLayer);
-			if(currentLayer==0){
-				if((!_Player->tomove.y==1)&&(_Player->tile.y == currentRow)){
-					DrawPlayer(_Player);
+		//	DrawRow(currentRow,currentLayer);
+			for(int col = 0; col < WORLD_W; col++){
+				if (World[col][row] != NULL){
+					if(World[col][row]->structure->spritesheet == NULL) continue;
+					Vec2i loc = {col*TILE_W,row*TILE_H};
+					loc = World[col][row]->position;
+					//draw the base height tile
+					World[col][row]->structure->baseframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->baseframe,loc,&mainCamera);
+					loc.y -= World[col][row]->structure->height<<2;
+					//draw the ground height tile
+					World[col][row]->structure->floorframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->floorframe,loc,&mainCamera);
+					loc.y += TILE_H;
+					World[col][row]->structure->wallframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->wallframe,loc,&mainCamera);
+					
+			
 				}
-				else if((_Player->tomove.y==1)&&(_Player->tile.y+1 == currentRow)){
-					DrawPlayer(_Player);
+			}
+			//draw tile contents after drawing the row
+			for(int col = 0; col < WORLD_W; col++){
+				if (World[col][row] != NULL){
+					if(World[col][row]->contents!=NULL){
+						Entity *contents = World[col][row]->contents;
+						bool drawn = false;
+						for(int i = 0; i < num_ents; i++){
+							if(contents == ents_drawn[i])
+								drawn = true;
+						}
+						if(drawn) continue;
+						
+						contents->Draw();
+						ents_drawn[num_ents] = contents;
+						num_ents++;
+						
+					}
+				}
+			}
+		}
+	}
+}
+
+
+void DrawWorld2(){	//draws the game in stacked layers based on their height. doesn't work.
+	int row;
+	static Entity *ents_drawn[MAX_ENTS];
+	static int num_ents;
+
+	for(int i = 0; i < MAX_ENTS; i++){
+		ents_drawn[i] = NULL;
+	}
+	num_ents = 0;
+
+	int currentLayer = 0;
+	int numLayers = 10;	//the number of different heights tiles can have 
+
+	//Draw the Base tiles first. This ensures the world has no gaping holes.
+	for(row = 0; row < WORLD_H; row++){
+		for(int col = 0; col < WORLD_W; col++){
+			if (World[col][row] == NULL) continue;
+			if(World[col][row]->structure->spritesheet == NULL) continue;
+			//draw the base height tile
+			Vec2i loc = World[col][row]->position;
+			World[col][row]->structure->baseframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->baseframe,loc,&mainCamera);	
+			// I thiiiiink walls should also be drawn at this point? idfk
+			loc.y -= World[col][row]->structure->height<<2;
+			loc.y += TILE_H;
+			World[col][row]->structure->wallframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->wallframe,loc,&mainCamera);
+					
+		}
+	}
+
+
+	
+	for(currentLayer = 0; currentLayer < numLayers; currentLayer++){
+		for(row = 0; row < WORLD_H; row++){
+			for(int col = 0; col < WORLD_W; col++){
+				//draw all tiles on a layer
+				if (World[col][row] != NULL){
+					if(World[col][row]->structure->spritesheet == NULL) continue;
+					Vec2i loc = {col*TILE_W,row*TILE_H};
+					loc = World[col][row]->position;
+					if(World[col][row]->structure->height != currentLayer)
+						continue;
+					loc.y -= World[col][row]->structure->height<<2;
+					//draw the ground height tile
+					World[col][row]->structure->floorframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->floorframe,loc,&mainCamera);
+					loc.y += TILE_H;
+				//	World[col][row]->structure->wallframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->wallframe,loc,&mainCamera);
+					
+			
+				}
+			}
+			//draw tile contents on that layer
+			for(int col = 0; col < WORLD_W; col++){
+				if (World[col][row] != NULL){
+					if(World[col][row]->contents!=NULL){
+						if(World[col][row]->structure->height != currentLayer)
+							continue;
+						Entity *contents = World[col][row]->contents;
+						bool drawn = false;
+						for(int i = 0; i < num_ents; i++){
+							if(contents == ents_drawn[i])
+								drawn = true;
+						}
+						if(drawn) continue;
+						
+						contents->Draw();
+						ents_drawn[num_ents] = contents;
+						num_ents++;
+						
+					}
 				}
 			}
 		}
@@ -330,24 +482,38 @@ void DrawWorld(){
 
 
 void DrawRow(int row, int layer){
+	return;
+
+/*
 	for(int col = 0; col < WORLD_W; col++){
 		if (World[col][row] != NULL){
 			Vec2i loc = {col*TILE_W,row*TILE_H};
 			loc = World[col][row]->position;
-			if(layer == 0){
-				if(World[col][row]->lowerspr != NULL){
-					World[col][row]->lowerframe = DrawSprite(World[col][row]->lowerspr,World[col][row]->lowerframe,loc,&mainCamera);
-				}
-			}else if(layer ==1){
-				if(World[col][row]->upperspr != NULL){
-					World[col][row]->upperframe = DrawSprite(World[col][row]->upperspr,World[col][row]->upperframe,loc,&mainCamera);
+			loc.y -= World[col][row]->structure->height<<2;
+			//draw the tile
+			if(World[col][row]->structure->lowerspr != NULL){
+				World[col][row]->structure->lowerframe = DrawSprite(World[col][row]->structure->lowerspr,World[col][row]->structure->lowerframe,loc,&mainCamera);
+			}
+			
+			
+		}
+	}
+	//draw tile contents after drawing the row
+	for(int col = 0; col < WORLD_W; col++){
+		static Entity *last_drawn = NULL;
+		if (World[col][row] != NULL){
+			if(World[col][row]->contents!=NULL){
+				Entity *contents = World[col][row]->contents;
+				if(contents != last_drawn){
+					contents->Draw();
+					last_drawn = contents;
 				}
 			}
 		}
-	}
+	}*/
 }
 
-*/
+
 
 
 
@@ -355,15 +521,16 @@ void DrawRow(int row, int layer){
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //soon to be unused
 void DrawTilesLower(){
-	for(int i = 0; i < WORLD_W; i++){
+/*	for(int i = 0; i < WORLD_W; i++){
 		for(int j = 0; j < WORLD_H; j++){
 			if (World[i][j] != NULL){
 				if(World[i][j]->lowerspr != NULL){
-			/*		fprintf(stdout,"Tile %i, %i   ",i,j);
+					fprintf(stdout,"Tile %i, %i   ",i,j);
 					fprintf(stdout,World[i][j]->lowerspr->filename);
-					fprintf(stdout,"   Position: %i, %i \n",World[i][j]->position.x,World[i][j]->position.y);*/
+					fprintf(stdout,"   Position: %i, %i \n",World[i][j]->position.x,World[i][j]->position.y);
 					Vec2i loc = {i*TILE_W,j*TILE_H};
 					loc = World[i][j]->position;
+					loc.y -= World[i][j]->height<<3;
 //					fprintf(stdout,"%i, %i \n",loc.x,loc.y);
 					World[i][j]->lowerframe = DrawSprite(World[i][j]->lowerspr,World[i][j]->lowerframe,loc,&mainCamera);
 					if(World[i][j]->contents!=NULL){
@@ -373,11 +540,11 @@ void DrawTilesLower(){
 				}
 			}
 		}
-	}
+	}*/
 }
 //soon to be unused
 void DrawTilesUpper(){
-	for(int i = 0; i < WORLD_W; i++){
+	/*for(int i = 0; i < WORLD_W; i++){
 		for(int j = 0; j < WORLD_H; j++){
 			if (World[i][j] != NULL){
 				if(World[i][j]->upperspr != NULL)
@@ -386,7 +553,7 @@ void DrawTilesUpper(){
 //					DrawSprite(World[i][j]->debugFill,World[i][j]->position,&mainCamera);
 			}
 		}
-	}
+	}*/
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

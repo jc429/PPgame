@@ -13,6 +13,8 @@ typedef struct Level_T{
 }Level;
 
 
+void LoadLevel();
+
 int LoadCFG(Level *l, char* path);
 int LoadLevelDef(Level *l, FILE *fileptr, char *buf);
 int LoadSpriteDef(Level *l,FILE *fileptr,char *buf);
@@ -21,5 +23,6 @@ int LoadMapDef(Level *l,FILE *fileptr,char *buf);
 int SaveCFG(Level *l, char* path);
 
 void InitWorld();
+void UpdateWorld();
 
 #endif

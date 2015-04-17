@@ -5,13 +5,14 @@
 
 #define FORCE_DEBUG_LEVEL 0
 
+#define DEBUG_MUTE 0
+
 #define DEBUG_START_MODE OVERWORLD
-/*{
-	MAIN_MENU,
-	OPTIONS,
-	OVERWORLD,
-	COMBAT,				
-	DIALOGUE_OVERLAY,	//Maybe unnecessary?
-	DIALOGUE_FULL,
-	DATE			
-}*/
+
+#define DEBUG_BREAK 0
+
+#define DEBUG_BREAK_FUNC TestJansson
+
+
+//debug function declarations
+void TestJansson();
