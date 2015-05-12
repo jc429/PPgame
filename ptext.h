@@ -96,10 +96,10 @@ void DecrementCursor(Menu *m);
 
 Menu *LoadPauseMenu();
 Menu *LoadMenuYesNo(Vec2i *loc = NULL, char* yes = NULL, char* no = NULL, void (*YesFunc)() = NULL,void (*NoFunc)() = NULL);
-Menu *LoadCustomMenu(int numItems, char *op1 = NULL, char *op2 = NULL, char *op3 = NULL, char *op4 = NULL, char *op5 = NULL, char *op6 = NULL);
+Menu *LoadCustomMenu(int numItems, char itemNames[6][16]);
 
 
-void OpenMenu(Menu *m);
+void OpenMenu(Menu *m,vector<struct Menu_T*> *stack = NULL);
 
 void CancelMenu();
 void AdvanceText(int steps = 0);

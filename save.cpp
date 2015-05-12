@@ -12,7 +12,7 @@ typedef struct SaveData_T{
 void Create_Save(void *data){
 	SaveData sd;
 	//sd.test_int = data->i;
-	//strcpy(sd.test_string,data->str,50);
+	//copy_string(sd.test_string,data->str,50);
 }
 
 void Save_Data(char *filepath, SaveData *data){

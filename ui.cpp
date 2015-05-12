@@ -1,4 +1,3 @@
-#include "ui.h"
 #include "dialogue.h"
 #include "graphics.h"
 #include "input.h"
@@ -49,7 +48,7 @@ void DeleteInputNode(InputNode *node,int steps){
 }
 
 
-bool InputPressed(Uint8 input,InputNode *node){
+bool InputPressed(Uint16 input,InputNode *node){
 	if(node == NULL)
 		node = _Inputs;
 	return ((node->input & input)&&!(node->prev->input & input));
@@ -75,10 +74,5 @@ bool InputBuffered (InputNode *input, int button, int buf){
 		}
 	}else
 		return 0;
-}
-
-
-void DrawOverworldUI(){
-
 }
 

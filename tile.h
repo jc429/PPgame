@@ -29,7 +29,7 @@ typedef struct Tile_T{
 
 //changing stuff	
 	bool free;				//is the tile unoccupied?
-	Entity *contents;		//who or what is in this tile?
+	OverworldEnt *contents;		//who or what is in this tile?
 }Tile;
 
 Tile* LoadTile(bool fr, int ht, Sprite *sheet,  int baseframe, int floorframe, int wallframe = 0);

@@ -17,12 +17,12 @@
 #define SPATH_MENU_CURSOR_LARGE "sprites/menucursor-l.png"
 
 
-#define SPATH_PLAYER_OVERWORLD "sprites/player2.png"
-#define SPATH_NPC_GENERIC "sprites/nonplayer.png"
+#define SPATH_PLAYER_OVERWORLD "sprites/player.png"
+#define SPATH_NPC_GENERIC "sprites/skeleton_base.png"
 #define SPATH_SIGN_GENERIC "sprites/sign.png"
 
 #define SPATH_ENEMY_GENERIC "sprites/enemies/begg.png"
-#define SPATH_ALLY_GENERIC "sprites/mad.png"
+#define SPATH_ALLY_GENERIC "sprites/player.png"
 
 
 

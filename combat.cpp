@@ -1,4 +1,5 @@
 #include "combat.h"
+#include "gamestate.h"
 #include "audio.h"
 #include <queue>
 #include <vector>
@@ -17,7 +18,7 @@ extern Menu *_CurrentMenu;
 extern vector<CombatUI*> _CombatUIStack;
 Music *bgm;
 
-extern CombatEnt *Party[MAX_PARTY];
+extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
 extern CombatEnt *Enemies[MAX_ENEMIES];
 
 static queue<CombatAction*> _ActionStack;
@@ -36,6 +37,31 @@ extern CombatUI *targetcursor;
 extern CombatUI *testmenu;
 
 extern char CombatMessages[8][255];
+
+
+static Uint32 frontcolor = pCol_Yellow;
+static Uint32 backcolor = pCol_DarkRed;
+void SwapColors();
+
+void Combat::Update(){
+	UpdateCombat();
+	
+}
+
+void Combat::Draw(){
+	DrawCombatBG();
+	DrawEnemies();
+	DrawAllies();
+	DrawCombatUI();
+}
+
+
+void SwapColors(){
+	Uint32 temp = frontcolor;
+	frontcolor = backcolor;
+	backcolor = temp;
+}
+
 
 
 void InitCombat(){
@@ -66,11 +92,11 @@ void SetupCombat(){
 	PlayMusic(bgm);
 	LoadEnemies();
 	LoadAllies();
-	selectcursor->contents.cursor.target = Party[0];
+	selectcursor->contents.cursor.target = CombatParty[0];
 	targetcursor->contents.cursor.target = Enemies[0];
-	strcpy(CombatMessages[0], "An %ENAME% attacks!");
-	strcpy(CombatMessages[1],"HAHAHAHAHA %FUCK% YOU");
-	/*strcpy(CombatMessages[1],"What will ");
+	copy_string(CombatMessages[0], "An %ENAME% attacks!");
+	copy_string(CombatMessages[1],"HAHAHAHAHA %FUCK% YOU");
+	/*copy_string(CombatMessages[1],"What will ");
 	strcat(CombatMessages[1],Party[0]->name);
 	strcat(CombatMessages[1]," do?")*/
 	SetText(CombatMessages[0],&combatTextbox,1);
@@ -86,36 +112,37 @@ void UpdateCombat(){
 		break;
 	case BATTLE_MID:
 		EnemyAI();
+		if(!_CombatUIStack.empty()){
+			UpdateCombatUI(_CombatUIStack.back());
+		}
 		UpdateTurn();
 		break;
 	}
 	
-	if(!_CombatUIStack.empty()){
-		UpdateCombatUI(_CombatUIStack.back());
-	}
+	
 }
 
 void UpdateTurn(){
 	if(ActionTimer>0)
 		ActionTimer--;
 	if(ActionTimer == 0){
+		SwapColors();
 		if(!_ActionStack.empty()){
 			ExecuteQueue();
-		//	RoundEffects();
 		}
 		ActionTimer = ROUND_TIME; //placeholder
 	}
 	
-	for(int i = 0; i < MAX_PARTY; i++)
-		PerformCurrentEvent(Party[i]);
+	for(int i = 0; i < MAX_PARTY_COMBAT; i++)
+		PerformCurrentEvent(CombatParty[i]);
 	for(int i = 0; i < MAX_ENEMIES; i++)
 		PerformCurrentEvent(Enemies[i]);
 
-	if(_CombatUIStack.empty())
-		OpenCombatUI(selectcursor);
 	
-	if(InputPressed(PPINPUT_X)){
-		
+	
+	if(InputPressed(PPINPUT_A)){
+		if(_CombatUIStack.empty())
+			OpenCombatUI(selectcursor);
 	}
 
 
@@ -159,6 +186,7 @@ void Attack(CombatEnt* owner, CombatEnt *target){
 	dest.x += 15;
 	AddMotion(owner,dest,5);
 	AddMotion(owner,owner->position_base,40);
+
 }
 
 void QueueAction(CombatAction* action){
@@ -178,7 +206,7 @@ void ExecuteAction(CombatAction* action){
 	action->Action(action->ent,action->target);
 }
 
-void AdvanceTurnPhase(){
+void AdvanceTurnPhase(){  //not implemented yet
 	switch(_TurnPhase){
 	case ACTION_SELECT:
 		_TurnPhase = ACTING;
@@ -199,22 +227,62 @@ void DrawHPBar(CombatEnt *ent){
 	if(ent == NULL) return;
 	//jank ass hp bar code
 	SDL_Rect hpbar;
-	hpbar.x = (int)ent->position_base.x - (ent->stats_base.max_health>>4);
-	hpbar.y = (int)ent->position_base.y + ent->s_offset.y;
+	Uint32 barcolor;
+
+	if(ent->chardata->health == ent->chardata->stats_base.max_health)
+		barcolor = pCol_Blue;
+	else if(((double)ent->chardata->health / (double)ent->chardata->stats_base.max_health) > 0.5)
+		barcolor = pCol_DarkGreen;
+	else if(((double)ent->chardata->health / (double)ent->chardata->stats_base.max_health) > 0.2)
+		barcolor = pCol_DarkYellow;
+	else
+		barcolor = pCol_DarkRed;
+
+	hpbar.x = (int)ent->position_base.x - 12;
+	hpbar.y = (int)ent->position_base.y;// + (ent->s_offset.y>>4);
 	hpbar.h = 4;
-	hpbar.w = ent->stats_base.max_health>>2;
+	hpbar.w = 25;
 	DrawRectFill(&hpbar,&combatCamera,pCol_DarkGray);
-	hpbar.w = ent->health>>2;
+	hpbar.w = ((double)ent->chardata->health / (double)ent->chardata->stats_base.max_health)*25;
 	if(hpbar.w < 0) hpbar.w = 0;
-	DrawRectFill(&hpbar,&combatCamera,pCol_Green);
-	hpbar.w = ent->stats_base.max_health>>2;
+	DrawRectFill(&hpbar,&combatCamera,barcolor);
+	hpbar.w = 25;
+	DrawRect(&hpbar,&combatCamera,pCol_Black);
+}
+
+void DrawHPBarFull(CombatEnt *ent){
+	if(ent == NULL) return;
+	//jank ass hp bar code
+	SDL_Rect hpbar;
+	Uint32 barcolor;
+
+	if(ent->chardata->health == ent->chardata->stats_base.max_health)
+		barcolor = pCol_Cyan;
+	else if(((double)ent->chardata->health / (double)ent->chardata->stats_base.max_health) > 0.5)
+		barcolor = pCol_Green;
+	else if(((double)ent->chardata->health / (double)ent->chardata->stats_base.max_health) > 0.2)
+		barcolor = pCol_Yellow;
+	else
+		barcolor = pCol_Red;
+
+	hpbar.x = (int)ent->position_base.x - 50;
+	hpbar.y = (int)ent->position_base.y + 6;// + (ent->s_offset.y>>4);
+	hpbar.h = 6;
+	hpbar.w = 100;
+	DrawRectFill(&hpbar,&combatCamera,pCol_Gray);
+	hpbar.w = ((double)ent->chardata->health / (double)ent->chardata->stats_base.max_health)*100;
+	if(hpbar.w < 0) hpbar.w = 0;
+	
+
+	DrawRectFill(&hpbar,&combatCamera,barcolor);
+	hpbar.w = 100;
 	DrawRect(&hpbar,&combatCamera,pCol_Black);
 }
 
 
 void LoadCombatBG(){
 	Sprite *bgSpr = LoadSprite(SPATH_BG_COMBAT,320,240,1);
-	combatBG = LoadAnimation(bgSpr,0,0,10,1,1);
+	combatBG = LoadAnimation(bgSpr,0,0,1,1,1);
 }
 
 void DrawCombatBG(){
@@ -224,12 +292,12 @@ void DrawCombatBG(){
 
 void DrawCombatUI(){
 	DrawEffectStack();
-	for(int i = 0; i < MAX_PARTY;i++){
-		DrawHPBar(Party[i]);
+	/*for(int i = 0; i < MAX_PARTY_COMBAT;i++){
+		DrawHPBar(CombatParty[i]);
 	}
 	for(int i = 0; i < MAX_ENEMIES;i++){
 		DrawHPBar(Enemies[i]);
-	}
+	}*/
 	DrawBattleTimer();
 	DrawActionStack();
 	DrawTextbox(&combatTextbox);
@@ -247,13 +315,21 @@ void DrawEffectStack(){
 }
 
 void DrawBattleTimer(){
+	
+
 	SDL_Rect timer;
-	timer.x = 5;
 	timer.y = 5;
 	timer.h = 5;
-	timer.w = ActionTimer;
 
-	DrawRectFill(&timer,&combatCamera,pCol_Red);
+	timer.x = 5;
+	timer.w = ROUND_TIME;
+	DrawRectFill(&timer,&combatCamera,backcolor);
+	
+	timer.x = 5+((ROUND_TIME - ActionTimer)>>1);
+	timer.w = ActionTimer;
+	DrawRectFill(&timer,&combatCamera,frontcolor);
+
+	timer.x = 5;
 	timer.w = ROUND_TIME;
 	DrawRect(&timer,&combatCamera,pCol_Black);
 }
@@ -294,7 +370,7 @@ void QueueAttack(CombatEnt *owner, CombatEnt *target){
 	c->ent = owner;
 	c->target = target;
 	
-	strcpy(c->text,c->ent->name);
+	copy_string(c->text,c->ent->chardata->name);
 	strcat(c->text," attacks!");
 	c->type = ACT_DEBUG;
 	c->Action = Attack;

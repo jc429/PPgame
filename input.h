@@ -7,6 +7,39 @@
 #include "ptext.h"
 
 
+//Game inputs 
+#define PPKEY_LEFT		SDL_SCANCODE_A
+#define PPKEY_RIGHT		SDL_SCANCODE_D
+#define PPKEY_UP		SDL_SCANCODE_W
+#define PPKEY_DOWN		SDL_SCANCODE_S
+#define PPKEY_LEFT2		SDL_SCANCODE_LEFT
+#define PPKEY_RIGHT2	SDL_SCANCODE_RIGHT
+#define PPKEY_UP2		SDL_SCANCODE_UP
+#define PPKEY_DOWN2		SDL_SCANCODE_DOWN
+#define PPKEY_A			SDL_SCANCODE_SPACE
+#define PPKEY_B			SDL_SCANCODE_LSHIFT
+#define PPKEY_X			SDL_SCANCODE_Z
+#define PPKEY_Y			SDL_SCANCODE_X
+#define PPKEY_START		SDL_SCANCODE_RETURN
+//debug pause idk 
+#define PPKEY_PAUSE SDL_SCANCODE_P
+
+#define PPINPUT_LEFT	1<<7
+#define PPINPUT_RIGHT	1<<6
+#define PPINPUT_UP		1<<5
+#define PPINPUT_DOWN	1<<4
+#define PPINPUT_A		1<<3
+#define PPINPUT_B		1<<2
+#define PPINPUT_X		1<<1
+#define PPINPUT_Y		1
+#define PPINPUT_START	1<<8
+#define PPINPUT_ESC		1<<15
+
+#define PPINPUT_FACE_ANY (PPINPUT_A|PPINPUT_B|PPINPUT_X|PPINPUT_Y)
+#define PPINPUT_DIR_ANY (PPINPUT_UP|PPINPUT_DOWN|PPINPUT_LEFT|PPINPUT_RIGHT)
+
+#define PPINPUT_TEXT_ADVANCE (PPINPUT_A|PPINPUT_B)
+
 
 //This could apply to anything really; a key, a mouse button, a gamepad button, etc
 typedef struct Input_T{
@@ -37,8 +70,8 @@ void DeleteInputNode(InputNode *node,int steps);
 
 
 
-bool InputPressed(Uint8 input,InputNode *node = NULL);
-bool InputReleased(Uint8 input,InputNode *node = NULL);
+bool InputPressed(Uint16 input,InputNode *node = NULL);
+bool InputReleased(Uint16 input,InputNode *node = NULL);
 bool InputBuffered (InputNode *input, int button, int buf);
 
 #endif

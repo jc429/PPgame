@@ -144,7 +144,7 @@ Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl){
 	/*sets a transparent color for blitting.*/
 	//  SDL_SetColorKey(SpriteList[i].image, SDL_SRCCOLORKEY , SDL_MapRGB(SpriteList[i].image->format, 255,255,255));
 	/*then copy the given information to the sprite*/
-	strncpy_s(SpriteList[i].filename,filename,40);
+	strncpy(SpriteList[i].filename,filename,40);
 	/*now sprites don't have to be 16 frames per line, but most will be.*/
 	SpriteList[i].framesperline = fpl;
 	SpriteList[i].w = sizex;
@@ -157,7 +157,7 @@ void FreeSprite(Sprite *spr){
 	if(spr==NULL) return;
 	spr->used--;
 	if(spr->used <= 0){
-		strcpy_s(spr->filename,"\0");
+		copy_string(spr->filename,"\0");
 		if(spr->image != NULL)
 			SDL_DestroyTexture(spr->image);
 		spr->image = NULL;
@@ -351,7 +351,7 @@ void DrawPanel(SDL_Rect rect, Sprite *spr){
 
 void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking down are drawn beneath the tile they're walking into
 	int row;
-	static Entity *ents_drawn[MAX_ENTS];
+	static OverworldEnt *ents_drawn[MAX_ENTS];
 	static int num_ents;
 
 	for(int i = 0; i < MAX_ENTS; i++){
@@ -385,7 +385,7 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking do
 			for(int col = 0; col < WORLD_W; col++){
 				if (World[col][row] != NULL){
 					if(World[col][row]->contents!=NULL){
-						Entity *contents = World[col][row]->contents;
+						OverworldEnt *contents = World[col][row]->contents;
 						bool drawn = false;
 						for(int i = 0; i < num_ents; i++){
 							if(contents == ents_drawn[i])
@@ -407,7 +407,7 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking do
 
 void DrawWorld2(){	//draws the game in stacked layers based on their height. doesn't work.
 	int row;
-	static Entity *ents_drawn[MAX_ENTS];
+	static OverworldEnt *ents_drawn[MAX_ENTS];
 	static int num_ents;
 
 	for(int i = 0; i < MAX_ENTS; i++){
@@ -461,7 +461,7 @@ void DrawWorld2(){	//draws the game in stacked layers based on their height. doe
 					if(World[col][row]->contents!=NULL){
 						if(World[col][row]->structure->height != currentLayer)
 							continue;
-						Entity *contents = World[col][row]->contents;
+						OverworldEnt *contents = World[col][row]->contents;
 						bool drawn = false;
 						for(int i = 0; i < num_ents; i++){
 							if(contents == ents_drawn[i])
@@ -500,10 +500,10 @@ void DrawRow(int row, int layer){
 	}
 	//draw tile contents after drawing the row
 	for(int col = 0; col < WORLD_W; col++){
-		static Entity *last_drawn = NULL;
+		static OverworldEnt *last_drawn = NULL;
 		if (World[col][row] != NULL){
 			if(World[col][row]->contents!=NULL){
-				Entity *contents = World[col][row]->contents;
+				OverworldEnt *contents = World[col][row]->contents;
 				if(contents != last_drawn){
 					contents->Draw();
 					last_drawn = contents;
@@ -534,7 +534,7 @@ void DrawTilesLower(){
 //					fprintf(stdout,"%i, %i \n",loc.x,loc.y);
 					World[i][j]->lowerframe = DrawSprite(World[i][j]->lowerspr,World[i][j]->lowerframe,loc,&mainCamera);
 					if(World[i][j]->contents!=NULL){
-						Entity *contents = World[i][j]->contents;
+						OverworldEnt *contents = World[i][j]->contents;
 						DrawAnimation(contents->animlist[contents->animation][contents->direction],contents->worldposition-contents->s_offset,&mainCamera);
 					}
 				}

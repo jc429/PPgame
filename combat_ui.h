@@ -4,7 +4,6 @@
 
 #include "global.h"
 #include "sprites.h"
-#include "ui.h"
 #include "combat_ent.h"
 
 typedef enum CUIType{
@@ -39,7 +38,7 @@ void UpdateCombatUI(CombatUI * c);
 void DrawCombatUI(CombatUI * c);
 
 void OpenCombatUI(CombatUI *c);
-
+void CancelCombatUI();
 
 void UpdateCursor(CombatCursor *cc);
 void MoveCursor(CombatCursor *cc);

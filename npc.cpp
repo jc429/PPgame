@@ -8,6 +8,9 @@ extern Player *_Player;
 
 NPC::NPC (int xpos, int ypos, char *entName){
 
+	if(entName == NULL)
+		entName = "Some Guy";
+	chardata = LoadCharData(entName);
 //	name = NULL;
 
 	//Facing
@@ -73,10 +76,7 @@ NPC::NPC (int xpos, int ypos, char *entName){
 	passable = false;
 	type = Ent_NPC;
 
-	if(entName != NULL)
-		strcpy(name,entName);
-	else
-		strcpy(name,"Some Guy");
+
 
 	//get us started on a tile
 	AddToWorld(this, xpos, ypos);
@@ -122,5 +122,5 @@ void NPC::Talk(Textbox *t){
 void GiveNPCMessage(NPC *npc, Message *msg){
 	npc->msg = msg;
 	npc->talks = true;
-	SetSpeaker(msg,npc);
+	SetSpeaker(msg,npc->chardata);
 }

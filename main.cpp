@@ -3,6 +3,7 @@
 using std::vector;
 
 void InitGame();
+void ExitGame();
 void PollEvents();
 Uint16 PollInputs();
 void UpdateGame();
@@ -92,10 +93,13 @@ void InitGame(){
 	InitSoundList();
 	InitChunkList();
 
-
+	InitItemTable();
+	InitInventory();
+	InitParty();
+	
 	numMenus = 0;
 /////////////////////
-	
+	LoadWallet();
 	InitCombat();
 
 	InitMainTextbox(&mainTextbox,4,40,LoadSprite(SPATH_MAIN_TEXTBOX,320,80,1));
@@ -104,11 +108,17 @@ void InitGame(){
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//test stuff goes between the squiggles
 	
-
-	What(); 
-
 	_CurrentScene = new Overworld();
 	
+	AddMoney(6000);
+	AddItem(300);
+	AddItem(600);
+	AddItem(300);
+	AddItem(600);
+	AddItem(601);
+	AddItem(10);
+	AddItem(301);
+
 
 	LoadDialogue();
 
@@ -140,6 +150,11 @@ void InitGame(){
 		_GameState = START_MODE;
 }
 
+void ExitGame(){
+	done = 1;
+}
+
+
 //This is how you get your inputs
 void PollEvents(){
 	SDL_Event e;
@@ -157,7 +172,20 @@ void PollEvents(){
 	DeleteInputNode(inputNode, INPUTS_HISTORY);
 
 	if(DEBUG){
-		if(_Inputs->input & 1<<14){
+		if(InputPressed(PPINPUT_ESC)){
+			if(_GameState == INVENTORY){
+				CloseInventory();
+			}else if(_GameState == COMBAT){
+				ExitCombat();
+			}else{
+				if(!_MenuStack.empty())
+					CancelMenu();
+				else
+					done = 1;
+			}
+			
+		}
+		/*if(_Inputs->input & 1<<14){
 			if(_GameState == OVERWORLD){
 				EnterCombat();
 			}
@@ -166,7 +194,7 @@ void PollEvents(){
 			if(_GameState == COMBAT){
 				ExitCombat();
 			}
-		}
+		}*/
 	}
 
 }
@@ -175,15 +203,17 @@ Uint16 PollInputs(){
 	Uint16 inputs = 0;
 	const Uint8 *keys = SDL_GetKeyboardState(NULL);
 	if(DEBUG)
-		if (keys[SDL_SCANCODE_ESCAPE])
-			done = 1;
+		if (keys[SDL_SCANCODE_F4])
+			ExitGame();
 
 	if(DEBUG){		//debug inputs
-		if(keys[SDL_SCANCODE_M])
+	/*	if(keys[SDL_SCANCODE_M])
 			inputs |= 1<<15;
 		if(keys[SDL_SCANCODE_N]){
 			inputs |= 1<<14;		
-		}
+		}*/
+		if(keys[SDL_SCANCODE_ESCAPE])
+			inputs |= PPINPUT_ESC;
 	}
 
 	if(keys[PPKEY_PAUSE]){
@@ -192,13 +222,13 @@ Uint16 PollInputs(){
 	if(keys[PPKEY_START])
 		inputs |= PPINPUT_START;
 
-	if(keys[PPKEY_LEFT])
+	if(keys[PPKEY_LEFT]||keys[PPKEY_LEFT2])
 		inputs |= PPINPUT_LEFT;
-	if(keys[PPKEY_RIGHT])
+	if(keys[PPKEY_RIGHT]||keys[PPKEY_RIGHT2])
 		inputs |= PPINPUT_RIGHT;
-	if(keys[PPKEY_UP])
+	if(keys[PPKEY_UP]||keys[PPKEY_UP2])
 		inputs |= PPINPUT_UP;
-	if(keys[PPKEY_DOWN])
+	if(keys[PPKEY_DOWN]||keys[PPKEY_DOWN2])
 		inputs |= PPINPUT_DOWN;
 	if(keys[PPKEY_A])
 		inputs |= PPINPUT_A;
@@ -221,17 +251,6 @@ void UpdateGame(){
 		_SceneStack.back()->Update();
 	}
 	//
-	
-	
-
-
-	/*int i;
-	for(i = MAX_MENUS-1; i >= 0; i--)
-		if(_MenuStack[i].used&&_MenuStack[i].active)	//only update the highest active menu, i.e. the one on top
-			break;
-	if(i>=0)											//dont update a menu that doesn't exist
-		UpdateMenu(&_MenuStack[i]);
-		*/
 }
 
 //Put the Drawing functions for everything here 
@@ -253,7 +272,6 @@ void DrawGame(){
 		}
 	}
 		
-	
 	
 
 	RenderCurrentFrame();
@@ -290,12 +308,14 @@ void LoadLevel(){
 void Overworld::Update(){
 	if(InputPressed(PPINPUT_B))
 		if(!_Dialogue){
-			if(_MenuStack.empty())
+			if(_MenuStack.empty()){
 				OpenPauseMenu();
-			else
-				if(_MenuStack.back()->type == MENU_PAUSE)
+				ShowWallet();
+			}else
+				if(_MenuStack.back()->type == MENU_PAUSE){
 					CancelMenu();
-
+					HideWallet();
+				}
 		}
 	UpdateWorld();
 	if(!_MenuStack.empty()){
@@ -305,7 +325,6 @@ void Overworld::Update(){
 		UpdatePlayer(_Player);
 	}
 	UpdateCamera(&mainCamera);
-	
 }
 
 void Overworld::Draw(){
@@ -315,7 +334,6 @@ void Overworld::Draw(){
 		DrawFacingCursor(_Player->tile+_Player->facing);
 	}
 
-	DrawOverworldUI();
 	if(_Dialogue)
 		DrawTextbox(&mainTextbox);
 	if(!_MenuStack.empty()){
@@ -323,68 +341,34 @@ void Overworld::Draw(){
 			DrawMenu(_MenuStack[i]);
 		}
 	}
+
+	DrawWallet();
 }
 
-Combat::Combat(){
-	type = COMBAT;
-	_SceneStack.push_back(this);
-	SetupCombat();
-}
 
-Combat::~Combat(){
-	_SceneStack.pop_back();
-}
 
-void Combat::Update(){
-	UpdateCombat();
-	
-}
 
-void Combat::Draw(){
-	DrawCombatBG();
-	DrawEnemies();
-	DrawAllies();
-	DrawCombatUI();
-}
 
-CombatTransition::CombatTransition(){
-	type = CUTSCENE;
-	Sprite *spr = LoadSprite(SPATH_COMBAT_ENTER,320,240,1);
-	startanim = LoadAnimation(spr,0,0,10,1,0,3);
-	spr = LoadSprite(SPATH_COMBAT_EXIT,320,240,1);
-	endanim = LoadAnimation(spr,0,0,10,1,0,3);
-	anim = startanim;
-	timer = 58;
-	this->combat_entered = false;
-	_SceneStack.push_back(this);
-}
 
-CombatTransition::~CombatTransition(){
-	_SceneStack.pop_back();
-}
-
-void CombatTransition::Update(){
-	if(timer > 0)
-		timer--;
-	if(timer == 29){
-		this->combat_entered = true;
-		StartCombat();
-	}
-	if(timer == 28)
-		anim = endanim;
-	if(timer == 0){
-		if(combat_entered)
-			delete(this);
-	}
-}
-
-void CombatTransition::Draw(){
-	Vec2i loc = {0,0};
-	DrawAnimation(this->anim,loc,&uiCamera);
-}
 
 void StartCombat(){
 	_CurrentScene = new Combat();
+}
+
+void OpenInventory(){
+	_CurrentScene = new InventoryPage();
+}
+
+void CloseInventory(){
+	_SceneStack.pop_back();
+}
+
+void OpenParty(){
+	_CurrentScene = new PartyView();
+}
+
+void CloseParty(){
+	_SceneStack.pop_back();
 }
 
 Menu *LoadPauseMenu(){
@@ -393,6 +377,8 @@ Menu *LoadPauseMenu(){
 	for(int i = 0; i < m->numItems; i++){
 		SetMenuItemAction(m->items[i],CancelMenu,names[i]);
 	}
+	SetMenuItemAction(m->items[0],OpenParty);
+	SetMenuItemAction(m->items[1],OpenInventory);
 	SetMenuItemAction(m->items[2],LaunchCombat);
 	return m;
 }

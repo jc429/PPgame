@@ -7,13 +7,14 @@
 #include "sprites.h"
 #include "tile.h"
 #include "entity.h"
+#include "chardata.h"
 
 typedef enum CharAnim{
 	ANIM_CHAR_IDLE = 0,
 	ANIM_CHAR_WALK = 1,
 };
 
-class Character: public Entity{
+class OverworldCharacter: public OverworldEnt{
 public:
 	//world position and movement stuff
 	Vec2i facing;
@@ -29,10 +30,11 @@ public:
 	
 };
 
-class Player: public Character{
+class Player: public OverworldCharacter{
 public:
 	InputNode *inputs;
 	bool movelock;
+	CharData *chardata;
 
 	Player();
 	~Player();
@@ -42,8 +44,9 @@ public:
 };
 
 
-class NPC: public Character{
+class NPC: public OverworldCharacter{
 public:
+	char name[32];
 	bool rotates; //does this NPC turn when they speak?
 	Message *msg;	//any dialogue they have gets stored here 
 	int actiontimer;	//counts down to 0 then does an something (maybe) 
@@ -92,11 +95,11 @@ void DrawPlayer(Player *p);
 
 void PlayerMovement(Player *p);
 
-void StepOutOfTile(Character *c,Tile *tile);
-void StepIntoTile(Character *c,Tile *tile);
-void MoveToTile(Character *c, Tile *src, Tile *dest);
-void UpdateTile(Character *c);
-void UpdateDirection(Character *c);
+void StepOutOfTile(OverworldCharacter *c,Tile *tile);
+void StepIntoTile(OverworldCharacter *c,Tile *tile);
+void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest);
+void UpdateTile(OverworldCharacter *c);
+void UpdateDirection(OverworldCharacter *c);
 
 void GiveNPCMessage(NPC *npc, Message *msg);
 

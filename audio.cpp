@@ -1,6 +1,7 @@
 #include "audio.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "pstring.h"
 #include <string.h>
 
 Music MusicList[MAX_MUSIC];
@@ -62,7 +63,7 @@ void InitMusicList(){
 	int i;
 	for(i = 0;i < MAX_MUSIC;i++){
 		MusicList[i].song = NULL;
-		strcpy(SoundList[i].filename,"\0");
+		copy_string(SoundList[i].filename,"\0");
 		MusicList[i].used = 0;
 		MusicList[i].volume = 0;
 	}
@@ -94,7 +95,7 @@ Music *LoadMusic(char filename[20],int volume){
 		fprintf(stderr, "FAILED TO LOAD A VITAL SOUND: %s\n", filename);
 //		exit(4);
 	}
-	strcpy(MusicList[i].filename,filename);
+	copy_string(MusicList[i].filename,filename);
 	MusicList[i].volume = volume;
 	MusicList[i].used = 1;
 	Mix_VolumeMusic(volume);
@@ -119,7 +120,7 @@ void ClearMusicList(){
 			Mix_FreeMusic(MusicList[i].song);
 			MusicList[i].song = NULL;
 		}
-		strcpy(MusicList[i].filename,"\0");
+		copy_string(MusicList[i].filename,"\0");
 		MusicList[i].used = 0;
 		MusicList[i].volume = 0;
 	}
@@ -130,7 +131,7 @@ void InitSoundList(){
 	int i;
 	for(i = 0;i < MAX_SOUNDS;i++){
 		SoundList[i].sound = NULL;
-		strcpy(SoundList[i].filename,"\0");
+		copy_string(SoundList[i].filename,"\0");
 		SoundList[i].used = 0;
 		SoundList[i].volume = 0;
 	}
@@ -163,7 +164,7 @@ Sound *LoadSound(char filename[20],int volume){
 		fprintf(stderr, "FAILED TO LOAD A VITAL SOUND.\n");
 		exit(1);
 	}
-	strcpy(SoundList[i].filename,filename);
+	copy_string(SoundList[i].filename,filename);
 	SoundList[i].volume = volume;
 	SoundList[i].used = 1;
 	Mix_VolumeChunk(SoundList[i].sound,volume);
@@ -188,7 +189,7 @@ void ClearSoundList(){
 			Mix_FreeChunk(SoundList[i].sound);
 			SoundList[i].sound = NULL;
 		}
-		strcpy(SoundList[i].filename,"\0");
+		copy_string(SoundList[i].filename,"\0");
 		SoundList[i].used = 0;
 		SoundList[i].volume = 0;
 	}

@@ -107,23 +107,23 @@ Message *NewMessage(){
 	return msg;
 }
 
-void CreateMessage(Message *msg, char* text, class Entity *speaker){
+void CreateMessage(Message *msg, char* text, OverworldEnt *speaker){
 	if(msg != NULL)
 		delete(msg);
 	msg = NewMessage();
 
-	strcpy(msg->text,text);
+	copy_string(msg->text,text);
 	msg->hasPrompt = 0;
 	msg->prompt = NULL;
 	msg->numFunctions = 0;
 //	_MessageStack = msg;
 
-	SetSpeaker(msg,speaker);
+	SetSpeaker(msg,speaker->chardata);
 }
 
-void SetSpeaker(Message *msg, class Entity *ent){
-	if(ent != NULL){
-		msg->speaker = ent;
+void SetSpeaker(Message *msg, CharData *speaker){
+	if(speaker != NULL){
+		msg->speaker = speaker;
 		msg->hasSpeaker = true;
 	}else{
 		msg->speaker = NULL;
@@ -131,12 +131,12 @@ void SetSpeaker(Message *msg, class Entity *ent){
 	}
 	for(int i = 0; i < 6; i++){
 		if(msg->next[i] != NULL){
-			SetSpeaker(msg->next[i], ent);
+			SetSpeaker(msg->next[i], speaker);
 		}	
 	}
 }
 
-void CreateMonologue(Message *msg, Entity *speaker, int numMessages, ...){
+void CreateMonologue(Message *msg, OverworldEnt *speaker, int numMessages, ...){
 	va_list args;
 	char* text;
 	speaker->talks = true;
@@ -165,12 +165,15 @@ void SetPrompt(Message *msg, MenuType type, Vec2i *loc){
 
 void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*func3)(), void(*func4)(), void(*func5)(), void(*func6)()){
 	msg->numFunctions = num;
-	msg->promptFunctions[0] = func1;
+
+	msg->promptFunctions[0] = func1;	
 	msg->promptFunctions[1] = func2;
 	msg->promptFunctions[2] = func3;
 	msg->promptFunctions[3] = func4;
 	msg->promptFunctions[4] = func5;
 	msg->promptFunctions[5] = func6;
+	for(int i = 5; i >= num; i--)
+		msg->promptFunctions[i] = NULL;
 }
 
 void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
@@ -235,7 +238,7 @@ char* ParseText(char *text){
 	int parsecursor = 0;
 	int textcursor = 0;
 	char newText[255];
-	strcpy(newText,text);
+	copy_string(newText,text);
 
 	for(;;textcursor++){
 		if(newText[textcursor] == '%'){
@@ -246,11 +249,11 @@ char* ParseText(char *text){
 			}while(newText[subcursor+textcursor] != '%');
 			parse_key[subcursor]= '%';
 			subcursor++;
-			strcpy(newText,CutString(newText,textcursor,subcursor));
+			copy_string(newText,CutString(newText,textcursor,subcursor));
 			if(strcmp(parse_key,"%ENAME%")==0)
-				strcpy(newText,InjectString(newText,"ENRAGED EGG",textcursor));
+				copy_string(newText,InjectString(newText,"ENRAGED EGG",textcursor));
 			if(strcmp(parse_key,"%PNAME%")==0)
-				strcpy(newText,InjectString(newText,"ENRAGED EGG",textcursor));
+				copy_string(newText,InjectString(newText,"ENRAGED EGG",textcursor));
 			return ParseText(newText);
 		}
 		if(newText[textcursor] == '\0') {
@@ -406,22 +409,13 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 	promptloc.x = LOC_DEFAULT_PROMPT_X;
 	promptloc.y = LOC_DEFAULT_PROMPT_Y;
 
-	InteractableObject *sign = LoadSign(5,5);
-	//SetSpeaker(sign->flavortext,sign);
-//dynamic_cast < Entity* > ( sign ));
-
-	CreateMonologue(sign->flavortext,sign,3,"Hi.","I love you.", "Like, comment, and subscribe for more.");
+	
 	
 //	Message *massage = OpenDialogue("testfiles/test.json");
-	
-/*	Message *massage = new Message;
-	CreateMessage(massage, "Ball...");
-	massage->next[0] = new Message;
-	CreateMessage(massage->next[0], "...is life.");
-	*/
+
 	NPC **npclist;
 	npclist = LoadEntitiesCFG("testfiles/chunk1-npc.json");
-	NPC *npc2 = new NPC(4,8,"Zach");
+	/*NPC *npc2 = new NPC(4,8,"Zach");
 	NPC *npc3 = new NPC(9,8,"Pete");
 
 	std::cout<<OUTPUT(npc2->name);
@@ -435,10 +429,14 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 	Message *massage = AskQuestion("Where are you from?","Yes? You're from Yes???","No? You have to be from somewhere...");
 //	SetAnswers(massage,2,SelectAnswer1,SelectAnswer2);
 
-	GiveNPCMessage(npc3,massage);
+	GiveNPCMessage(npc3,massage);*/
 
+
+	InteractableObject *sign = LoadSign(3,5);
+
+	CreateMonologue(sign->flavortext,sign,3,"Hi.","I love you.", "Like, comment, and subscribe for more.");
 	
-	InteractableObject *sign2 = LoadSign(8,3);
+	InteractableObject *sign2 = LoadSign(6,3);
 
 
 	CreateMessage(sign2->flavortext,"Am I... A sign?",sign2);

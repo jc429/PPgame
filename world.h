@@ -1,6 +1,7 @@
 #ifndef _WORLD_
 #define _WORLD_
 
+#include "global.h"
 #include "tile.h"
 
 /* 

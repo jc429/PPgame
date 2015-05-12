@@ -1,4 +1,14 @@
+#ifndef _SETTINGS_
+#define _SETTINGS_
+
+
 #include "debug.h"
+
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+
 
 #define START_MODE OVERWORLD
 
@@ -9,8 +19,8 @@
 
 
 //Window stuff
-#define GAMENAME "Final Fantasy 3"				// Title of your game window
-#define GAMEICON "img/fieyerrr.ico"	// path to a .ico file (might not have to be .ico idk try it)
+#define GAMENAME "RPG DemoLand"				// Title of your game window
+#define GAMEICON "img/bookicon.ico"	// path to a .ico file (might not have to be .ico idk try it)
 #define STARTFULLSCREEN 0			// Starts the game in fullscreen if on
 
 //GAME_RES is for the in-game resolution, WINDOW_RES is for the resolution of the actual window
@@ -38,7 +48,7 @@
 //max npcs loaded at once
 #define MAX_NPC 64
 //max party members (4?)
-#define MAX_PARTY 4
+#define MAX_PARTY_COMBAT 4
 //max enemies per battle
 #define MAX_ENEMIES 5
 //max techniques per char
@@ -72,30 +82,5 @@
 #define CHANNELS 16
 
 
-//Game inputs 
-#define PPKEY_LEFT SDL_SCANCODE_A
-#define PPKEY_RIGHT SDL_SCANCODE_D
-#define PPKEY_UP SDL_SCANCODE_W
-#define PPKEY_DOWN SDL_SCANCODE_S
-#define PPKEY_A SDL_SCANCODE_SPACE
-#define PPKEY_B SDL_SCANCODE_LSHIFT
-#define PPKEY_X SDL_SCANCODE_RSHIFT
-#define PPKEY_Y SDL_SCANCODE_RCTRL
-#define PPKEY_START SDL_SCANCODE_RETURN
-//debug pause idk 
-#define PPKEY_PAUSE SDL_SCANCODE_P
 
-#define PPINPUT_LEFT	1<<7
-#define PPINPUT_RIGHT	1<<6
-#define PPINPUT_UP		1<<5
-#define PPINPUT_DOWN	1<<4
-#define PPINPUT_A		1<<3
-#define PPINPUT_B		1<<2
-#define PPINPUT_X		1<<1
-#define PPINPUT_Y		1
-#define PPINPUT_START	1<<8
-
-#define PPINPUT_FACE_ANY (PPINPUT_A|PPINPUT_B|PPINPUT_X|PPINPUT_Y)
-#define PPINPUT_DIR_ANY (PPINPUT_UP|PPINPUT_DOWN|PPINPUT_LEFT|PPINPUT_RIGHT)
-
-#define PPINPUT_TEXT_ADVANCE (PPINPUT_A|PPINPUT_B)
+#endif

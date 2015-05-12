@@ -24,7 +24,7 @@ void InitCUI(){
 	targetcursor = LoadCombatUI(CUI_CURSOR);
 	testmenu = LoadCombatUI(CUI_MENU);
 
-	strcpy(CombatMessages[0],"A WILD ");
+	copy_string(CombatMessages[0],"A WILD ");
 	strcat(CombatMessages[0],"FUCKTRUCK");
 	strcat(CombatMessages[0]," APPEARS");
 
@@ -48,14 +48,18 @@ Menu *LoadBattleMenu(Vec2i *loc){
 	_InMenu = true;
 	Menu *m = LoadMenu(MENU_BATTLE,loc);
 	SetMenuItemAction(m->items[0],InitiateAttack);
-	SetMenuItemAction(m->items[1],CancelMenu);
-	SetMenuItemAction(m->items[2],CancelMenu);
+	SetMenuItemAction(m->items[1],OpenInventory);
+	SetMenuItemAction(m->items[2],CancelCombatUI);
 	SetMenuItemAction(m->items[3],Flee);
 	return m;
 }
 
 
 void UpdateCombatUI(CombatUI *c){
+	if(InputPressed(PPINPUT_B)){
+		CancelCombatUI();
+		return;
+	}
 	switch(c->type){
 	case CUI_MENU:
 		UpdateMenu(&c->contents.menu);
@@ -93,10 +97,14 @@ void OpenCombatUI(CombatUI *c){
 	_CombatUIStack.push_back(c);
 }
 
+void CancelCombatUI(){
+	_CombatUIStack.pop_back();
+}
+
 void UpdateCursor(CombatCursor *cc){
 	if(InputPressed(PPINPUT_DIR_ANY))
 		MoveCursor(cc);
-	SetVec2i(cc->position,(int)cc->target->position_base.x,(int)cc->target->position_base.y);
+	SetVec2i(cc->position,(int)cc->target->position_base.x,(int)cc->target->position_base.y - 0.7*cc->target->s_offset.y);
 	if(InputPressed(PPINPUT_A)){
 		if(!_InAttack){
 			OpenCombatUI(testmenu);
@@ -125,9 +133,9 @@ void MoveCursor(CombatCursor *cc){
 	Vec2i dir;
 	SetVec2i(dir,0,0);
 	if(InputPressed(PPINPUT_UP))
-		dir.y -= 1;
-	if(InputPressed(PPINPUT_DOWN))
 		dir.y += 1;
+	if(InputPressed(PPINPUT_DOWN))
+		dir.y -= 1;
 	if(InputPressed(PPINPUT_LEFT))
 		dir.x -= 1;
 	if(InputPressed(PPINPUT_RIGHT))

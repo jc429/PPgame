@@ -4,23 +4,23 @@
 
 #include <stdio.h>
 
-Entity EntList[MAX_ENTS];
+OverworldEnt EntList[MAX_ENTS];
 int numEnts;
 
 extern Tile* World[WORLD_W][WORLD_H];
 extern Camera mainCamera;
 
-void Entity::Update(){
+void OverworldEnt::Update(){
 	return;
 }
-void Entity::Draw(){
+void OverworldEnt::Draw(){
 	return;
 }
-void Entity::Talk(Textbox *t){
+void OverworldEnt::Talk(Textbox *t){
 	return;
 }
 
-void AddToWorld(Entity *e, int xpos, int ypos){
+void AddToWorld(OverworldEnt *e, int xpos, int ypos){
 	if(World[xpos][ypos] == NULL) return;
 	World[xpos][ypos]->contents = e;
 	World[xpos][ypos]->free = e->passable;
@@ -66,7 +66,7 @@ InteractableObject::InteractableObject(int xpos, int ypos){
 
 InteractableObject *LoadSign(int xpos, int ypos){
 	InteractableObject *ent = new InteractableObject(xpos,ypos);
-	strcpy(ent->name,"Sign");
+	ent->chardata = LoadCharData("Sign");
 	Sprite *s = LoadSprite(SPATH_SIGN_GENERIC,32,32,1);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;
@@ -81,7 +81,7 @@ InteractableObject *LoadSign(int xpos, int ypos){
 
 InteractableObject *LoadEgg(int xpos, int ypos){
 	InteractableObject *ent = new InteractableObject(xpos,ypos);
-	strcpy(ent->name,"Egg");
+	ent->chardata = LoadCharData("Egg");
 	Sprite *s = LoadSprite("sprites/egg-over.png",64,64,1);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;
@@ -121,7 +121,7 @@ void InitEntList(){
 	}
 }
 
-Entity *NewEntity(){
+OverworldEnt *NewOverworldEnt(){
 	int i;
 	if(numEnts+1 >= MAX_ENTS){
 		fprintf(stderr, "Too many Ents!\n");
@@ -137,7 +137,7 @@ Entity *NewEntity(){
 	return &EntList[i];
 }
 
-void FreeEntity(Entity *ent){
+void FreeOverworldEnt(OverworldEnt *ent){
 	if(ent->used > 1) {
 		ent->used--;
 		return;

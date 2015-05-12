@@ -21,10 +21,14 @@ typedef enum EntType{
 
 class Entity{
 public:
+	int entID; //unique integer referring to this entity?
+};
+
+class OverworldEnt:public Entity{
+public:
 	EntType type;
 	int used;
-
-	char name[32];
+	CharData *chardata;
 
 	//position stuff
 	Vec2i tile;				//tile we are currently standing on
@@ -51,8 +55,9 @@ public:
 
 };
 
-class InteractableObject: public Entity{
+class InteractableObject: public OverworldEnt{
 public:
+//	char name[32];
 	Message *flavortext;
 //	char* flavortext;
 
@@ -69,10 +74,10 @@ InteractableObject *LoadSign(int xpos, int ypos);
 InteractableObject *LoadEgg(int xpos, int ypos);
 
 void InitEntList();
-Entity* NewEntity();
-void FreeEntity();
+OverworldEnt* NewOverworldEnt();
+void FreeOverworldEnt();
 void ClearEntList();
 
-void AddToWorld(Entity *e, int xpos, int ypos);
+void AddToWorld(OverworldEnt *e, int xpos, int ypos);
 
 #endif

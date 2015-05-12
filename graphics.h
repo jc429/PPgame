@@ -10,6 +10,7 @@
 #include "pmath.h"
 #include "camera.h"
 
+
 #define COL_MASK_R 0xFF000000
 #define COL_MASK_G 0x00FF0000
 #define COL_MASK_B 0x0000FF00
@@ -17,12 +18,24 @@
 #define G_SHIFT 16
 #define B_SHIFT 8
 
-#define pCol_White		0xFEFEFE00
-#define pCol_Black		0x01010100
-#define pCol_DarkGray	0x22222200
-#define pCol_Red		0xDD333300
-#define pCol_Green		0x33DD3300
-#define pCol_Blue		0x3333DD00
+#define pCol_White			0xFEFEFE00
+#define pCol_Black			0x01010100
+#define pCol_Gray			0x66666600
+#define pCol_DarkGray		0x22222200
+#define pCol_Red			0xDD333300
+#define pCol_Green			0x33DD3300
+#define pCol_Blue			0x3333DD00
+#define pCol_Yellow			0xDDDD3300
+#define pCol_Magenta		0xDD33DD00
+#define pCol_Cyan			0x33DDDD00
+#define pCol_DarkRed		0x99222200
+#define pCol_DarkGreen		0x22992200
+#define pCol_DarkBlue		0x22229900
+#define pCol_DarkYellow		0x99992200
+#define pCol_LightRed		0xFF888800
+#define pCol_LightGreen		0x88FF8800
+#define pCol_LightBlue		0x8888FF00
+#define pCol_LightYellow	0xFFFF8800
 
 void InitWindow();
 

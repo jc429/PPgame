@@ -70,6 +70,7 @@ void LoadCombatBG();
 //drawing
 void DrawCombatBG();
 void DrawHPBar(CombatEnt *ent);
+void DrawHPBarFull(CombatEnt *ent);
 void DrawBattleTimer();
 void DrawEffectStack();
 void DrawActionStack();

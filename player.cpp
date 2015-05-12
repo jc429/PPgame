@@ -10,6 +10,9 @@ extern InputNode *_Inputs;
 extern bool _Dialogue;	//are we currently talking?
 
 Player::Player(){
+
+	chardata = LoadCharData("Me");
+
 	//Inputs
 	inputs = new InputNode;
 	inputs->input = 0;
@@ -249,7 +252,7 @@ void PlayerMovement(Player *p){
 }
 
 
-void MoveToTile(Character *c, Tile *src, Tile *dest){
+void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest){
 	//fprintf(stdout,"moving from %i, %i to %i, %i \n",src->position.x/TILE_W,src->position.y/TILE_H,dest->position.x/TILE_W,dest->position.y/TILE_H);
 	Vec2i movement;
 	movement.x = 0;
@@ -273,7 +276,7 @@ void MoveToTile(Character *c, Tile *src, Tile *dest){
 	}
 }
 
-void UpdateTile(Character *c){
+void UpdateTile(OverworldCharacter *c){
 	StepOutOfTile(c,World[c->tile.x][c->tile.y]);
 	if(c->localposition.x > TILE_W){
 		c->tile.x++;
@@ -307,7 +310,7 @@ void DrawPlayer(Player *p){
 
 }
 
-void UpdateDirection(Character *c){
+void UpdateDirection(OverworldCharacter *c){
 	switch(c->facing.x){
 	case 0:
 		switch(c->facing.y){

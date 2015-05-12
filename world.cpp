@@ -64,13 +64,13 @@ void LoadChunkCFG(Chunk *ch,char *chunkpath){
 	ch->size.y = chunk["size_y"].GetInt();
 	if(chunk.HasMember("sprite_def")){
 		const rapidjson::Value& sprites = chunk["sprite_def"];
-		for(int i = 0; i < sprites.MemberCount(); i++){
+		for(int i = 0; i < (int)sprites.MemberCount(); i++){
 			const rapidjson::Value& sprite = sprites["spr_0"];
 			char sprpath[255];
 			int tw;
 			int th;
 			int fpl;
-			strcpy(sprpath,sprite["path"].GetString());
+			copy_string(sprpath,sprite["path"].GetString());
 			tw = sprite["tile_width"].GetInt();
 			th = sprite["tile_height"].GetInt();
 			fpl = sprite["frames_per_line"].GetInt();
@@ -88,7 +88,7 @@ void LoadChunkCFG(Chunk *ch,char *chunkpath){
 			t_struct = new TileStructure;
 			t_struct->id = curTile["tile_id"].GetInt();
 			t_struct->height = curTile["height"].GetInt();
-			t_struct->solid = curTile["solid"].GetInt();
+			t_struct->solid = (curTile["solid"].GetInt() != 0);
 			t_struct->spritesheet = ch->spritelist[curTile["sprite"].GetInt()];
 			t_struct->baseframe = curTile["base_frame"].GetInt();
 			t_struct->floorframe = curTile["floor_frame"].GetInt();

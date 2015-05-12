@@ -334,7 +334,7 @@ void UpdateWorld(){
 		for(int j = 0; j < WORLD_H; j++){
 			if(World[i][j] != NULL){
 				if(World[i][j]->contents!=NULL){
-					Entity *contents = World[i][j]->contents;
+					OverworldEnt *contents = World[i][j]->contents;
 					contents->Update();
 				}
 			}

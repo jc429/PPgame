@@ -3,7 +3,6 @@
 
 #include "graphics.h"
 #include "global.h"
-#include "ui.h"
 #include "pmath.h"
 #include "pfile.h"
 #include "player.h"
@@ -15,6 +14,8 @@
 #include "combat.h"
 #include "gamestate.h"
 #include "world.h"
+#include "inventory.h"
+#include "party.h"
  
  
 static bool _GamePause;

@@ -1,12 +1,14 @@
-#include "ui.h"
+
 #include "dialogue.h"
 #include "graphics.h"
+#include "inventory.h"
 
 extern Camera uiCamera;
 extern InputNode *_Inputs;
 Menu *_CurrentMenu;
 vector<struct Menu_T*> _MenuStack;
-extern vector<struct Menu_T*> _CombatMenuStack;
+vector<struct Menu_T*> *curMenuStack = NULL;
+//extern vector<struct Menu_T*> _CombatMenuStack;
 
 MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
 	MenuItem *m = new MenuItem;
@@ -29,8 +31,9 @@ void FreeMenuItem(MenuItem *m){
 
 void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
 	m->action = func;
-	if(name)
-		strcpy(m->text->lines[0],name);
+	if(name){
+		copy_string(m->text->lines[0],name);
+	}
 }
 
 Menu *LoadMenu(MenuType type,Vec2i *loc){
@@ -137,7 +140,7 @@ Menu *LoadMenu(MenuType type,Vec2i *loc){
 		
 		break;
 	default:
-		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_SMALL,32,16,1);
+		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_LARGE,64,16,1);
 		break;
 	}
 	m->cursor.anim_active = LoadAnimation(cursorSpr,0,0,2,1,1,18);
@@ -233,7 +236,7 @@ Menu *LoadMenuYesNo(Vec2i *loc, char *yes, char *no, void (*YesFunc)(),void (*No
 	return m;
 }
 
-Menu *LoadCustomMenu(int numItems, char *op1, char *op2, char *op3, char *op4, char *op5, char *op6){
+Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	if(numItems > 6)
 		numItems = 6;
 	if(numItems < 0)
@@ -243,7 +246,7 @@ Menu *LoadCustomMenu(int numItems, char *op1, char *op2, char *op3, char *op4, c
 	Textbox *textboxes[8];
 	SDL_Rect itemRect;
 	Vec2i loc;
-	SetVec2i(loc,250,150 - (numItems * 18));
+	SetVec2i(loc,216,158 - (numItems * 18));
 	switch(numItems){
 	case 6:
 		m = LoadMenu(MENU_CUSTOM_6,&loc);
@@ -262,14 +265,14 @@ Menu *LoadCustomMenu(int numItems, char *op1, char *op2, char *op3, char *op4, c
 		break;
 	}
 
-	SetRect(m->location,loc.x,loc.y,30,16);
+	SetRect(m->location,loc.x,loc.y,96,16);
 	itemRect = m->location;
 	for(int i = 0; i < 8; i++)
 		textboxes[i] = NULL;
 	for(int i = 0; i < numItems; i++){
 		textboxes[i] = new Textbox();
-		LoadTextbox(textboxes[i],1,3,NULL,itemRect);
-		m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],op1);
+		LoadTextbox(textboxes[i],1,10,NULL,itemRect);
+		m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
 
 		if(i + 1 < numItems){
 			itemRect.y += 18;
@@ -280,58 +283,45 @@ Menu *LoadCustomMenu(int numItems, char *op1, char *op2, char *op3, char *op4, c
 	m->itemsPerRow = 1;
 	switch(numItems){
 	case 6:
-		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
-		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
-		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
-		SetMenuItemAction(m->items[3],SelectAnswer4,op4);
-		SetMenuItemAction(m->items[4],SelectAnswer5,op5);
-		SetMenuItemAction(m->items[5],SelectAnswer6,op6);
-		break;
+		SetMenuItemAction(m->items[5],SelectAnswer6,itemNames[5]);
 	case 5:
-		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
-		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
-		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
-		SetMenuItemAction(m->items[3],SelectAnswer4,op4);
-		SetMenuItemAction(m->items[4],SelectAnswer5,op5);
-		break;
+		SetMenuItemAction(m->items[4],SelectAnswer5,itemNames[4]);
 	case 4:
-		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
-		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
-		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
-		SetMenuItemAction(m->items[3],SelectAnswer4,op4);
-		break;
+		SetMenuItemAction(m->items[3],SelectAnswer4,itemNames[3]);
 	case 3:
-		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
-		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
-		SetMenuItemAction(m->items[2],SelectAnswer3,op3);
-		break;
+		SetMenuItemAction(m->items[2],SelectAnswer3,itemNames[2]);
+	case 2:
+		SetMenuItemAction(m->items[1],SelectAnswer2,itemNames[1]);
 	default:
-		SetMenuItemAction(m->items[0],SelectAnswer1,op1);
-		SetMenuItemAction(m->items[1],SelectAnswer2,op2);
+		SetMenuItemAction(m->items[0],SelectAnswer1,itemNames[0]);
 		break;
 	}
 	return m;
 }
 
-void OpenMenu(Menu *m){
+void OpenMenu(Menu *m,vector<struct Menu_T*> *stack){
 	m->active = true;
 	m->cursor.location = 0;
-	if(InCombat()){
-	//	_CombatMenuStack.push_back(m);
+	if(stack != NULL){
+		curMenuStack = stack;
 	}else
-		_MenuStack.push_back(m);
+		curMenuStack = &_MenuStack;
+		
+	curMenuStack->push_back(m);
 }
 
 
 
 void CancelMenu(){
-	if(InCombat()){
-/*		_CombatMenuStack.back()->active = false;
-		_CombatMenuStack.pop_back();*/
-	}else{
-		_MenuStack.back()->active = false;
-		_MenuStack.pop_back();
-	}
+	if(GetCurrentState() == OVERWORLD)
+		curMenuStack = &_MenuStack;
+	
+	//if(GetCurrentState() == COMBAT)
+	//	return;//fix it so it works in combat
+	curMenuStack->back()->active = false;
+	if(curMenuStack->back()->type == MENU_PAUSE)
+		HideWallet();
+	curMenuStack->pop_back();
 }
 
 void AdvanceAndCancel(int steps){

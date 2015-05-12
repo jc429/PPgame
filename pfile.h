@@ -3,11 +3,10 @@
 #ifndef _PFILE_
 #define _PFILE_
 
-#include <stdio.h>
+#include "pstring.h"
 
 void TestFile(char *path);
 
-void What();
 
 void LoadChunkCFG();
 

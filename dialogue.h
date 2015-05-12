@@ -5,7 +5,7 @@
 #include <SDL_ttf.h>
 #include "global.h"
 #include "ptext.h"
-
+#include "chardata.h"
 #include "pfile.h"
 
 
@@ -18,7 +18,7 @@ typedef struct Message_T{
 	char text[255];
 		
 	bool hasSpeaker;			
-	class Entity *speaker;		//for the little name above a text box
+	CharData *speaker;		//for the little name above a text box
 
 	bool hasPrompt;
 	Menu *prompt;
@@ -51,11 +51,12 @@ void LoadTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr, SDL_Rect r, b
 void DrawTextbox(Textbox *t, int offset_x = 0, int offset_y = 0);
 
 Message *NewMessage();
-void CreateMessage(Message *msg = NULL, char* text = NULL, class Entity *speaker = NULL);
-void SetSpeaker(Message *msg, class Entity *ent);
-void CreateMonologue(Message *msg, Entity *speaker, int numMessages, ...);
+void CreateMessage(Message *msg = NULL, char* text = NULL, class OverworldEnt *speaker = NULL);
+void SetSpeaker(Message *msg, CharData *speaker);
+void CreateMonologue(Message *msg, OverworldEnt *speaker, int numMessages, ...);
 void SetPrompt(Message *msg, MenuType type, Vec2i *loc = NULL);
-void SetAnswers(Message *msg, int num,  void(*func1)()=NULL, void(*func2)()=NULL, void(*func3)()=NULL, void(*func4)()=NULL, void(*func5)()=NULL, void(*func6)()=NULL);
+void SetAnswers(Message *msg, int num,  void(*func1)()=SelectAnswer1, void(*func2)()=SelectAnswer2, void(*func3)()=SelectAnswer3, 
+	void(*func4)()=SelectAnswer4, void(*func5)()=SelectAnswer5, void(*func6)()=SelectAnswer6);
 void SetMessagePrompts(Message *msg);
 void SetMessageEndFunction(Message *msg, void (*func)());
 

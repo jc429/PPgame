@@ -1,19 +1,11 @@
 #ifndef _GAMESTATE_
 #define _GAMESTATE_
 
+#include "global.h"
 #include "sprites.h"
 #include <vector>
 
-typedef enum{
-	MAIN_MENU,
-	OPTIONS,
-	OVERWORLD,
-	COMBAT,		
-	CUTSCENE,				
-	DIALOGUE_OVERLAY,	//Maybe unnecessary?
-	DIALOGUE_FULL,
-	DATE			
-}GameState;
+
 
 class GameScene{
 	
@@ -28,6 +20,22 @@ class Overworld : public GameScene{
 public:
 	Overworld();
 	~Overworld();
+	void Update();
+	void Draw();
+};
+
+class InventoryPage : public GameScene{
+public:
+	InventoryPage();
+	~InventoryPage();
+	void Update();
+	void Draw();
+};
+
+class PartyView : public GameScene{
+public:
+	PartyView();
+	~PartyView();
 	void Update();
 	void Draw();
 };
@@ -55,5 +63,6 @@ public:
 
 void StartCombat();
 void EndCombatExit();
+
 
 #endif 

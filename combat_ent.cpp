@@ -2,69 +2,73 @@
 #include "combat.h"
 
 
-CombatEnt *Party[MAX_PARTY];
+CombatEnt *CombatParty[MAX_PARTY_COMBAT];
 CombatEnt *Enemies[MAX_ENEMIES];
 extern Camera combatCamera;
 
-Vec2i PartySlots[MAX_PARTY];
+Vec2i CombatPartySlots[MAX_PARTY_COMBAT];
 Vec2i EnemySlots[MAX_ENEMIES];
 
 void InitCombatSlots(){
-	Vec2i pos = {30,180};
-	for(int i = 0; i < MAX_PARTY;i++){
-		PartySlots[i] = pos;
-		pos.x+= 40;
+	Vec2i pos = {60,160};
+	for(int i = 0; i < MAX_PARTY_COMBAT;i++){
+		CombatPartySlots[i] = pos;
+		pos.x += 8;
+		pos.y -= 12;
 	}
-	pos.x = 40;
-	pos.y = 80;
+	pos.x = GAME_RES_X - 60;
+	pos.y = 160;
 	for(int i = 0; i < MAX_ENEMIES;i++){
 		EnemySlots[i] = pos;
-		if(i%2 != 0)
-			pos.y -= 20;
-		else
-			pos.y += 020;
-		pos.x+= 50;
+		pos.x -= 8;
+		pos.y -= 12;
 	}
 }
 
 void LoadAllies(){
 	//Vec2i pos = {50,40};
-	Sprite *bs = LoadSprite(SPATH_ALLY_GENERIC,32,32,4);
-	for(int i = 0; i < MAX_PARTY;i++)
-		Party[i] = NULL;
+	Sprite *bs = LoadSprite(SPATH_ALLY_GENERIC,64,64,5);
+	Sprite *as = LoadSprite(SPATH_NPC_GENERIC,64,64,5);
+	for(int i = 0; i < MAX_PARTY_COMBAT;i++)
+		CombatParty[i] = NULL;
 
-	for(int i = 0; i < 2;i++){
+	for(int i = 0; i < 4;i++){
 		CombatEnt *ent = LoadCombatEnt();
-		ent->name = "guy";
+		//copy_string(ent->name,"guy");
 
 		ent->friendly = true;
 
 		ent->numAnims = 0;
 
-		ent->s_offset.x = 16;
-		ent->s_offset.y = 16;
+		ent->s_offset.x = 32;
+		ent->s_offset.y = 48;
 		ent->animation = 0;
-		ent->animlist[ent->numAnims] = LoadAnimation(bs,i,i,1,0,0);
+		if(i == 0)
+			ent->animlist[ent->numAnims] = LoadAnimation(bs,5,5,1,0,0);
+		else
+			ent->animlist[ent->numAnims] = LoadAnimation(as,5,5,1,0,0);
+
 		ent->numAnims = 1;
-		ent->position_base.x = PartySlots[i].x;
-		ent->position_base.y = PartySlots[i].y;
+		ent->position_base.x = CombatPartySlots[i].x;
+		ent->position_base.y = CombatPartySlots[i].y;
 		ent->position = ent->position_base;
 
-		Party[i] = ent;
+		CombatParty[i] = ent;
 	}
 }
 
 void LoadEnemies(){
-		Vec2i pos = {30,70};
+	//	Vec2i pos = {30,120};
 	Sprite *bs = LoadSprite(SPATH_ENEMY_GENERIC,128,128,1);
+	Sprite *es = LoadSprite("sprites/enemies/goomb.png",64,64,4);
 	for(int i = 0; i < MAX_ENEMIES;i++)
 		Enemies[i] = NULL;
-	int i =3;
+	int i =0;
 
 		CombatEnt *ent = LoadCombatEntCFG("testfiles/enemy-test.json");
 
-		ent->stats_base.max_health = 300;
-		ent->health = ent->stats_base.max_health;
+//		ent->chardata->stats_base.max_health = 300;
+		ent->chardata->health = ent->chardata->stats_base.max_health;
 		
 	//	ent->name = "ENRAGED EGG";
 
@@ -72,10 +76,12 @@ void LoadEnemies(){
 
 		ent->numAnims = 0;
 
-		ent->s_offset.x = 64;
-		ent->s_offset.y = 64;
+	/*	ent->s_offset.x = 64;		//for the egg
+		ent->s_offset.y = 128;*/
+		SetVec2i(ent->s_offset,32,64);
+
 		ent->animation = 0;
-		ent->animlist[ent->numAnims] = LoadAnimation(bs,0,0,1,0,0);
+		ent->animlist[ent->numAnims] = LoadAnimation(es,0,0,4,1,1,8);
 		ent->numAnims = 1;
 		
 		ent->position_base.x = EnemySlots[i].x;
@@ -90,28 +96,35 @@ void LoadEnemies(){
 
 CombatEnt *LoadCombatEnt(){
 	CombatEnt *ent = new CombatEnt();
-	
-	ent->stats_base.max_health = 100;		
-	ent->health = ent->stats_base.max_health;	
+	ent->chardata = new CharData;
+
+	ent->chardata->stats_base.max_health = 100;		
+	ent->chardata->health = ent->chardata->stats_base.max_health;	
 
 	return ent;
 }
 
 void DrawAllies(){
-	for(int i = 0; i < MAX_PARTY;i++){
-		if(Party[i]!=NULL){
-			DrawAnimation(Party[i]->animlist[Party[i]->animation],(Vec2i)Party[i]->position-Party[i]->s_offset,&combatCamera);
-		//	DrawHPBar(Party[i]);
+	for(int i = MAX_PARTY_COMBAT- 1; i >=0; i--){
+		if(CombatParty[i]!=NULL){
+			DrawAnimation(CombatParty[i]->animlist[CombatParty[i]->animation],(Vec2i)CombatParty[i]->position-CombatParty[i]->s_offset,&combatCamera);
+			if(i==0)
+				DrawHPBarFull(CombatParty[i]);
+			else
+				DrawHPBar(CombatParty[i]);
 		}
 	}
 }
 
 
 void DrawEnemies(){
-	for(int i = 0; i < MAX_ENEMIES;i++){
+	for(int i =  MAX_ENEMIES-1; i >=0;i--){
 		if(Enemies[i]!=NULL){
 			DrawAnimation(Enemies[i]->animlist[Enemies[i]->animation],Enemies[i]->position-Enemies[i]->s_offset,&combatCamera);
-		//	DrawHPBar(Enemies[i]);
+			if(i==0)
+				DrawHPBarFull(Enemies[i]);
+			else
+				DrawHPBar(Enemies[i]);
 		}
 	}
 }
@@ -122,7 +135,7 @@ void EnemyAI(){
 			Enemies[i]->exhaustion--;
 			if(Enemies[i]->exhaustion <= 0){
 				CombatEntThink(Enemies[i]);
-				Enemies[i]->exhaustion = 400;
+				Enemies[i]->exhaustion = 300;
 			}
 		}
 	}
@@ -132,9 +145,9 @@ void CombatEntThink(CombatEnt *ent){
 	CombatEnt *target;
 	int targ;
 	do{
-		targ = RandomInt(0,MAX_PARTY);
-	}while(Party[targ] == NULL);
-	target = Party[targ];
+		targ = RandomInt(0,MAX_PARTY_COMBAT);
+	}while(CombatParty[targ] == NULL);
+	target = CombatParty[targ];
 	QueueAttack(ent,target);
 
 }
@@ -152,6 +165,7 @@ void PerformCurrentEvent(CombatEnt *ent){
 		PerformDamage(ent,ent->events.front().e.damage);
 		break;
 	}
+
 }
 
 
@@ -197,7 +211,7 @@ void PerformMotion(CombatEnt *ent, EntMotion m){
 	}else{
 		if(		//if going one more increment would pass the destination
 			((ent->position.x <= m.dest.x && ent->position.x + increment.x >= m.dest.x)||
-			(ent->position.x >= m.dest.x && ent->position.x + increment.x <= m.dest.x))&&
+			(ent->position.x >= m.dest.x && ent->position.x + increment.x <= m.dest.x))||
 			((ent->position.y <= m.dest.y && ent->position.y + increment.y >= m.dest.y)||
 			(ent->position.y >= m.dest.y && ent->position.y + increment.y <= m.dest.y))
 			){
@@ -210,17 +224,18 @@ void PerformMotion(CombatEnt *ent, EntMotion m){
 
 
 void PerformDamage(CombatEnt *ent, EntDamage d){
-	d.target->health -= d.damage;
+	d.target->chardata->health -= d.damage;
 	ent->events.pop();
 }
+
 
 CombatEnt *FindCombatEnt(CombatEnt *current, Vec2i dir){ //direction to look for combat ent
 	CombatEnt** ent_list;
 	int list_len;
 
 	if(current->friendly){
-		ent_list = Party;
-		list_len = MAX_PARTY;
+		ent_list = CombatParty;
+		list_len = MAX_PARTY_COMBAT;
 	}else{
 		ent_list = Enemies;
 		list_len = MAX_ENEMIES;
@@ -258,4 +273,23 @@ CombatEnt *FindCombatEnt(CombatEnt *current, Vec2i dir){ //direction to look for
 	}
 	cursor = (cursor+dir.y)%list_len;
 	return ent_list[cursor];*/
+}
+
+
+
+void RoatateAllies(){
+	CombatEnt *temp = CombatParty[0];
+	for (int i = 0; i < MAX_PARTY_COMBAT-1; i++){
+		CombatParty[i] = CombatParty[i+1];
+	}
+	CombatParty[MAX_PARTY_COMBAT-1] = temp;
+	for (int i = 0; i < MAX_PARTY_COMBAT; i++){
+		if(CombatParty[i] == NULL) return;
+		CombatParty[i]->position_base.x = CombatPartySlots[i].x;
+		CombatParty[i]->position_base.y = CombatPartySlots[i].y;
+	}
+}
+
+void RoatateEnemies(){
+
 }
