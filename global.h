@@ -21,12 +21,17 @@ typedef enum{
 
 //Any globally accessible functions get declared here
 
-void LaunchCombat();
+void EnterCombat();
+void ExitCombat();
 bool InCombat();
 GameState GetCurrentState();
 void OpenInventory();
 void CloseInventory();
 void OpenParty();
 void CloseParty();
+void AddToCombatParty(int charid);
+void SetEnemies(int num, ...);
+
+void FightBoss();
 
 #endif

@@ -66,7 +66,7 @@ InteractableObject::InteractableObject(int xpos, int ypos){
 
 InteractableObject *LoadSign(int xpos, int ypos){
 	InteractableObject *ent = new InteractableObject(xpos,ypos);
-	ent->chardata = LoadCharData("Sign");
+	ent->chardata = CreateCharData("Sign");
 	Sprite *s = LoadSprite(SPATH_SIGN_GENERIC,32,32,1);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;
@@ -81,7 +81,7 @@ InteractableObject *LoadSign(int xpos, int ypos){
 
 InteractableObject *LoadEgg(int xpos, int ypos){
 	InteractableObject *ent = new InteractableObject(xpos,ypos);
-	ent->chardata = LoadCharData("Egg");
+	ent->chardata = CreateCharData("Egg");
 	Sprite *s = LoadSprite("sprites/egg-over.png",64,64,1);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;

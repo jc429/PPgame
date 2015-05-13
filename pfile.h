@@ -8,6 +8,6 @@
 void TestFile(char *path);
 
 
-void LoadChunkCFG();
+
 
 #endif

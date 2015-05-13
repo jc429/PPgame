@@ -7,10 +7,11 @@ extern Camera mainCamera;
 extern Player *_Player;
 
 NPC::NPC (int xpos, int ypos, char *entName){
-
+	static int id;
+	
 	if(entName == NULL)
 		entName = "Some Guy";
-	chardata = LoadCharData(entName);
+	chardata = LoadCharData(ID_NPC+id);
 //	name = NULL;
 
 	//Facing

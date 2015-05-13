@@ -73,8 +73,8 @@ void InitCombatSlots();
 
 void LoadAllies();
 void LoadEnemies();
-CombatEnt *LoadCombatEnt();
-CombatEnt *LoadCombatEntCFG(char *path);
+CombatEnt *LoadCombatEnt(int charid);
+//CombatEnt *LoadCombatEntCFG(char *path);
 void DrawAllies();
 void DrawEnemies();
 void EnemyAI();

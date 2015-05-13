@@ -9,6 +9,10 @@ extern Camera combatCamera;
 Vec2i CombatPartySlots[MAX_PARTY_COMBAT];
 Vec2i EnemySlots[MAX_ENEMIES];
 
+extern int playerid;
+int CombatPartyIDs[MAX_PARTY_COMBAT];
+int EnemyIDs[MAX_ENEMIES];
+
 void InitCombatSlots(){
 	Vec2i pos = {60,160};
 	for(int i = 0; i < MAX_PARTY_COMBAT;i++){
@@ -25,6 +29,31 @@ void InitCombatSlots(){
 	}
 }
 
+void AddToCombatParty(int charid){
+	for(int i = 0; i < MAX_PARTY_COMBAT; i++){
+		if(CombatPartyIDs[i] == 0){
+			CombatPartyIDs[i] = charid;
+			return;
+		}
+	}
+}
+
+void SetEnemies(int num, ...){
+	va_list args;
+
+	for(int i = 0; i < MAX_ENEMIES; i++)
+		EnemyIDs[i] = 0;
+
+	va_start(args,num);
+	for(int i = 0; i < num; i++){
+		if(i >= MAX_ENEMIES) return;
+		EnemyIDs[i] = va_arg(args,int);
+	}
+	va_end(args);
+}
+
+
+
 void LoadAllies(){
 	//Vec2i pos = {50,40};
 	Sprite *bs = LoadSprite(SPATH_ALLY_GENERIC,64,64,5);
@@ -33,7 +62,10 @@ void LoadAllies(){
 		CombatParty[i] = NULL;
 
 	for(int i = 0; i < 4;i++){
-		CombatEnt *ent = LoadCombatEnt();
+		if(CombatPartyIDs[i] == 0)
+			continue;
+
+		CombatEnt *ent = LoadCombatEnt(CombatPartyIDs[i]);
 		//copy_string(ent->name,"guy");
 
 		ent->friendly = true;
@@ -63,14 +95,16 @@ void LoadEnemies(){
 	Sprite *es = LoadSprite("sprites/enemies/goomb.png",64,64,4);
 	for(int i = 0; i < MAX_ENEMIES;i++)
 		Enemies[i] = NULL;
-	int i =0;
+	for(int i = 0; i < MAX_ENEMIES;i++){
+		if(EnemyIDs[i] == 0)
+			continue;
 
-		CombatEnt *ent = LoadCombatEntCFG("testfiles/enemy-test.json");
+		CombatEnt *ent = LoadCombatEnt(EnemyIDs[i]);
+	//	CombatEnt *ent = LoadCombatEntCFG("testfiles/enemy-test.json");
 
 //		ent->chardata->stats_base.max_health = 300;
 		ent->chardata->health = ent->chardata->stats_base.max_health;
-		
-	//	ent->name = "ENRAGED EGG";
+	
 
 		ent->friendly = false;
 
@@ -88,15 +122,15 @@ void LoadEnemies(){
 		ent->position_base.y = EnemySlots[i].y;
 		ent->position = ent->position_base;
 
-		ent->exhaustion = 240;
+		ent->exhaustion = 240 + 48*i;
 
 		Enemies[i] = ent;
-	
+	}
 }
 
-CombatEnt *LoadCombatEnt(){
+CombatEnt *LoadCombatEnt(int charid){
 	CombatEnt *ent = new CombatEnt();
-	ent->chardata = new CharData;
+	ent->chardata = LoadCharData(charid);	//
 
 	ent->chardata->stats_base.max_health = 100;		
 	ent->chardata->health = ent->chardata->stats_base.max_health;	
@@ -142,6 +176,9 @@ void EnemyAI(){
 }
 
 void CombatEntThink(CombatEnt *ent){
+	if(ent->chardata->health <=0)
+		ExitCombat();		//replace this
+
 	CombatEnt *target;
 	int targ;
 	do{

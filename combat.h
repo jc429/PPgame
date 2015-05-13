@@ -55,8 +55,7 @@ void InitCombat();
 
 void SetupCombat();
 
-void EnterCombat();
-void ExitCombat();
+
 void UpdateCombat();
 void UpdateTurn();
 void AdvanceBattlePhase();

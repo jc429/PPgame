@@ -48,6 +48,10 @@ Menu *pauseMenu;
 
 bool _Dialogue;	//are we currently talking?
 
+vector<int> enemylist;
+extern int CombatPartyIDs[MAX_PARTY_COMBAT];
+extern int EnemyIDs[MAX_ENEMIES];
+
 int main (int argc, char* argv[]){
 	done = 0;
 
@@ -185,16 +189,7 @@ void PollEvents(){
 			}
 			
 		}
-		/*if(_Inputs->input & 1<<14){
-			if(_GameState == OVERWORLD){
-				EnterCombat();
-			}
-		}
-		if(_Inputs->input & 1<<15){
-			if(_GameState == COMBAT){
-				ExitCombat();
-			}
-		}*/
+
 	}
 
 }
@@ -283,6 +278,14 @@ bool InCombat(){
 }
 
 void EnterCombat(){
+	//only go to combat if enemies are loaded
+	for(int i = 0; i < MAX_ENEMIES; i++){
+		if(EnemyIDs[i] != 0){
+			break;
+		}
+		if(i + 1 == MAX_ENEMIES)
+			return;
+	}
 	_CurrentScene = new CombatTransition();
 }
 
@@ -293,6 +296,8 @@ void ExitCombat(){
 
 void LoadLevel(){
 	Chunk *ch = LoadChunk("testfiles/chunk1.json");
+	enemylist = LoadEnemyDataCFG("testfiles/enemy-test.json");
+	SetEnemies(2, enemylist.at(1), enemylist.at(1));
 	for(int i = 0; i < ch->size.x; i++){
 		for(int j = 0; j < ch->size.y; j++){
 			World[i][j] = &ch->tiles[i][j];
@@ -379,7 +384,7 @@ Menu *LoadPauseMenu(){
 	}
 	SetMenuItemAction(m->items[0],OpenParty);
 	SetMenuItemAction(m->items[1],OpenInventory);
-	SetMenuItemAction(m->items[2],LaunchCombat);
+	SetMenuItemAction(m->items[2],EnterCombat);
 	return m;
 }
 
@@ -387,6 +392,9 @@ void OpenPauseMenu(){
 	OpenMenu(pauseMenu);
 }
 
-void LaunchCombat(){
-	_CurrentScene = new CombatTransition();
+
+//move this prob
+void FightBoss(){
+	SetEnemies(1,enemylist.at(0));
+	EnterCombat();
 }

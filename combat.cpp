@@ -94,8 +94,8 @@ void SetupCombat(){
 	LoadAllies();
 	selectcursor->contents.cursor.target = CombatParty[0];
 	targetcursor->contents.cursor.target = Enemies[0];
-	copy_string(CombatMessages[0], "An %ENAME% attacks!");
-	copy_string(CombatMessages[1],"HAHAHAHAHA %FUCK% YOU");
+	copy_string(CombatMessages[0], "A %ENAME% attacks!");
+//	copy_string(CombatMessages[1],"HAHAHAHAHA %FUCK% YOU");
 	/*copy_string(CombatMessages[1],"What will ");
 	strcat(CombatMessages[1],Party[0]->name);
 	strcat(CombatMessages[1]," do?")*/

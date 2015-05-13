@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include <iostream>
 
-
+///for parsing -- see below
+#include "combat_ent.h"
+//
 
 extern SDL_Renderer *mainRenderer;
 extern Camera uiCamera;
@@ -16,6 +18,11 @@ Sound *textBlip;
 
 Textbox mainTextbox; //the main dialogue box for now
 Textbox combatTextbox; //combat has a different one
+
+////externs for text parsing -- i dont like doing this and will probably change it 
+extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
+extern CombatEnt *Enemies[MAX_ENEMIES];
+
 
 void InitFont(){
 	if(TTF_Init()!=0) 
@@ -251,8 +258,8 @@ char* ParseText(char *text){
 			subcursor++;
 			copy_string(newText,CutString(newText,textcursor,subcursor));
 			if(strcmp(parse_key,"%ENAME%")==0)
-				copy_string(newText,InjectString(newText,"ENRAGED EGG",textcursor));
-			if(strcmp(parse_key,"%PNAME%")==0)
+				copy_string(newText,InjectString(newText,Enemies[0]->chardata->name,textcursor));
+			if(strcmp(parse_key,"%BNAME%")==0)
 				copy_string(newText,InjectString(newText,"ENRAGED EGG",textcursor));
 			return ParseText(newText);
 		}
@@ -450,6 +457,6 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 
 	InteractableObject *egg = LoadEgg(6,1);
 	CreateMessage(egg->flavortext,". . .",egg);
-	SetMessageEndFunction(egg->flavortext, LaunchCombat);
+	SetMessageEndFunction(egg->flavortext, FightBoss);
 
 }

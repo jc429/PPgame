@@ -41,6 +41,7 @@ Chunk *LoadChunk(char* chunkpath){
 		if(ChunkList[i].used == 0) break;
 	
 	LoadChunkCFG(&ChunkList[i],chunkpath);
+
 //	printf("Size: %i,%i\n",ChunkList[i].size.x,ChunkList[i].size.y);
 	ChunkList[i].used++;
 	numChunks++;

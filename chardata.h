@@ -2,6 +2,15 @@
 #define _CHARDATA_
 
 #include "global.h"
+#include <vector>
+using std::vector;
+
+//these numbers are to sort chardata, so everything doesn't have a random ID
+#define ID_PARTY	400
+#define ID_NPC		500
+#define ID_ENEMY	600
+#define ID_MISC		900
+
 
 typedef struct Stats_T{
 	int max_health;
@@ -62,7 +71,11 @@ typedef struct CharData_T{
 	Stats growths;			//growth rates, stored as int/100 probably. used for level ups
 }CharData;
 
-CharData *LoadCharData(char *name);
+
+vector<int> LoadEnemyDataCFG(char *path);
+
+CharData *LoadCharData(int charid);
+CharData *CreateCharData(char *name);
 
 void LevelUp(CharData *chr);
 

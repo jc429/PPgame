@@ -9,9 +9,14 @@ extern Textbox mainTextbox; //the main dialogue box for now
 extern InputNode *_Inputs;
 extern bool _Dialogue;	//are we currently talking?
 
-Player::Player(){
+int playerid;
 
-	chardata = LoadCharData("Me");
+Player::Player(){
+	playerid = ID_PARTY;
+	chardata = LoadCharData(playerid);
+	copy_string(chardata->name,"Player");
+
+	AddToCombatParty(chardata->id);
 
 	//Inputs
 	inputs = new InputNode;

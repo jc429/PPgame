@@ -16,6 +16,7 @@ Document ParseFile(char* path);
 Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse);
 Sprite *ParseSprite(const rapidjson::Value& sprite_parse);
 Animation *ParseAnimation(const rapidjson::Value& anim_parse);
+CharData *ParseCharData(const rapidjson::Value& cd_parse);
 
 void What();
 
@@ -136,7 +137,7 @@ NPC **LoadEntitiesCFG(char *path){
 
 
 CombatEnt *LoadCombatEntCFG(char *path){
-	CombatEnt *ent = LoadCombatEnt();
+	CombatEnt *ent;
 	int id;
 
 	FILE* pFile = fopen(path, "rb");
@@ -147,10 +148,12 @@ CombatEnt *LoadCombatEntCFG(char *path){
 	assert(doc.IsObject());
 	fclose(pFile);
 
+
 	assert(doc["test-boss-egg"].IsObject());
 	const Value& parsed_ent = doc["test-boss-egg"];
 
-
+	assert(parsed_ent["id"].IsInt());
+	ent = LoadCombatEnt(parsed_ent["id"].GetInt());
 	
 	assert(parsed_ent["name"].IsString());
 	copy_string(ent->chardata->name,parsed_ent["name"].GetString());
@@ -158,6 +161,45 @@ CombatEnt *LoadCombatEntCFG(char *path){
 	
 
 	return ent;
+}
+
+vector<int> LoadEnemyDataCFG(char *path){
+
+	FILE* pFile = fopen(path, "rb");
+	char buffer[65536];
+	FileReadStream is(pFile, buffer, sizeof(buffer));
+	Document doc;
+	doc.ParseStream<0, UTF8<>, FileReadStream>(is);
+	assert(doc.IsObject());
+	fclose(pFile);
+
+	vector<int> enemy_ids;
+
+	CharData *cd;
+	int i = 0;
+	for(rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr){
+		if(strcmp(itr->name.GetString(),"info")==0)
+			continue;
+
+		const rapidjson::Value& enemy_parse = doc[itr->name];
+
+		cd = ParseCharData(enemy_parse);
+		enemy_ids.push_back(cd->id);
+		i++;
+	}
+
+	return enemy_ids;
+}
+
+CharData *ParseCharData(const rapidjson::Value& cd_parse){
+	CharData *cd;
+	assert(cd_parse["id"].IsInt());
+	cd = LoadCharData(ID_ENEMY + cd_parse["id"].GetInt());
+
+	assert(enemy_parse["name"].IsString());
+	copy_string(cd->name,cd_parse["name"].GetString());
+	
+	return cd;
 }
 
 Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
