@@ -66,7 +66,7 @@ char *InjectString(char *text,char *str, int location);
 char *CutString(char *text, int location, int length);
 
 void DrawText(Textbox *t);
-void DrawLine(char *msg,SDL_Rect location);
+void DrawLine(string msg,SDL_Rect location);
 void RenderText();
 
 void LoadDialogue();

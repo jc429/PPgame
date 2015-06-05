@@ -32,7 +32,8 @@ void FreeMenuItem(MenuItem *m){
 void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
 	m->action = func;
 	if(name){
-		copy_string(m->text->lines[0],name);
+		m->text->text = name;
+//		copy_string(m->text->lines[0],name);
 	}
 }
 

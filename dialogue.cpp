@@ -70,8 +70,8 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 
 	t->cursor = 0;
 	for(int i = 0; i < t->linect; i++){
-		t->lines[i] = (char*)malloc(sizeof(char)*(t->linelength + 1));
-		t->lines[i][0] = '\0';
+//		t->lines[i] = (char*)malloc(sizeof(char)*(t->linelength + 1));
+//		t->lines[i][0] = '\0';
 	}
 	SetText(NULL,t,0);
 	t->donewriting = false;
@@ -92,7 +92,6 @@ void DrawTextbox(Textbox *t, int offset_x, int offset_y){
 
 	if(t->msg && t->msg->hasSpeaker){
 		if(t->msg->speaker != NULL){
-			SetText( t->msg->speaker->name,t->speakerbox,0);
 			DrawPanel(t->speakerbox->box,LoadSprite(SPATH_PANEL_DEF,4,4,3));
 			DrawTextbox(t->speakerbox,0,-6);
 		}
@@ -184,12 +183,18 @@ void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*fu
 }
 
 void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
+	//sets a textbox up for display
+
 	int ptr = 0;			//what character we're currently drawing up to
 	int offset = 0;			//offset for the lines
 	int i;
 	bool done = false;
 
-	char* parsed_text = ParseText(text);
+	if(text == NULL) return;
+	string parsed_text = string(text); //gotta do this better 
+	
+	if(DEBUG)
+		printf("%s \n",parsed_text.c_str());
 
 	if(scroll){
 		t->cursor = 0;
@@ -200,43 +205,51 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	}
 	
 	for(i = 0; i < t->linect; i++){
-		char *line = t->lines[i];
-		if(parsed_text==NULL){
+		//string line = t->lines[i];
+		if(parsed_text.empty()){
 			done = true;
 		}
-		if(done){
+
+		t->text = parsed_text;//.substr(0,t->linelength);
+		//parsed_text = parsed_text.substr(t->linelength,t->linelength);
+
+		/*if(done){
 			while(i < t->linect){
 				for(int j = 0; j < t->linelength; j++)
-					t->lines[i][j] = ' ';
-				t->lines[i][t->linelength-1]='\0';
+					t->lines[i].append(" ");
 				i++;
 			}
 			break;
-		}
+		}*/
 		
-		while(ptr < t->linelength){
-			if(parsed_text[ptr+offset] == '\n')
+	/*	while(ptr < t->linelength){
+			if(parsed_text.at(ptr+offset) == '\n')
 				break;
-			if(parsed_text[ptr+offset] == '\0'){
+			if(parsed_text.at(ptr+offset) == '\0'){
 				done = true;
 				break;
 			}
-			line[ptr] = parsed_text[ptr+offset];
+			line.at(ptr) = parsed_text.at(ptr+offset);
 			ptr++;
-		}
-		while(ptr < t->linelength){
+		}*/
+
+
+		/*while(ptr < t->linelength){
 			line[ptr] = ' ';
 			ptr++;
-		}
+		}*/
 		offset += t->linelength;
 		ptr = 0;
-		line[t->linelength-1] = '\0';
-		memcpy(t->lines[i],line,sizeof(char)*(t->linelength));
+	//	t->lines[i] = line;
+		//memcpy(t->lines[i],line,sizeof(char)*(t->linelength));
 	}
 //	if((t->donewriting)&&(prompt))
-	//if(prompt){
-		t->msg = msg;
-	//}
+//	if(prompt){
+		if(msg != NULL){
+			t->msg = msg;
+			if(msg->hasSpeaker)
+				SetText( t->msg->speaker->name,t->speakerbox,0); 
+		}
 	t->donewriting = false;
 }
 
@@ -295,8 +308,8 @@ char *CutString(char *text, int location, int length){
 
 void DrawText(Textbox *t){
 	//draws the text in a textbox
-	if(t->cursor >= 0 && t->cursor < 159)
-		printf(" %i ,", t->cursor);
+	/*if(t->cursor >= 0 && t->cursor < 159)
+		printf(" %i ,", t->cursor);*/
 
 	SDL_Rect temp = {t->box.x,2+t->box.y,t->box.w,(int)(t->box.h*0.2)};
 	if(t->linect == 1){
@@ -315,77 +328,81 @@ void DrawText(Textbox *t){
 				}
 	}
 
-	if((t->cursor>=0)&&(t->cursor + 1 < (t->linelength*t->linect))){
-	
+	if((t->cursor >= 0)&&(t->cursor < t->text.length())){
 
 		++t->cursor;		
-			//	printf("%i \n", t->cursor);
+			
+		if(t->cursor < t->text.length()){
+			while(t->text.at(t->cursor) == ' '){ //skip white space
+				++t->cursor;
+				if(t->cursor >= t->text.length()) 
+					break;
+			}
+		}
+		
 
 		for(int i = 0; i < t->linect; i++){
-			char *line = (char*)malloc(sizeof(char)*(t->linelength+1));
-			memcpy(line,t->lines[i],sizeof(char)*(t->linelength+1));
 
-			printf("%c \n",line[t->cursor - (t->linelength*i)]);
+			string line;
+			
+			if((i * t->linelength) > t->text.length()) //if we're already past the last line with text
+				break;
+			
+			int textlength = t->cursor - (t->linelength*i); //get how far the cursor is from the most recent line ending
 
-			while(isspace(line[t->cursor - (t->linelength*i)])){
-				//THIS BREAKS SOMETIMES?
-				//fprintf(stdout,"Space at %i\n",t->cursor);
-		///		else
-				printf("space skip \n");
-					++t->cursor;
-				//there are random spaces everywhere idk what im doing
-			}
-		
-			if(t->cursor >= t->linelength*(i+1)){
-				DrawLine(t->lines[i],temp);
+			if(textlength > t->linelength) //if the cursor is more than a line away
+				line = t->text.substr((i * t->linelength),t->linelength); //use linelength
+			else 
+				line = t->text.substr((i * t->linelength),textlength); //use where the cursor is now
+
+			while(line.length() < t->linelength)
+				line.append(" ");		//add spaces until the line reaches the specified line length (for SDL text rendering)
+
+			if(t->cursor >= t->linelength*(i+1)){ //if the cursor is already past this line, just draw it 
+				DrawLine(line,temp);
 				temp.y += 2+temp.h;
 			}
 			else{
 				
 				
-				if(t->cursor >= (t->linelength*t->linect)){		
+				if(t->cursor >= (t->text.length())){		
 					t->donewriting = true;
 				//	break;
 				}
 
-				for(int j = (t->cursor - (t->linelength*i)); j < t->linelength; j++){
-					if(j<0) 
-						j = 0;
-					if(line[j] == '\0'){
-						break;
-					}else
-						line[j] = ' ';
-					//line[(t->cursor - (t->linelength*i))] = '@';
-				}
+				
  				DrawLine(line,temp);
 				temp.y += 2+temp.h;
-				free(line);
 			}
 		}
 	}else {
 		for(int i = 0; i < t->linect; i++){
-			DrawLine(t->lines[i],temp);
+			string line;
+			if((i * t->linelength) > t->text.length()) //if we're already past the last line with text
+				break;
+			line = t->text.substr((i * t->linelength),t->linelength); 
+			DrawLine(line,temp);
 			temp.y += 2+temp.h;
 		}
 		t->donewriting = true;
 	}
 }
 
-void DrawLine(char *msg,SDL_Rect location){
+void DrawLine(string msg,SDL_Rect location){
 
 	//draws a line of text... should probably be renamed...
 
 
-	if(msg == NULL) return;
+	if(msg.empty()) return;
 	SDL_Color color = {255,255,255,0};
 	//targetarea.w = 100;
-	SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg,color); 
+	SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg.c_str(),color); 
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(mainRenderer,temp);
 	SDL_Rect targetarea = {location.x+TEXTAREA_INSET,location.y+TEXTAREA_INSET,location.w-(2*TEXTAREA_INSET),location.h};
 	
 
 	SDL_RenderCopy(mainRenderer,texture,NULL,&targetarea);
-
+	
 //	if(DEBUG_DRAW_RECTS)
 //		SDL_RenderDrawRect(mainRenderer, &targetarea);
 

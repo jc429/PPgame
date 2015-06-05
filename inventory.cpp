@@ -96,6 +96,8 @@ void InitInventory(){
 }
 
 void LoadItemPrompt(Uint8 attributes){
+	return; //REMOVE ME
+
 	char itemPromptNames[6][16];
 	int num = 2;	//min item prompt actions is 2 (move and cancel)
 	int i = 0;
