@@ -17,9 +17,9 @@ MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
 	m->bounds.w = box.w;
 	m->bounds.h = box.h;
 	m->bgsprite = spr;
-	m->text = t;
-	m->text->box.y -= 6;
-	SetText(text,m->text,0);
+	m->tbox = t;
+	m->tbox->box.y -= 6;
+	SetText(text,m->tbox,0);
 	return m;
 }
 
@@ -32,8 +32,7 @@ void FreeMenuItem(MenuItem *m){
 void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
 	m->action = func;
 	if(name){
-		m->text->text = name;
-//		copy_string(m->text->lines[0],name);
+		SetText(name,m->tbox,0);
 	}
 }
 
@@ -211,19 +210,20 @@ void DrawMenu(Menu *m){
 		loc.y = m->items[i]->bounds.y;
 	
 		DrawSprite(m->items[i]->bgsprite,0,loc,&uiCamera);
-		DrawTextbox(m->items[i]->text);
+		DrawTextbox(m->items[i]->tbox);
 	}
 
-	loc.x = m->items[m->cursor.location]->bounds.x; // - m->cursor.anim[0]->sprite->w;
-	loc.y = m->items[m->cursor.location]->bounds.y; //- m->cursor.anim[0]->sprite->h;
-	DrawAnimation(m->cursor.anim[0],loc,&uiCamera);
+	loc.x = m->items[m->cursor.location]->bounds.x; 
+	loc.y = m->items[m->cursor.location]->bounds.y; 
+
+	DrawAnimation(m->cursor.anim[0],loc,&uiCamera);		//upper left corner
 	loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;
-	DrawAnimation(m->cursor.anim[1],loc,&uiCamera);
-	loc.x = m->items[m->cursor.location]->bounds.x;// - m->cursor.anim[0]->sprite->w;
+	DrawAnimation(m->cursor.anim[1],loc,&uiCamera);		//upper right corner
+	loc.x = m->items[m->cursor.location]->bounds.x;
 	loc.y += m->items[m->cursor.location]->bounds.h - m->cursor.anim[0]->sprite->h;
-	DrawAnimation(m->cursor.anim[2],loc,&uiCamera);
+	DrawAnimation(m->cursor.anim[2],loc,&uiCamera);		//lower left corner
 	loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;	
-	DrawAnimation(m->cursor.anim[3],loc,&uiCamera);
+	DrawAnimation(m->cursor.anim[3],loc,&uiCamera);		//lower right corner
 
 }
 

@@ -213,35 +213,12 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		t->text = parsed_text;//.substr(0,t->linelength);
 		//parsed_text = parsed_text.substr(t->linelength,t->linelength);
 
-		/*if(done){
-			while(i < t->linect){
-				for(int j = 0; j < t->linelength; j++)
-					t->lines[i].append(" ");
-				i++;
-			}
-			break;
-		}*/
 		
-	/*	while(ptr < t->linelength){
-			if(parsed_text.at(ptr+offset) == '\n')
-				break;
-			if(parsed_text.at(ptr+offset) == '\0'){
-				done = true;
-				break;
-			}
-			line.at(ptr) = parsed_text.at(ptr+offset);
-			ptr++;
-		}*/
 
 
-		/*while(ptr < t->linelength){
-			line[ptr] = ' ';
-			ptr++;
-		}*/
+
 		offset += t->linelength;
 		ptr = 0;
-	//	t->lines[i] = line;
-		//memcpy(t->lines[i],line,sizeof(char)*(t->linelength));
 	}
 //	if((t->donewriting)&&(prompt))
 //	if(prompt){
@@ -328,7 +305,7 @@ void DrawText(Textbox *t){
 				}
 	}
 
-	if((t->cursor >= 0)&&(t->cursor < t->text.length())){
+	if((t->cursor >= 0)&&(t->cursor < t->text.length())){ //if the text is being written letter bt letter
 
 		++t->cursor;		
 			
@@ -349,6 +326,9 @@ void DrawText(Textbox *t){
 				break;
 			
 			int textlength = t->cursor - (t->linelength*i); //get how far the cursor is from the most recent line ending
+
+			if(textlength < 0)	//if this number is negative we shouldn't even be drawing this line yet
+				break;
 
 			if(textlength > t->linelength) //if the cursor is more than a line away
 				line = t->text.substr((i * t->linelength),t->linelength); //use linelength
@@ -375,12 +355,14 @@ void DrawText(Textbox *t){
 				temp.y += 2+temp.h;
 			}
 		}
-	}else {
+	}else {	// if the text is rigid or has completed being written out
 		for(int i = 0; i < t->linect; i++){
 			string line;
 			if((i * t->linelength) > t->text.length()) //if we're already past the last line with text
 				break;
 			line = t->text.substr((i * t->linelength),t->linelength); 
+			while(line.length() < t->linelength)
+				line.append(" ");		//add spaces until the line reaches the specified line length (for SDL text rendering)
 			DrawLine(line,temp);
 			temp.y += 2+temp.h;
 		}

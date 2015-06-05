@@ -351,7 +351,7 @@ void DrawPanel(SDL_Rect rect, Sprite *spr){
 
 //////			World Drawing
 
-void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking down are drawn beneath the tile they're walking into
+void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking south are drawn beneath the tile they're walking into
 	int row;
 	static OverworldEnt *ents_drawn[MAX_ENTS];
 	static int num_ents;
@@ -388,13 +388,29 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking do
 				if (World[col][row] != NULL){
 					if(World[col][row]->contents!=NULL){
 						OverworldEnt *contents = World[col][row]->contents;
+						if(contents == NULL) continue;
+
+						Vec2i pos;
+						SetVec2i(pos,col,row);
+
+						if(DEBUG_DRAW_RECTS)
+							DrawTile(pos);
+
 						bool drawn = false;
 						for(int i = 0; i < num_ents; i++){
-							if(contents == ents_drawn[i])
+							if(contents == ents_drawn[i])	//if the tile's contents were already drawn
 								drawn = true;
 						}
 						if(drawn) continue;
 						
+						//this is gross but idk a better way to do this
+						if((World[col][row+1] != NULL)&&(World[col][row+1]->contents == contents))
+							continue;	//basically if this same entity is also on a tile south of us, don't draw it yet
+						if((World[col-1][row+1] != NULL)&&(World[col-1][row+1]->contents == contents))
+							continue;	//also check for diagonals obviously
+						if((World[col+1][row+1] != NULL)&&(World[col+1][row+1]->contents == contents))
+							continue;
+
 						contents->Draw();
 						ents_drawn[num_ents] = contents;
 						num_ents++;

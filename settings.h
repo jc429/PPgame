@@ -55,7 +55,7 @@
 #define MAX_TECHS 8
 
 //the amount of delay between one frame and the next, in milliseconds
-#define FRAMEDELAY 50//16 // working based on 16	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
+#define FRAMEDELAY 16 // working based on 16	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
 #define FRAMESPERDRAW	6				//how many game frames to wait before updating player animations (for smooth movement but less sprites needed)
 
 //Gameplay stuff

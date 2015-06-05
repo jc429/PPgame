@@ -258,6 +258,7 @@ void PlayerMovement(Player *p){
 
 
 void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest){
+	StepIntoTile(c,dest);
 	//fprintf(stdout,"moving from %i, %i to %i, %i \n",src->position.x/TILE_W,src->position.y/TILE_H,dest->position.x/TILE_W,dest->position.y/TILE_H);
 	Vec2i movement;
 	movement.x = 0;

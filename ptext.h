@@ -52,7 +52,7 @@ typedef struct MenuItem_T{
 */
 	SDL_Rect bounds;
 	Sprite *bgsprite;
-	Textbox *text;
+	Textbox *tbox;
 
 	bool highlighted;
 	bool selected;

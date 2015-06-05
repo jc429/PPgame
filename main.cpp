@@ -333,7 +333,6 @@ void Overworld::Update(){
 }
 
 void Overworld::Draw(){
-	//DrawWorld();
 	DrawWorld();
 	if(DEBUG_DRAW_RECTS){
 		DrawFacingCursor(_Player->tile+_Player->facing);
