@@ -67,14 +67,14 @@ InteractableObject::InteractableObject(int xpos, int ypos){
 InteractableObject *LoadSign(int xpos, int ypos){
 	InteractableObject *ent = new InteractableObject(xpos,ypos);
 	ent->chardata = CreateCharData("Sign");
-	Sprite *s = LoadSprite(SPATH_SIGN_GENERIC,32,32,1);
+	Sprite *s = LoadSprite(SPATH_SIGN_GENERIC,32,32,1,16,24);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;
 	////////////////////////////////////////////////////////////////////////
-	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
+/*	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
 	ent->s_offset.y = ent->animlist[ent->animation][0]->sprite->h>>1;
 	ent->s_offset.y += 8;
-	ent->s_offset.y += World[ent->tile.x][ent->tile.y]->structure->height <<2;
+	ent->s_offset.y += World[ent->tile.x][ent->tile.y]->structure->height <<2;*/
 
 	return ent;
 }
@@ -82,14 +82,14 @@ InteractableObject *LoadSign(int xpos, int ypos){
 InteractableObject *LoadEgg(int xpos, int ypos){
 	InteractableObject *ent = new InteractableObject(xpos,ypos);
 	ent->chardata = CreateCharData("Egg");
-	Sprite *s = LoadSprite("sprites/egg-over.png",64,64,1);
+	Sprite *s = LoadSprite("sprites/egg-over.png",64,64,1,32,36);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;
 	////////////////////////////////////////////////////////////////////////
-	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
+/*	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
 	ent->s_offset.y = ent->animlist[ent->animation][0]->sprite->h>>1;
 	ent->s_offset.y += 8;
-	ent->s_offset.y += World[ent->tile.x][ent->tile.y]->structure->height <<2;
+	ent->s_offset.y += World[ent->tile.x][ent->tile.y]->structure->height <<2;*/
 
 	return ent;
 }
@@ -106,7 +106,9 @@ void InteractableObject::Update(){
 }
 
 void InteractableObject::Draw(){
-	DrawAnimation(animlist[animation][direction],worldposition-s_offset,&mainCamera);
+	Vec2i heightoffset;
+	SetVec2i(heightoffset,0,World[tile.x][tile.y]->structure->height<<2);
+	DrawAnimation(animlist[animation][direction],worldposition - heightoffset,&mainCamera);
 }
 
 void InteractableObject::Talk(Textbox *t){

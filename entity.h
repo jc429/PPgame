@@ -38,7 +38,7 @@ public:
 	Vec2i worldposition;	//current position within the world in pixels
 	
 	//graphics stuff
-	Vec2i s_offset;	
+//	Vec2i s_offset;	
 	Animation *animlist[MAX_ANIMS][NUM_ANIM_DIRS]; //all animations this entity can have
 	AnimDir direction;				//direction facing (default: south)
 	int animation;				//current animation

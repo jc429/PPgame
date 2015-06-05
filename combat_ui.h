@@ -13,7 +13,7 @@ typedef enum CUIType{
 
 typedef struct CombatCursor_T{
 	Vec2i position;
-	Vec2i s_offset;
+//	Vec2i s_offset;
 	CombatEnt *target;
 	Animation *anim;
 }CombatCursor;

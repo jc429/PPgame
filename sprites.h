@@ -11,6 +11,10 @@ typedef struct Sprite_T{
 	int w, h;						/*the width and height of the frames of the sprites, not the file itself*/
 	int framesperline;			/*default is 16*/
 	//int color1,color2,color3;	/*if the file was palette swapped these are the colors that were changed*/
+
+	int s_offset_x;				/*x and y offsets, where to draw the sprite from*/
+	int s_offset_y;
+
 	int used;						/*used by the maintanence functions to keep track of how many times a single sprite is being used*/
 }Sprite;
 
@@ -43,7 +47,7 @@ typedef enum AnimDir{
 };
 
 void InitSpriteList();
-Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl);
+Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl, int off_x = 0, int off_y = 0);
 void FreeSprite(Sprite *spr);
 
 Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop = true, int delay = FRAMESPERDRAW, void(*finish)() = NULL);

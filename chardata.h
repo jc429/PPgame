@@ -72,7 +72,7 @@ typedef struct CharData_T{
 }CharData;
 
 
-vector<int> LoadEnemyDataCFG(char *path);
+
 
 CharData *LoadCharData(int charid);
 CharData *CreateCharData(char *name);

@@ -22,7 +22,7 @@
 #define SPATH_SIGN_GENERIC "sprites/sign.png"
 
 #define SPATH_ENEMY_GENERIC "sprites/enemies/begg.png"
-#define SPATH_ALLY_GENERIC "sprites/player.png"
+#define SPATH_ALLY_GENERIC "sprites/mc_combat.png"
 
 
 

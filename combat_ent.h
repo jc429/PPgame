@@ -56,7 +56,7 @@ typedef struct CombatEnt_T:public Entity{
 	Vec2d position;			//where the ent is currently
 	Vec2d position_target;	//used for motion events
 
-	Vec2i s_offset;					//sprite offset
+//	Vec2i s_offset;					//sprite offset
 	Animation *animlist[MAX_ANIMS]; //all animations this CombatEnt can have
 	int animation;					//current animation
 	int numAnims;
@@ -73,7 +73,9 @@ void InitCombatSlots();
 
 void LoadAllies();
 void LoadEnemies();
+CombatEnt *FindEnemy(int id);
 CombatEnt *LoadCombatEnt(int charid);
+void AddCombatEntAnim(CombatEnt *cent, Animation *anim, int position = 0);
 //CombatEnt *LoadCombatEntCFG(char *path);
 void DrawAllies();
 void DrawEnemies();
@@ -93,6 +95,7 @@ void PerformMotion(CombatEnt *ent, EntMotion m);
 void PerformDamage(CombatEnt *ent, EntDamage d);
 CombatEnt *FindCombatEnt(CombatEnt *current, Vec2i dir); //direction to look for combat ent
 
+vector<CombatEnt*> LoadEnemyDataCFG(char *path);
 
 void RoatateAllies();
 void RoatateEnemies();

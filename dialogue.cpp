@@ -206,7 +206,9 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		}
 		if(done){
 			while(i < t->linect){
-				t->lines[i][0]='\0';
+				for(int j = 0; j < t->linelength; j++)
+					t->lines[i][j] = ' ';
+				t->lines[i][t->linelength-1]='\0';
 				i++;
 			}
 			break;
@@ -228,7 +230,7 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		}
 		offset += t->linelength;
 		ptr = 0;
-		line[t->linelength] = '\0';
+		line[t->linelength-1] = '\0';
 		memcpy(t->lines[i],line,sizeof(char)*(t->linelength));
 	}
 //	if((t->donewriting)&&(prompt))
@@ -292,6 +294,10 @@ char *CutString(char *text, int location, int length){
 }
 
 void DrawText(Textbox *t){
+	//draws the text in a textbox
+	if(t->cursor >= 0 && t->cursor < 159)
+		printf(" %i ,", t->cursor);
+
 	SDL_Rect temp = {t->box.x,2+t->box.y,t->box.w,(int)(t->box.h*0.2)};
 	if(t->linect == 1){
 		temp.h = t->box.h;
@@ -313,20 +319,24 @@ void DrawText(Textbox *t){
 	
 
 		++t->cursor;		
-		
+			//	printf("%i \n", t->cursor);
 
 		for(int i = 0; i < t->linect; i++){
 			char *line = (char*)malloc(sizeof(char)*(t->linelength+1));
 			memcpy(line,t->lines[i],sizeof(char)*(t->linelength+1));
 
+			printf("%c \n",line[t->cursor - (t->linelength*i)]);
 
-			while((line[t->cursor - (t->linelength*i)] == ' ')||(line[t->cursor - (t->linelength*i)] == '\0')){
+			while(isspace(line[t->cursor - (t->linelength*i)])){
 				//THIS BREAKS SOMETIMES?
 				//fprintf(stdout,"Space at %i\n",t->cursor);
-				++t->cursor;
+		///		else
+				printf("space skip \n");
+					++t->cursor;
+				//there are random spaces everywhere idk what im doing
 			}
 		
-			if(t->cursor > t->linelength*(i+1)){
+			if(t->cursor >= t->linelength*(i+1)){
 				DrawLine(t->lines[i],temp);
 				temp.y += 2+temp.h;
 			}
@@ -362,6 +372,10 @@ void DrawText(Textbox *t){
 }
 
 void DrawLine(char *msg,SDL_Rect location){
+
+	//draws a line of text... should probably be renamed...
+
+
 	if(msg == NULL) return;
 	SDL_Color color = {255,255,255,0};
 	//targetarea.w = 100;
@@ -387,6 +401,7 @@ void SetMessagePrompts(Message *msg){
 }
 
 void SetMessageEndFunction(Message *msg, void (*func)()){
+	// not sure if this works yet
 	msg->atEnd = func;
 }
 
@@ -441,9 +456,9 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 
 	InteractableObject *sign = LoadSign(3,5);
 
-	CreateMonologue(sign->flavortext,sign,3,"Hi.","I love you.", "Like, comment, and subscribe for more.");
+	CreateMonologue(sign->flavortext,sign,2,"Press Shift (the left one) to open the  menu!","You can't use items yet though...");
 	
-	InteractableObject *sign2 = LoadSign(6,3);
+	/*InteractableObject *sign2 = LoadSign(6,3);
 
 
 	CreateMessage(sign2->flavortext,"Am I... A sign?",sign2);
@@ -451,7 +466,7 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 	CreateMessage(sign2->flavortext->next[0],"...What the hell!?",sign2);
 	sign2->flavortext->next[1] = NewMessage();
 	CreateMessage(sign2->flavortext->next[1],"Oh, okay. Thank God.",sign2);
-	SetPrompt(sign2->flavortext,MENU_YES_NO);
+	SetPrompt(sign2->flavortext,MENU_YES_NO);*/
 //	SetAnswers(sign2->flavortext,2,SelectAnswer1,SelectAnswer2);
 
 

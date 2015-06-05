@@ -114,7 +114,7 @@ void InitSpriteList(){
 }
 
 /*Create a sprite from a file, the most common use for it.*/
-Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl){
+Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl, int off_x, int off_y){
 	int i;
 	SDL_Surface *temp; 
 	/*first search to see if the requested sprite image is already loaded*/
@@ -149,6 +149,8 @@ Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl){
 	SpriteList[i].framesperline = fpl;
 	SpriteList[i].w = sizex;
 	SpriteList[i].h = sizey;
+	SpriteList[i].s_offset_x = off_x;
+	SpriteList[i].s_offset_y = off_y;
 	SpriteList[i].used++;
 	return &SpriteList[i];
 }
@@ -231,8 +233,8 @@ int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
     src.w = spr->w;
     src.h = spr->h;
 
-	targetarea.x = pos.x-c->viewport.x;
-	targetarea.y = pos.y-c->viewport.y;
+	targetarea.x = (pos.x - spr->s_offset_x) - c->viewport.x;
+	targetarea.y = (pos.y - spr->s_offset_y) - c->viewport.y;
 	targetarea.w = spr->w;
 	targetarea.h = spr->h;
 	
@@ -266,8 +268,8 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	src.w = anim->sprite->w;
 	src.h = anim->sprite->h;
 
-	targetarea.x = pos.x-c->viewport.x;
-	targetarea.y = pos.y-c->viewport.y;
+	targetarea.x = (pos.x - anim->sprite->s_offset_x) - c->viewport.x;
+	targetarea.y = (pos.y - anim->sprite->s_offset_y) - c->viewport.y;
 	targetarea.w = anim->sprite->w;
 	targetarea.h = anim->sprite->h;
 

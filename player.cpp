@@ -50,7 +50,7 @@ Player::Player(){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	////////////////////////////////////////////////////////////////// there has to be a better way to do this
-	Sprite *s = LoadSprite(SPATH_PLAYER_OVERWORLD,64,64,5);
+	Sprite *s = LoadSprite(SPATH_PLAYER_OVERWORLD,64,64,5,32,40);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1,1,1,12);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,5,5,1,1,1,12);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,5,5,1,1,1,12);
@@ -72,9 +72,9 @@ Player::Player(){
 
 	numAnims = 2;
 	////////////////////////////////////////////////////////////////////////
-	s_offset.x = animlist[animation][0]->sprite->w>>1;
+	/*s_offset.x = animlist[animation][0]->sprite->w>>1;
 	s_offset.y = animlist[animation][0]->sprite->h>>1;
-	s_offset.y += 8;
+	s_offset.y += 8;*/
 
 	//Dialogue and misc
 	talking = false;
@@ -311,7 +311,7 @@ void DrawPlayer(Player *p){
 	if(p->animation+1 > p->numAnims)
 		p->animation =  (CharAnim)(p->numAnims-1);
 
-	DrawAnimation(p->animlist[p->animation][p->direction],p->worldposition-p->s_offset,&mainCamera);
+	DrawAnimation(p->animlist[p->animation][p->direction],p->worldposition,&mainCamera);
 
 }
 

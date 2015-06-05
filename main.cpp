@@ -48,7 +48,7 @@ Menu *pauseMenu;
 
 bool _Dialogue;	//are we currently talking?
 
-vector<int> enemylist;
+extern vector<CombatEnt*> enemylist;
 extern int CombatPartyIDs[MAX_PARTY_COMBAT];
 extern int EnemyIDs[MAX_ENEMIES];
 
@@ -297,7 +297,7 @@ void ExitCombat(){
 void LoadLevel(){
 	Chunk *ch = LoadChunk("testfiles/chunk1.json");
 	enemylist = LoadEnemyDataCFG("testfiles/enemy-test.json");
-	SetEnemies(2, enemylist.at(1), enemylist.at(1));
+	SetEnemies(2, enemylist.at(1)->chardata->id, enemylist.at(1)->chardata->id);
 	for(int i = 0; i < ch->size.x; i++){
 		for(int j = 0; j < ch->size.y; j++){
 			World[i][j] = &ch->tiles[i][j];
@@ -395,6 +395,6 @@ void OpenPauseMenu(){
 
 //move this prob
 void FightBoss(){
-	SetEnemies(1,enemylist.at(0));
+	SetEnemies(1,enemylist.at(0)->chardata->id);
 	EnterCombat();
 }

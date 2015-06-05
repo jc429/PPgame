@@ -135,9 +135,9 @@ void UpdateTurn(){
 	
 	for(int i = 0; i < MAX_PARTY_COMBAT; i++)
 		PerformCurrentEvent(CombatParty[i]);
-	for(int i = 0; i < MAX_ENEMIES; i++)
-		PerformCurrentEvent(Enemies[i]);
-
+//	for(int i = 0; i < MAX_ENEMIES; i++)
+//		PerformCurrentEvent(Enemies[i]);
+	/*enemy cant properly target players anymore? idk*/
 	
 	
 	if(InputPressed(PPINPUT_A)){
@@ -350,10 +350,10 @@ void DrawActionStack(){
 }
 
 void InitiateAttack(){
-	OpenCombatUI(targetcursor);
 	for(int i = 0; i < MAX_ENEMIES; i++)
 		if(Enemies[i] != NULL)
 			targetcursor->contents.cursor.target = Enemies[i];
+	OpenCombatUI(targetcursor);
 }
 
 void QueuePlayerAttack(){

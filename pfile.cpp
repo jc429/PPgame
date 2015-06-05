@@ -163,7 +163,7 @@ CombatEnt *LoadCombatEntCFG(char *path){
 	return ent;
 }
 
-vector<int> LoadEnemyDataCFG(char *path){
+vector<CombatEnt*> LoadEnemyDataCFG(char *path){
 
 	FILE* pFile = fopen(path, "rb");
 	char buffer[65536];
@@ -173,22 +173,41 @@ vector<int> LoadEnemyDataCFG(char *path){
 	assert(doc.IsObject());
 	fclose(pFile);
 
-	vector<int> enemy_ids;
+	vector<CombatEnt*> enemies;
 
 	CharData *cd;
 	int i = 0;
 	for(rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr){
+		CombatEnt *cent;
+		Sprite *spr;
+		Animation *anim;
 		if(strcmp(itr->name.GetString(),"info")==0)
 			continue;
 
 		const rapidjson::Value& enemy_parse = doc[itr->name];
 
 		cd = ParseCharData(enemy_parse);
-		enemy_ids.push_back(cd->id);
+		cent = LoadCombatEnt(cd->id);
+
+		if(enemy_parse.HasMember("sprite")){
+			spr = ParseSprite(enemy_parse["sprite"]);
+		}
+
+		if(enemy_parse.HasMember("animations")){
+			const rapidjson::Value& anims = enemy_parse["animations"];
+			int i = 0;
+			for(rapidjson::Value::ConstMemberIterator itr = anims.MemberBegin(); itr != anims.MemberEnd(); ++itr){
+				anim = ParseAnimation(itr->value);
+				AddCombatEntAnim(cent,anim,i);
+				++i;
+			}
+		}
+
+		enemies.push_back(cent);
 		i++;
 	}
 
-	return enemy_ids;
+	return enemies;
 }
 
 CharData *ParseCharData(const rapidjson::Value& cd_parse){
@@ -196,8 +215,9 @@ CharData *ParseCharData(const rapidjson::Value& cd_parse){
 	assert(cd_parse["id"].IsInt());
 	cd = LoadCharData(ID_ENEMY + cd_parse["id"].GetInt());
 
-	assert(enemy_parse["name"].IsString());
+	assert(cd_parse["name"].IsString());
 	copy_string(cd->name,cd_parse["name"].GetString());
+
 	
 	return cd;
 }
@@ -352,7 +372,7 @@ void LoadItemCFG(char *path){
 
 Sprite *ParseSprite(const rapidjson::Value& sprite_parse){
 	char path[40];
-	int tw,th,fpl;
+	int tw,th,fpl,offx,offy;
 	if(sprite_parse.HasMember("path")){
 		copy_string(path,sprite_parse["path"].GetString());
 	}
@@ -365,9 +385,51 @@ Sprite *ParseSprite(const rapidjson::Value& sprite_parse){
 	if(sprite_parse.HasMember("frames_per_line")){
 		fpl = sprite_parse["frames_per_line"].GetInt();
 	}
-	return LoadSprite(path,tw,th,fpl);
+	if(sprite_parse.HasMember("offset_x")){
+		offx = sprite_parse["offset_x"].GetInt();
+	}
+	if(sprite_parse.HasMember("offset_y")){
+		offy = sprite_parse["offset_y"].GetInt();
+	}
+	return LoadSprite(path,tw,th,fpl,offx,offy);
 }
 
 Animation *ParseAnimation(const rapidjson::Value& anim_parse){
+	Sprite *spr;
+	char path[40];
+	int startf,seed,length,play,loop,delay;
+
+	if(anim_parse.HasMember("sprite")){
+		copy_string(path,anim_parse["sprite"].GetString());	
+		spr = LoadSprite(path,0,0,0);
+	}else
+		spr = NULL;
+
+	if(anim_parse.HasMember("start_frame")){
+		startf = anim_parse["start_frame"].GetInt();
+	}
+	if(anim_parse.HasMember("seed")){
+		seed = anim_parse["seed"].GetInt();
+	}
+	if(anim_parse.HasMember("length")){
+		length = anim_parse["length"].GetInt();
+	}
+	if(anim_parse.HasMember("play")){
+		play = anim_parse["play"].GetInt();
+	}else
+		play = 1;
+
+	if(anim_parse.HasMember("loop")){
+		loop = anim_parse["loop"].GetInt();
+	}else
+		loop = 1;
+
+	if(anim_parse.HasMember("delay")){
+		delay = anim_parse["delay"].GetInt();
+	}else
+		delay = 1;
+
+	return LoadAnimation(spr,startf,seed,length,play,loop,delay);
+
 
 }

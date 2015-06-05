@@ -36,16 +36,18 @@ void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
 	}
 }
 
-Menu *LoadMenu(MenuType type,Vec2i *loc){
-	Menu *m = new Menu();
+Menu *LoadMenu(MenuType mtype,Vec2i *loc){	
+	//Loads a menu, with special conditions based on type
+
 	Textbox *textboxes[8];
 	for(int i = 0; i < 8; i++){
 		textboxes[i] = NULL;
 	}
 
-	Sprite *bg = NULL;
 	SDL_Rect itemRect;
 	Sprite *cursorSpr = NULL;
+
+	Menu *m = new Menu();
 
 	m->cursor.location = 0;
 	if(loc != NULL){
@@ -53,10 +55,17 @@ Menu *LoadMenu(MenuType type,Vec2i *loc){
 	}
 	
 	m->spr = LoadSprite(SPATH_PANEL_DEF,4,4,3);
-	//bg = LoadSprite(SPATH_MENU_BG,32,16,1);
-	m->type = type;
+	m->type = mtype;
 
-	switch(type){
+	int cframes = 2; //num frames in cursor animation
+	cursorSpr = LoadSprite("sprites/menucursor.png",8,8,4);
+	for(int i = 0; i < 4; i++){
+		m->cursor.anim_active[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,2,1,1,18);
+		m->cursor.anim_inactive[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,1,1,1,18); //should be different eventually
+		m->cursor.anim[i] = m->cursor.anim_active[i];
+	}
+
+	switch(mtype){
 	case MENU_PAUSE:
 		m->location.x = 10;
 		m->location.y = 10;
@@ -65,14 +74,11 @@ Menu *LoadMenu(MenuType type,Vec2i *loc){
 		SetRect(itemRect,m->location.x,m->location.y,60,16);
 		m->location = itemRect;
 		
-		bg = NULL;
-		//bg = LoadSprite(SPATH_MENU_BG_COMBAT,64,16,1);
-		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_LARGE,64,16,1);
 
 		for(int i = 0; i < m->numItems; i++){
 			textboxes[i] = new Textbox();
 			LoadTextbox(textboxes[i],1,6,NULL,itemRect);
-			m->items[i] = LoadMenuItem(itemRect,bg,textboxes[i]);
+			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
 			if(i + 1 < m->numItems){
 				itemRect.y += 16;
 				m->location.h += 16;
@@ -91,18 +97,16 @@ Menu *LoadMenu(MenuType type,Vec2i *loc){
 		SetRect(itemRect,m->location.x,m->location.y,30,16);
 		m->location = itemRect;
 
-		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_SMALL,32,16,1);
-
 		textboxes[0] = new Textbox();
 		LoadTextbox(textboxes[0],1,3,NULL,itemRect);
-		m->items[0] = LoadMenuItem(itemRect,bg,textboxes[0],"Yes");
+		m->items[0] = LoadMenuItem(itemRect,NULL,textboxes[0],"Yes");
 
 		itemRect.y += 18;
 		m->location.h += 18;
 
 		textboxes[1] = new Textbox();
 		LoadTextbox(textboxes[1],1,3,NULL,itemRect);
-		m->items[1] = LoadMenuItem(itemRect,bg,textboxes[1],"No");
+		m->items[1] = LoadMenuItem(itemRect,NULL,textboxes[1],"No");
 		break;
 	case MENU_BATTLE:		////////////////////////////////////////////////////////
 		m->location.x = 190;
@@ -118,8 +122,6 @@ Menu *LoadMenu(MenuType type,Vec2i *loc){
 		m->location.w += 64;
 		m->location.h += 16;
 
-
-		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_LARGE,64,16,1);
 
 		textboxes[0] = new Textbox;
 		//bg = LoadSprite(SPATH_MENU_BG_COMBAT,64,16,1);
@@ -140,12 +142,9 @@ Menu *LoadMenu(MenuType type,Vec2i *loc){
 		
 		break;
 	default:
-		cursorSpr = LoadSprite(SPATH_MENU_CURSOR_LARGE,64,16,1);
 		break;
 	}
-	m->cursor.anim_active = LoadAnimation(cursorSpr,0,0,2,1,1,18);
-	m->cursor.anim_inactive = LoadAnimation(cursorSpr,0,0,1,1,1,18);
-	m->cursor.anim = m->cursor.anim_active;
+	
 	return m;
 }
 
@@ -213,9 +212,18 @@ void DrawMenu(Menu *m){
 		DrawSprite(m->items[i]->bgsprite,0,loc,&uiCamera);
 		DrawTextbox(m->items[i]->text);
 	}
-	loc.x = m->items[m->cursor.location]->bounds.x;
-	loc.y = m->items[m->cursor.location]->bounds.y;
-	DrawAnimation(m->cursor.anim,loc,&uiCamera);
+
+	loc.x = m->items[m->cursor.location]->bounds.x; // - m->cursor.anim[0]->sprite->w;
+	loc.y = m->items[m->cursor.location]->bounds.y; //- m->cursor.anim[0]->sprite->h;
+	DrawAnimation(m->cursor.anim[0],loc,&uiCamera);
+	loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;
+	DrawAnimation(m->cursor.anim[1],loc,&uiCamera);
+	loc.x = m->items[m->cursor.location]->bounds.x;// - m->cursor.anim[0]->sprite->w;
+	loc.y += m->items[m->cursor.location]->bounds.h - m->cursor.anim[0]->sprite->h;
+	DrawAnimation(m->cursor.anim[2],loc,&uiCamera);
+	loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;	
+	DrawAnimation(m->cursor.anim[3],loc,&uiCamera);
+
 }
 
 void DrawMenuSprite(Menu *m){

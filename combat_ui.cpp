@@ -73,10 +73,15 @@ void UpdateCombatUI(CombatUI *c){
 void DrawCombatUI(CombatUI *c){
 	switch(c->type){
 	case CUI_MENU:
-		if(_CombatUIStack.back() ==  c)
-			c->contents.menu.cursor.anim = c->contents.menu.cursor.anim_active;
-		else
-			c->contents.menu.cursor.anim = c->contents.menu.cursor.anim_inactive;
+		if(_CombatUIStack.back() ==  c){
+			c->contents.menu.cursor.active = true;
+			for(int i = 0; i < 4; i++)
+				c->contents.menu.cursor.anim[i] = c->contents.menu.cursor.anim_active[i];
+		}else{
+			c->contents.menu.cursor.active = false;
+			for(int i = 0; i < 4; i++)
+				c->contents.menu.cursor.anim[i] = c->contents.menu.cursor.anim_inactive[i];
+		}
 		DrawMenu(&c->contents.menu);
 		break;
 	case CUI_CURSOR:
@@ -104,7 +109,7 @@ void CancelCombatUI(){
 void UpdateCursor(CombatCursor *cc){
 	if(InputPressed(PPINPUT_DIR_ANY))
 		MoveCursor(cc);
-	SetVec2i(cc->position,(int)cc->target->position_base.x,(int)cc->target->position_base.y - 0.7*cc->target->s_offset.y);
+	SetVec2i(cc->position,(int)cc->target->position_base.x,(int)cc->target->position_base.y - 50);
 	if(InputPressed(PPINPUT_A)){
 		if(!_InAttack){
 			OpenCombatUI(testmenu);
@@ -118,13 +123,13 @@ void UpdateCursor(CombatCursor *cc){
 }
 
 void DrawCursor(CombatCursor *cc){
-	DrawAnimation(cc->anim,cc->position - cc->s_offset,&combatCamera);
+	DrawAnimation(cc->anim,cc->position,&combatCamera);
 }
 
 CombatCursor *LoadCombatCursor(CombatEnt *targ){
 	CombatCursor *cc = new CombatCursor();
-	cc->anim = LoadAnimation(LoadSprite(SPATH_COMBAT_CURSOR,32,32,1),0,0,1,1);
-	SetVec2i(cc->s_offset,16,32);
+	cc->anim = LoadAnimation(LoadSprite(SPATH_COMBAT_CURSOR,32,32,1,16,32),0,0,1,1);
+//	SetVec2i(cc->s_offset,16,32);
 	cc->target = targ;
 	return cc;
 }

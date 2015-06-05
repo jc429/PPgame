@@ -199,14 +199,15 @@ void UpdateInvCursor(){
 	if(Inventory[InvCursor.selection].properties != NULL){
 		SetText(Inventory[InvCursor.selection].properties->name,&ItemNameBox,0);
 		SetText(Inventory[InvCursor.selection].properties->flavortext,&ItemDescBox,0);
+		if(InputPressed(PPINPUT_A)){
+			LoadItemPrompt(Inventory[InvCursor.selection].properties->attributes);
+			OpenMenu(itemPrompt,&_InvMenuStack);
+		}
 	}else{
 		SetText("------",&ItemNameBox,0);
 		SetText("------",&ItemDescBox,0);
 	}
-	if(InputPressed(PPINPUT_A)){
-		LoadItemPrompt(Inventory[InvCursor.selection].properties->attributes);
-		OpenMenu(itemPrompt,&_InvMenuStack);
-	}
+	
 }
 
 void MoveInvCursor(){

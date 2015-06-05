@@ -58,9 +58,13 @@ typedef struct MenuItem_T{
 
 typedef struct MenuCursor_T{
 	int location;		//what item is the cursor currently selecting?
-	Animation *anim;
-	Animation *anim_active;
-	Animation *anim_inactive;
+	SDL_Rect size;
+
+	bool active;
+
+	Animation *anim[4];
+	Animation *anim_active[4];
+	Animation *anim_inactive[4];
 }MenuCursor;
 
 typedef struct Menu_T{

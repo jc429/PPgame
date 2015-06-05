@@ -12,6 +12,8 @@ NPC::NPC (int xpos, int ypos, char *entName){
 	if(entName == NULL)
 		entName = "Some Guy";
 	chardata = LoadCharData(ID_NPC+id);
+	++id;
+	copy_string(chardata->name,entName);
 //	name = NULL;
 
 	//Facing
@@ -42,7 +44,7 @@ NPC::NPC (int xpos, int ypos, char *entName){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	////////////////////////////////////////////////////////////////// there has to be a better way to do this
-	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,64,64,5);
+	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,64,64,5,32,40);
 	///Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1,1,1);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,5,5,1,1,1);
@@ -65,9 +67,9 @@ NPC::NPC (int xpos, int ypos, char *entName){
 
 	numAnims = 2;
 	////////////////////////////////////////////////////////////////////////
-	s_offset.x = animlist[animation][0]->sprite->w>>1;
+/*	s_offset.x = animlist[animation][0]->sprite->w>>1;
 	s_offset.y = animlist[animation][0]->sprite->h>>1;
-	s_offset.y += 8;
+	s_offset.y += 8;*/
 
 	//Dialogue and misc
 	talks = false;
@@ -104,7 +106,7 @@ void NPC::Update(){
 }
 
 void NPC::Draw(){
-	DrawAnimation(animlist[animation][direction],worldposition-s_offset,&mainCamera);
+	DrawAnimation(animlist[animation][direction],worldposition,&mainCamera);
 }
 
 void NPC::Talk(Textbox *t){
