@@ -169,11 +169,13 @@ void PlayerMovement(Player *p){
 		if(p->animation != ANIM_CHAR_WALK)
 			p->animation = ANIM_CHAR_WALK;
 		p->facing = p->tomove;
-		UpdateTile(p);
+		
 		MoveToTile(p,World[p->tile_src.x][p->tile_src.y],World[p->tile_dest.x][p->tile_dest.y]);
 
 	}
 	else{
+		UpdateTile(p);
+
 		p->animation = ANIM_CHAR_IDLE;
 		p->tomove.x = 0;
 		p->tomove.y = 0;

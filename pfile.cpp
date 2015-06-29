@@ -225,6 +225,9 @@ CharData *ParseCharData(const rapidjson::Value& cd_parse){
 Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 	msg = NewMessage();
 	assert(dialogue_parse["text"].IsString());
+	int len = dialogue_parse["text"].GetStringLength();
+	if (len > MAX_PARAGRAPH_SIZE) //if the text we have is too big, abort mission
+		return NULL;
 	copy_string(msg->text,dialogue_parse["text"].GetString());
 	if(dialogue_parse.HasMember("next")){
 		const rapidjson::Value& next = dialogue_parse["next"];

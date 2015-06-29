@@ -295,12 +295,16 @@ void ExitCombat(){
 }
 
 void LoadLevel(){
-	Chunk *ch = LoadChunk("testfiles/chunk1.json");
-	enemylist = LoadEnemyDataCFG("testfiles/enemy-test.json");
-	SetEnemies(2, enemylist.at(1)->chardata->id, enemylist.at(1)->chardata->id);
-	for(int i = 0; i < ch->size.x; i++){
-		for(int j = 0; j < ch->size.y; j++){
-			World[i][j] = &ch->tiles[i][j];
+//	Chunk *ch = LoadChunk("testfiles/chunk2.json");
+	Area *a = LoadArea("testfiles/area1.json");
+
+	for(int x = 0; x < a->numchunks; x++){
+		Chunk *ch = a->chunklist[x];
+		Vec2i off = ch->location;
+		for(int i = 0; i < ch->size.x; i++){
+			for(int j = 0; j < ch->size.y; j++){
+				World[i+off.x][j+off.y] = &ch->tiles[i][j];
+			}
 		}
 	}
 	/*
@@ -308,6 +312,8 @@ void LoadLevel(){
 	Level *level = new Level;
 	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
 		InitWorld();*/
+	enemylist = LoadEnemyDataCFG("testfiles/enemy-test.json");
+	SetEnemies(2, enemylist.at(1)->chardata->id, enemylist.at(1)->chardata->id);
 }
 
 void Overworld::Update(){
@@ -360,6 +366,7 @@ void StartCombat(){
 }
 
 void OpenInventory(){
+	UpdateInvText();
 	_CurrentScene = new InventoryPage();
 }
 

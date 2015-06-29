@@ -191,10 +191,10 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	bool done = false;
 
 	if(text == NULL) return;
-	string parsed_text = string(text); //gotta do this better 
+	string parsed_text = string(text); //this isn't actually parsed bc that fucked up whoops
 	
-	if(DEBUG)
-		printf("%s \n",parsed_text.c_str());
+//	if(DEBUG)
+//		printf("%s \n",parsed_text.c_str());
 
 	if(scroll){
 		t->cursor = 0;
@@ -210,10 +210,7 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 			done = true;
 		}
 
-		t->text = parsed_text;//.substr(0,t->linelength);
-		//parsed_text = parsed_text.substr(t->linelength,t->linelength);
-
-		
+		t->text = parsed_text;
 
 
 

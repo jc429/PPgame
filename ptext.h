@@ -46,10 +46,6 @@ typedef enum MenuType{
 };
 
 typedef struct MenuItem_T{
-//	SDL_Rect FIXME;		
-/* I have no idea why, but something about calling SetText inside of LoadMenuItem overwrites the first member of a MenuItem
-	This FIXME rect is here for now to create garbage data to be overwritten while I look into why it's happening.
-*/
 	SDL_Rect bounds;
 	Sprite *bgsprite;
 	Textbox *tbox;

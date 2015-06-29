@@ -199,20 +199,25 @@ void EquipSelectedItem(){
 void UpdateInvCursor(){
 	MoveInvCursor();
 	if(Inventory[InvCursor.selection].properties != NULL){
-		SetText(Inventory[InvCursor.selection].properties->name,&ItemNameBox,0);
-		SetText(Inventory[InvCursor.selection].properties->flavortext,&ItemDescBox,0);
 		if(InputPressed(PPINPUT_A)){
 			LoadItemPrompt(Inventory[InvCursor.selection].properties->attributes);
 			OpenMenu(itemPrompt,&_InvMenuStack);
 		}
+	}
+}
+
+void UpdateInvText(){
+	if(Inventory[InvCursor.selection].properties != NULL){
+		SetText(Inventory[InvCursor.selection].properties->name,&ItemNameBox,0);
+		SetText(Inventory[InvCursor.selection].properties->flavortext,&ItemDescBox,0);
 	}else{
 		SetText("------",&ItemNameBox,0);
 		SetText("------",&ItemDescBox,0);
 	}
-	
 }
 
 void MoveInvCursor(){
+	int temp = InvCursor.selection;	//save the current selection
 	if(InputPressed(PPINPUT_LEFT)&&!InputPressed(PPINPUT_RIGHT)){
 		InvCursor.selection -= 1;
 	}
@@ -230,6 +235,10 @@ void MoveInvCursor(){
 	InvCursor.selection %= INV_SIZE;
 	InvCursor.location.x = InvCursor.selection % INV_ROW_LEN;
 	InvCursor.location.y = InvCursor.selection / INV_ROW_LEN;
+
+	if(InvCursor.selection != temp){	//if the selection changed this frame
+		UpdateInvText();
+	}
 }
 
 void DrawInvBG(){

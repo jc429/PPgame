@@ -29,11 +29,15 @@
 #define WINDOW_RES_X 640
 #define WINDOW_RES_Y 480
 
-//the size of the game world, in tiles for now. this doesn't really affect anything yet.
-#define WORLD_W 32
-#define WORLD_H	24
+#define MAX_CHUNK_SIZE_X 32		//maximum width (in tiles) of a single chunk
+#define MAX_CHUNK_SIZE_Y 32		//maximum height (in tiles) of a single chunk
+#define MAX_CHUNKS 16		//maximum chunks that can be loaded at one time
 
-//the size of the game tiles in the world
+//the size of the currently game world, in tiles. Has to be big to handle very long or very tall areas
+#define WORLD_W 512
+#define WORLD_H	512
+
+//the size of the game tiles (in pixels) in the world
 #define TILE_W 32
 #define TILE_H 32
 
@@ -72,8 +76,9 @@
 #define TEXTAREA_W 320
 #define TEXTAREA_H 80
 #define TEXTAREA_INSET 4
-#define LINE_LENGTH 40		//num chars per textbox line
-#define LINE_COUNT 4		//num lines per textbox
+#define LINE_LENGTH 40		//max chars per textbox line
+#define LINE_COUNT 4		//max lines per textbox
+#define MAX_PARAGRAPH_SIZE 255	//max size a single block of text is allowed to be
 #define TEXT_SPEED 1		//how many frames to wait before advancing another character in the text box
 
 //audio

@@ -11,6 +11,7 @@ void AddItem(int itemID, int amount = 1);
 void BuyItem(int itemID, int cost, int amount = 1);
 
 void UpdateInvCursor();
+void UpdateInvText();
 
 void DrawInvBG();
 void DrawInventory();

@@ -123,6 +123,7 @@ void NPC::Talk(Textbox *t){
 
 
 void GiveNPCMessage(NPC *npc, Message *msg){
+	if(msg == NULL) return;
 	npc->msg = msg;
 	npc->talks = true;
 	SetSpeaker(msg,npc->chardata);

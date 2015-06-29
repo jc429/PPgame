@@ -10,6 +10,10 @@ Chunk - a fixed size 2d array of Tiles (not Tile pointers) - does not have to be
 Area - a number of chunks "stitched" together, forming whatever location in the game world. All chunks of an area are loaded at once (?)
 World - The main world, handles loadind/unloading of areas. Probably loads the current Area and its neighbors 
 */
+
+/************************** Chunk Stuff **************************/
+
+
 Chunk ChunkList[MAX_CHUNKS];
 int numChunks;
 
@@ -24,7 +28,7 @@ void InitChunkList(){
 	}
 }
 
-Chunk *LoadChunk(char* chunkpath){
+Chunk *LoadChunk(char* chunkpath, Vec2i location){
 	int i;
 	if(numChunks >= MAX_CHUNKS){
 		printf("TOO MANY CHUNKS LOADED");
@@ -40,6 +44,8 @@ Chunk *LoadChunk(char* chunkpath){
 	for(i = 0; i <= MAX_CHUNKS; i++)
 		if(ChunkList[i].used == 0) break;
 	
+	ChunkList[i].location = location;
+
 	LoadChunkCFG(&ChunkList[i],chunkpath);
 
 //	printf("Size: %i,%i\n",ChunkList[i].size.x,ChunkList[i].size.y);
@@ -107,7 +113,7 @@ void LoadChunkCFG(Chunk *ch,char *chunkpath){
 			const rapidjson::Value& currentRow = map[rapidjson::SizeType(row)];
 			for(int col = 0; col < ch->size.x; col++){
 				ch->tiles[col][row].structure = ch->tilelist[currentRow[rapidjson::SizeType(col)].GetInt()];
-				SetVec2i(ch->tiles[col][row].position,col*TILE_W,row*TILE_H);
+				SetVec2i(ch->tiles[col][row].position,((ch->location.x+col)*TILE_W),((ch->location.y+row)*TILE_H));
 				ch->tiles[col][row].free = true;
 			//	printf("%i, ",currentRow[rapidjson::SizeType(col)].GetInt());
 			}
@@ -130,6 +136,81 @@ void FreeChunk(Chunk *ch){
 	SetVec2i(ch->size,0,0);
 	numChunks--;
 }
+
+
+/************************** Area Stuff **************************/
+
+Area testarea;
+
+Area *LoadArea(char *areapath){
+	char chunkpaths[MAX_CHUNKS][40];
+	Vec2i chunklocs[MAX_CHUNKS];
+
+	Area *area = &testarea;
+
+	area->numchunks = 0;
+
+	int cfgchunks = LoadAreaCFG(area,areapath,chunkpaths,chunklocs);
+
+	for(int i = 0; i < cfgchunks; i++){
+		Chunk *ch = LoadChunk(chunkpaths[i],chunklocs[i]);
+		if(ch == NULL) continue;
+
+
+		area->chunklist[area->numchunks] = ch;
+		area->numchunks++;
+	}
+
+	if(cfgchunks == area->numchunks)
+		return area;		//check that area->numchunks matches cfg chunks here(i.e. everything loaded properly)
+	else
+		return NULL;
+	//TODO: add something to handle failed loads
+}
+
+int LoadAreaCFG(Area *area, char *areapath, char chunkpaths[MAX_CHUNKS][40], Vec2i chunklocs[MAX_CHUNKS]){
+
+	FILE* pFile = fopen(areapath, "rb");
+	char buffer[65536];
+	rapidjson::FileReadStream is(pFile, buffer, sizeof(buffer));
+	rapidjson::Document document;
+	document.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(is);
+	assert(document.IsObject());
+	fclose(pFile);
+	
+	if(!document.HasMember("test_area")) 
+		return -1; //a negative number will imply nothing loaded properly*/
+	const rapidjson::Value& areadata = document["test_area"];
+
+	if(!areadata.HasMember("chunks")) 
+		return -1; //a negative number will imply nothing loaded properly*/
+	const rapidjson::Value& chunkdata = areadata["chunks"];
+
+	int chunkct = 0;
+	for(rapidjson::Value::ConstMemberIterator itr = chunkdata.MemberBegin(); itr != chunkdata.MemberEnd(); ++itr){
+		const rapidjson::Value& curchunk = chunkdata[itr->name];
+		if(curchunk.HasMember("path")){
+			if(curchunk["path"].IsString())
+				copy_string(chunkpaths[chunkct],curchunk["path"].GetString());
+		}
+		if(curchunk.HasMember("position")){
+			const rapidjson::Value& chunkpos = curchunk["position"];
+			if(chunkpos.HasMember("x") && chunkpos["x"].IsInt())
+				chunklocs[chunkct].x = chunkpos["x"].GetInt();
+			if(chunkpos.HasMember("y") && chunkpos["y"].IsInt())
+				chunklocs[chunkct].y = chunkpos["y"].GetInt();
+		}
+		chunkct++;
+	}
+
+	area->path = areapath;
+
+	return chunkct;
+}
+
+
+/************************** Tile Stuff **************************/
+
 
 bool CheckTileAvailable(Tile *t){
 	if(t==NULL)
