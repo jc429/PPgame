@@ -18,7 +18,7 @@ MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
 	m->bounds.h = box.h;
 	m->bgsprite = spr;
 	m->tbox = t;
-	m->tbox->box.y -= 6;
+/*	m->tbox->box.y -= 6;*/
 	SetText(text,m->tbox,0);
 	return m;
 }
@@ -71,7 +71,7 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 		m->location.y = 10;
 		m->numItems = 6;
 		m->itemsPerRow = 1;
-		SetRect(itemRect,m->location.x,m->location.y,60,16);
+		SetRect(itemRect,m->location.x,m->location.y,30,16);
 		m->location = itemRect;
 		
 
@@ -80,8 +80,8 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 			LoadTextbox(textboxes[i],1,6,NULL,itemRect);
 			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
 			if(i + 1 < m->numItems){
-				itemRect.y += 16;
-				m->location.h += 16;
+				itemRect.y += 10;
+				m->location.h += 10;
 			}
 		}
 
@@ -89,7 +89,7 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 		break;
 	case MENU_YES_NO:
 		if(loc == NULL){
-			SetRect(m->location,250,116);
+			SetRect(m->location,125,58);
 		}
 		m->numItems = 2;
 		m->itemsPerRow = 1;
@@ -208,7 +208,7 @@ void DrawMenu(Menu *m){
 	for(int i = 0; i < m->numItems; i++){
 		loc.x = m->items[i]->bounds.x;
 		loc.y = m->items[i]->bounds.y;
-	
+
 		DrawSprite(m->items[i]->bgsprite,0,loc,&uiCamera);
 		DrawTextbox(m->items[i]->tbox);
 	}
@@ -255,7 +255,7 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	Textbox *textboxes[8];
 	SDL_Rect itemRect;
 	Vec2i loc;
-	SetVec2i(loc,216,158 - (numItems * 18));
+	SetVec2i(loc,100,79 - (numItems * 18));
 	switch(numItems){
 	case 6:
 		m = LoadMenu(MENU_CUSTOM_6,&loc);
@@ -274,7 +274,7 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 		break;
 	}
 
-	SetRect(m->location,loc.x,loc.y,96,16);
+	SetRect(m->location,loc.x,loc.y,48,16);
 	itemRect = m->location;
 	for(int i = 0; i < 8; i++)
 		textboxes[i] = NULL;
@@ -284,8 +284,8 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 		m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
 
 		if(i + 1 < numItems){
-			itemRect.y += 18;
-			m->location.h += 18;
+			itemRect.y += 10;
+			m->location.h += 10;
 		}
 	}
 	m->numItems = numItems;

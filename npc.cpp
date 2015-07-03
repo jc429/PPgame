@@ -44,7 +44,7 @@ NPC::NPC (int xpos, int ypos, char *entName){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	////////////////////////////////////////////////////////////////// there has to be a better way to do this
-	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,64,64,5,32,40);
+	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,32,32,5,16,20);
 	///Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1,1,1);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,5,5,1,1,1);

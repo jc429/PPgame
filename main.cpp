@@ -90,12 +90,13 @@ void InitGame(){
 	IMG_Init(IMG_INIT_PNG);
 	InitAudio();
 	InitWindow();
-	InitFont();
 
 	InitSpriteList();
 	InitMusicList();
 	InitSoundList();
 	InitChunkList();
+
+	InitFont();
 
 	InitItemTable();
 	InitInventory();
@@ -106,7 +107,7 @@ void InitGame(){
 	LoadWallet();
 	InitCombat();
 
-	InitMainTextbox(&mainTextbox,4,40,LoadSprite(SPATH_MAIN_TEXTBOX,320,80,1));
+	InitMainTextbox(&mainTextbox,2,30,LoadSprite(SPATH_MAIN_TEXTBOX,160,40,1));
 	pauseMenu = LoadPauseMenu();
 
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -317,7 +318,7 @@ void LoadLevel(){
 }
 
 void Overworld::Update(){
-	if(InputPressed(PPINPUT_B))
+	/*if(InputPressed(PPINPUT_B))
 		if(!_Dialogue){
 			if(_MenuStack.empty()){
 				OpenPauseMenu();
@@ -327,7 +328,7 @@ void Overworld::Update(){
 					CancelMenu();
 					HideWallet();
 				}
-		}
+		}*/
 	UpdateWorld();
 	if(!_MenuStack.empty()){
 		_CurrentMenu = _MenuStack.back();

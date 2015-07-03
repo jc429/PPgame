@@ -19,13 +19,13 @@
 
 
 //Window stuff
-#define GAMENAME "RPG DemoLand"				// Title of your game window
+#define GAMENAME "Words. Words. Words!"				// Title of your game window
 #define GAMEICON "img/bookicon.ico"	// path to a .ico file (might not have to be .ico idk try it)
 #define STARTFULLSCREEN 0			// Starts the game in fullscreen if on
 
 //GAME_RES is for the in-game resolution, WINDOW_RES is for the resolution of the actual window
-#define GAME_RES_X 320
-#define GAME_RES_Y 240
+#define GAME_RES_X 160
+#define GAME_RES_Y 120
 #define WINDOW_RES_X 640
 #define WINDOW_RES_Y 480
 
@@ -38,8 +38,8 @@
 #define WORLD_H	512
 
 //the size of the game tiles (in pixels) in the world
-#define TILE_W 32
-#define TILE_H 32
+#define TILE_W 16
+#define TILE_H 16
 
 //the maximum number of different sprites that can be loaded into the game
 #define MAX_SPRITES 255
@@ -59,7 +59,7 @@
 #define MAX_TECHS 8
 
 //the amount of delay between one frame and the next, in milliseconds
-#define FRAMEDELAY 16 // working based on 16	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
+#define FRAMEDELAY 20 // working based on 16	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
 #define FRAMESPERDRAW	6				//how many game frames to wait before updating player animations (for smooth movement but less sprites needed)
 
 //Gameplay stuff
@@ -73,8 +73,8 @@
 
 //text stuff
 #define FONT_RES 48
-#define TEXTAREA_W 320
-#define TEXTAREA_H 80
+#define TEXTAREA_W 160
+#define TEXTAREA_H 40
 #define TEXTAREA_INSET 4
 #define LINE_LENGTH 40		//max chars per textbox line
 #define LINE_COUNT 4		//max lines per textbox

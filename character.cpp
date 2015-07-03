@@ -10,7 +10,6 @@ void StepIntoTile(OverworldCharacter *c,Tile *tile){
 	if(tile == NULL) return;
 
 	tile->free = false;
-	tile->contents = c;
-	
+	tile->contents = c;	
 }
 

@@ -26,8 +26,6 @@ public:
 //	CharAnim animation;
 
 
-
-	
 };
 
 class Player: public OverworldCharacter{
@@ -42,7 +40,6 @@ public:
 	void Update();
 	void Draw();
 };
-
 
 class NPC: public OverworldCharacter{
 public:

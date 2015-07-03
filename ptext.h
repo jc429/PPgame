@@ -3,11 +3,15 @@
 
 #include "global.h"
 #include "sprites.h"
+#include "pstring.h"
 
 #include <vector>
 using  std::vector;
 
 using std::string;
+
+
+
 
 typedef struct Textbox_T{
 	Sprite *spr;

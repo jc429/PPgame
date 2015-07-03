@@ -19,6 +19,9 @@ Sound *textBlip;
 Textbox mainTextbox; //the main dialogue box for now
 Textbox combatTextbox; //combat has a different one
 
+Sprite *mainFontSprite;	//the font sprite
+bool useFontSprite;
+
 ////externs for text parsing -- i dont like doing this and will probably change it 
 extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
 extern CombatEnt *Enemies[MAX_ENEMIES];
@@ -30,6 +33,10 @@ void InitFont(){
 	dialogueFont = TTF_OpenFont("fonts/font2.ttf",FONT_RES);
 	if(dialogueFont == NULL)
 		return;
+	mainFontSprite = LoadSprite("fonts/text7x7.png",8,16,32);
+	if(mainFontSprite != NULL)
+		useFontSprite = true;
+
 }
 
 void InitMainTextbox(Textbox *t,int numLines, int lineLen,Sprite *spr){
@@ -41,7 +48,7 @@ void InitMainTextbox(Textbox *t,int numLines, int lineLen,Sprite *spr){
 	r.h = TEXTAREA_H;
 	LoadTextbox(t,numLines,lineLen,spr,r,1);
 	
-	SDL_Rect s = {10,(GAME_RES_Y - spr->h)-18,128,16};
+	SDL_Rect s = {4,(GAME_RES_Y - spr->h)-16,64,12};
 	t->speakerbox = new Textbox();
 	LoadTextbox(t->speakerbox,1,16,NULL,s,0);
 
@@ -83,6 +90,7 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 void DrawTextbox(Textbox *t, int offset_x, int offset_y){
 	t->box.x += offset_x;
 	t->box.y += offset_y;
+	//DrawRect(&t->box,&uiCamera,pCol_Blue);
 	Vec2i loc;
 	loc.x = t->box.x;
 	loc.y = t->box.y;
@@ -93,7 +101,7 @@ void DrawTextbox(Textbox *t, int offset_x, int offset_y){
 	if(t->msg && t->msg->hasSpeaker){
 		if(t->msg->speaker != NULL){
 			DrawPanel(t->speakerbox->box,LoadSprite(SPATH_PANEL_DEF,4,4,3));
-			DrawTextbox(t->speakerbox,0,-6);
+			DrawTextbox(t->speakerbox);
 		}
 	}
 
@@ -285,7 +293,9 @@ void DrawText(Textbox *t){
 	/*if(t->cursor >= 0 && t->cursor < 159)
 		printf(" %i ,", t->cursor);*/
 
-	SDL_Rect temp = {t->box.x,2+t->box.y,t->box.w,(int)(t->box.h*0.2)};
+	int buf = 2;	//the buffer around all edges of the textbox
+
+	SDL_Rect temp = {t->box.x+buf,t->box.y+buf,t->box.w-(2*buf),t->box.h-(2*buf)};
 	if(t->linect == 1){
 		temp.h = t->box.h;
 	}
@@ -370,24 +380,34 @@ void DrawText(Textbox *t){
 void DrawLine(string msg,SDL_Rect location){
 
 	//draws a line of text... should probably be renamed...
-
-
 	if(msg.empty()) return;
-	SDL_Color color = {255,255,255,0};
-	//targetarea.w = 100;
-	SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg.c_str(),color); 
-	SDL_Texture *texture = SDL_CreateTextureFromSurface(mainRenderer,temp);
-	SDL_Rect targetarea = {location.x+TEXTAREA_INSET,location.y+TEXTAREA_INSET,location.w-(2*TEXTAREA_INSET),location.h};
+
+	if(useFontSprite){
+		Vec2i pos;
+		SetVec2i(pos,location.x,location.y);
+		for(int i = 0; i < msg.length(); i++){
+			Letter l = GetCharCode(msg.at(i));
+			DrawSprite(mainFontSprite,l.chr,pos,&uiCamera);
+			pos.x += l.width;
+		}
+	}
+	else{
+		SDL_Color color = {255,255,255,0};
+		//targetarea.w = 100;
+		SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg.c_str(),color); 
+		SDL_Texture *texture = SDL_CreateTextureFromSurface(mainRenderer,temp);
+		SDL_Rect targetarea = {location.x+TEXTAREA_INSET,location.y+TEXTAREA_INSET,location.w-(2*TEXTAREA_INSET),location.h};
 	
 
-	SDL_RenderCopy(mainRenderer,texture,NULL,&targetarea);
+		SDL_RenderCopy(mainRenderer,texture,NULL,&targetarea);
 	
-//	if(DEBUG_DRAW_RECTS)
-//		SDL_RenderDrawRect(mainRenderer, &targetarea);
+	//	if(DEBUG_DRAW_RECTS)
+	//		SDL_RenderDrawRect(mainRenderer, &targetarea);
 
-	SDL_FreeSurface(temp);
+		SDL_FreeSurface(temp);
 
-	SDL_DestroyTexture(texture);
+		SDL_DestroyTexture(texture);
+	}
 }
 
 void SetMessagePrompts(Message *msg){

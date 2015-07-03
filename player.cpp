@@ -35,7 +35,7 @@ Player::Player(){
 	movelock = false;
 
 	//Speeds and stuff
-	movespeed = 2;
+	movespeed = 1;
 	
 	//Position
 	tile.x = 1;
@@ -50,7 +50,7 @@ Player::Player(){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	////////////////////////////////////////////////////////////////// there has to be a better way to do this
-	Sprite *s = LoadSprite(SPATH_PLAYER_OVERWORLD,64,64,5,32,40);
+	Sprite *s = LoadSprite(SPATH_PLAYER_OVERWORLD,32,32,5,16,20);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1,1,1,12);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,5,5,1,1,1,12);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,5,5,1,1,1,12);
@@ -146,10 +146,12 @@ void UpdatePlayer(Player *p){
 				if(CheckTileHeights(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y],World[_Player->tile.x][_Player->tile.y])){
 				if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents!=NULL){
 					if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->talks){
-						if(!_Player->talking && !_Dialogue){
-							_Dialogue = true;
-							_Player->talking = true;
-							World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->Talk(&mainTextbox);
+						if(!_Player->talking && !_Player->moving && !_Dialogue){
+							if(World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents != _Player){
+								_Dialogue = true;
+								_Player->talking = true;
+								World[_Player->tile.x+_Player->facing.x][_Player->tile.y+_Player->facing.y]->contents->Talk(&mainTextbox);
+							}
 						}
 					}
 				}

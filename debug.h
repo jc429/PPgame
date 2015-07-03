@@ -1,7 +1,7 @@
 //debug mode toggle
 #define DEBUG 1				//PROTIP: wrap any code you want to execute in if(DEBUG){<code>} and set this to 1 or 0 as necessary  
 
-#define DEBUG_DRAW_RECTS 1
+#define DEBUG_DRAW_RECTS 0
 
 #define FORCE_DEBUG_LEVEL 0
 
