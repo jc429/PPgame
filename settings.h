@@ -49,8 +49,8 @@
 #define MAX_TILES 255
 //the maximum number of different sprites that can be loaded into the game
 #define MAX_ENTS 255
-//max npcs loaded at once
-#define MAX_NPC 64
+//max characters loaded at once
+#define MAX_CHARACTERS 255
 //max party members (4?)
 #define MAX_PARTY_COMBAT 4
 //max enemies per battle
@@ -59,7 +59,7 @@
 #define MAX_TECHS 8
 
 //the amount of delay between one frame and the next, in milliseconds
-#define FRAMEDELAY 20 // working based on 16	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
+#define FRAMEDELAY 20 // working based on 20	// 50 = 20FPS, 33 ~= 30FPS, 16 ~= 60FPS
 #define FRAMESPERDRAW	6				//how many game frames to wait before updating player animations (for smooth movement but less sprites needed)
 
 //Gameplay stuff
@@ -73,8 +73,10 @@
 
 //text stuff
 #define FONT_RES 48
+#define DEFAULT_KERNING 0
+
 #define TEXTAREA_W 160
-#define TEXTAREA_H 40
+#define TEXTAREA_H 35
 #define TEXTAREA_INSET 4
 #define LINE_LENGTH 40		//max chars per textbox line
 #define LINE_COUNT 4		//max lines per textbox

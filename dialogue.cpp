@@ -7,107 +7,22 @@
 #include <iostream>
 
 ///for parsing -- see below
-#include "combat_ent.h"
+//#include "combat_ent.h"
 //
 
 extern SDL_Renderer *mainRenderer;
 extern Camera uiCamera;
 
-TTF_Font *dialogueFont;
-Sound *textBlip;
 
 Textbox mainTextbox; //the main dialogue box for now
-Textbox combatTextbox; //combat has a different one
 
-Sprite *mainFontSprite;	//the font sprite
-bool useFontSprite;
+
 
 ////externs for text parsing -- i dont like doing this and will probably change it 
-extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
-extern CombatEnt *Enemies[MAX_ENEMIES];
+//extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
+//extern CombatEnt *Enemies[MAX_ENEMIES];
 
 
-void InitFont(){
-	if(TTF_Init()!=0) 
-		return;
-	dialogueFont = TTF_OpenFont("fonts/font2.ttf",FONT_RES);
-	if(dialogueFont == NULL)
-		return;
-	mainFontSprite = LoadSprite("fonts/text7x7.png",8,16,32);
-	if(mainFontSprite != NULL)
-		useFontSprite = true;
-
-}
-
-void InitMainTextbox(Textbox *t,int numLines, int lineLen,Sprite *spr){
-	textBlip = LoadSound("sounds/blip.wav",30);
-	SDL_Rect r;
-	r.x = 0;
-	r.y = GAME_RES_Y - spr->h;
-	r.w = TEXTAREA_W;
-	r.h = TEXTAREA_H;
-	LoadTextbox(t,numLines,lineLen,spr,r,1);
-	
-	SDL_Rect s = {4,(GAME_RES_Y - spr->h)-16,64,12};
-	t->speakerbox = new Textbox();
-	LoadTextbox(t->speakerbox,1,16,NULL,s,0);
-
-}
-
-void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rect, bool hasArrow){
-	if(numLines > LINE_COUNT)
-		numLines = LINE_COUNT;
-	t->linect = numLines;
-	if(lineLen > LINE_LENGTH)
-		lineLen = LINE_LENGTH;
-	t->linelength = lineLen;
-	
-	t->spr = spr;
-	t->box = rect;
-
-	t->speakerbox = NULL;
-	
-	if(hasArrow){
-		t->usesArrow = true;
-		t->arrow = LoadAnimation(LoadSprite(SPATH_TEXTBOX_ARROW,8,8,2),0,0,2,1,1,18);	
-		t->arrowpos.x = t->box.x + t->box.w - 16;
-		t->arrowpos.y = t->box.y + t->box.h - 16;
-	}else
-		t->usesArrow = false;
-
-	t->cursor = 0;
-	for(int i = 0; i < t->linect; i++){
-//		t->lines[i] = (char*)malloc(sizeof(char)*(t->linelength + 1));
-//		t->lines[i][0] = '\0';
-	}
-	SetText(NULL,t,0);
-	t->donewriting = false;
-	t->msg = NULL;
-}
-
-
-
-void DrawTextbox(Textbox *t, int offset_x, int offset_y){
-	t->box.x += offset_x;
-	t->box.y += offset_y;
-	//DrawRect(&t->box,&uiCamera,pCol_Blue);
-	Vec2i loc;
-	loc.x = t->box.x;
-	loc.y = t->box.y;
-	DrawSprite(t->spr,t->frame,loc,&uiCamera);
-	
-	DrawText(t);
-
-	if(t->msg && t->msg->hasSpeaker){
-		if(t->msg->speaker != NULL){
-			DrawPanel(t->speakerbox->box,LoadSprite(SPATH_PANEL_DEF,4,4,3));
-			DrawTextbox(t->speakerbox);
-		}
-	}
-
-	t->box.x -= offset_x;
-	t->box.y -= offset_y;
-}
 
 Message *NewMessage(){
 	Message *msg = new Message;
@@ -203,7 +118,7 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	
 //	if(DEBUG)
 //		printf("%s \n",parsed_text.c_str());
-
+	t->curline = 0;
 	if(scroll){
 		t->cursor = 0;
 	}
@@ -254,10 +169,10 @@ char* ParseText(char *text){
 			parse_key[subcursor]= '%';
 			subcursor++;
 			copy_string(newText,CutString(newText,textcursor,subcursor));
-			if(strcmp(parse_key,"%ENAME%")==0)
-				copy_string(newText,InjectString(newText,Enemies[0]->chardata->name,textcursor));
-			if(strcmp(parse_key,"%BNAME%")==0)
-				copy_string(newText,InjectString(newText,"ENRAGED EGG",textcursor));
+//			if(strcmp(parse_key,"%ENAME%")==0)
+//				copy_string(newText,InjectString(newText,Enemies[0]->chardata->name,textcursor));
+//			if(strcmp(parse_key,"%BNAME%")==0)
+//				copy_string(newText,InjectString(newText,"ENRAGED EGG",textcursor));
 			return ParseText(newText);
 		}
 		if(newText[textcursor] == '\0') {
@@ -288,127 +203,15 @@ char *CutString(char *text, int location, int length){
 	return text;
 }
 
-void DrawText(Textbox *t){
-	//draws the text in a textbox
-	/*if(t->cursor >= 0 && t->cursor < 159)
-		printf(" %i ,", t->cursor);*/
 
-	int buf = 2;	//the buffer around all edges of the textbox
-
-	SDL_Rect temp = {t->box.x+buf,t->box.y+buf,t->box.w-(2*buf),t->box.h-(2*buf)};
-	if(t->linect == 1){
-		temp.h = t->box.h;
+int GetNextWordLength(std::string str){
+	int ct = 0;
+	while((ct < str.length())&&!isspace(str.at(ct))){
+		ct++;
 	}
-
-	if(t->donewriting == true){
-		if(t->usesArrow)
-			DrawAnimation(t->arrow,t->arrowpos,&uiCamera);
-		if(t->msg != NULL)
-			if(t->msg->hasPrompt)
-				if(t->msg->prompt != NULL){
-					SetMessagePrompts(t->msg);
-					if(!t->msg->prompt->active)
-						OpenMenu(t->msg->prompt);
-				}
-	}
-
-	if((t->cursor >= 0)&&(t->cursor < t->text.length())){ //if the text is being written letter bt letter
-
-		++t->cursor;		
-			
-		if(t->cursor < t->text.length()){
-			while(t->text.at(t->cursor) == ' '){ //skip white space
-				++t->cursor;
-				if(t->cursor >= t->text.length()) 
-					break;
-			}
-		}
-		
-
-		for(int i = 0; i < t->linect; i++){
-
-			string line;
-			
-			if((i * t->linelength) > t->text.length()) //if we're already past the last line with text
-				break;
-			
-			int textlength = t->cursor - (t->linelength*i); //get how far the cursor is from the most recent line ending
-
-			if(textlength < 0)	//if this number is negative we shouldn't even be drawing this line yet
-				break;
-
-			if(textlength > t->linelength) //if the cursor is more than a line away
-				line = t->text.substr((i * t->linelength),t->linelength); //use linelength
-			else 
-				line = t->text.substr((i * t->linelength),textlength); //use where the cursor is now
-
-			while(line.length() < t->linelength)
-				line.append(" ");		//add spaces until the line reaches the specified line length (for SDL text rendering)
-
-			if(t->cursor >= t->linelength*(i+1)){ //if the cursor is already past this line, just draw it 
-				DrawLine(line,temp);
-				temp.y += 2+temp.h;
-			}
-			else{
-				
-				
-				if(t->cursor >= (t->text.length())){		
-					t->donewriting = true;
-				//	break;
-				}
-
-				
- 				DrawLine(line,temp);
-				temp.y += 2+temp.h;
-			}
-		}
-	}else {	// if the text is rigid or has completed being written out
-		for(int i = 0; i < t->linect; i++){
-			string line;
-			if((i * t->linelength) > t->text.length()) //if we're already past the last line with text
-				break;
-			line = t->text.substr((i * t->linelength),t->linelength); 
-			while(line.length() < t->linelength)
-				line.append(" ");		//add spaces until the line reaches the specified line length (for SDL text rendering)
-			DrawLine(line,temp);
-			temp.y += 2+temp.h;
-		}
-		t->donewriting = true;
-	}
+	return ct;
 }
 
-void DrawLine(string msg,SDL_Rect location){
-
-	//draws a line of text... should probably be renamed...
-	if(msg.empty()) return;
-
-	if(useFontSprite){
-		Vec2i pos;
-		SetVec2i(pos,location.x,location.y);
-		for(int i = 0; i < msg.length(); i++){
-			Letter l = GetCharCode(msg.at(i));
-			DrawSprite(mainFontSprite,l.chr,pos,&uiCamera);
-			pos.x += l.width;
-		}
-	}
-	else{
-		SDL_Color color = {255,255,255,0};
-		//targetarea.w = 100;
-		SDL_Surface *temp = TTF_RenderText_Blended(dialogueFont,msg.c_str(),color); 
-		SDL_Texture *texture = SDL_CreateTextureFromSurface(mainRenderer,temp);
-		SDL_Rect targetarea = {location.x+TEXTAREA_INSET,location.y+TEXTAREA_INSET,location.w-(2*TEXTAREA_INSET),location.h};
-	
-
-		SDL_RenderCopy(mainRenderer,texture,NULL,&targetarea);
-	
-	//	if(DEBUG_DRAW_RECTS)
-	//		SDL_RenderDrawRect(mainRenderer, &targetarea);
-
-		SDL_FreeSurface(temp);
-
-		SDL_DestroyTexture(texture);
-	}
-}
 
 void SetMessagePrompts(Message *msg){
 	for (int i = 0; i < msg->numFunctions; i++){ 
@@ -453,6 +256,8 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 
 	NPC **npclist;
 	npclist = LoadEntitiesCFG("testfiles/chunk1-npc.json");
+
+
 	/*NPC *npc2 = new NPC(4,8,"Zach");
 	NPC *npc3 = new NPC(9,8,"Pete");
 
@@ -485,9 +290,9 @@ void LoadDialogue(){		//I don't like loading all of the possible dialogue on the
 	SetPrompt(sign2->flavortext,MENU_YES_NO);*/
 //	SetAnswers(sign2->flavortext,2,SelectAnswer1,SelectAnswer2);
 
-
+	/*
 	InteractableObject *egg = LoadEgg(6,1);
-	CreateMessage(egg->flavortext,". . .",egg);
-	SetMessageEndFunction(egg->flavortext, FightBoss);
+	CreateMessage(egg->flavortext,". . .",egg);*/
+//	SetMessageEndFunction(egg->flavortext, FightBoss);
 
 }

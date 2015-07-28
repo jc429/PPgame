@@ -13,10 +13,8 @@ typedef enum EntAnim{
 };
 
 typedef enum EntType{
-	Ent_Player,
-	Ent_NPC,
+	Ent_Character,
 	Ent_IntObj,
-	Ent_Enemy,
 };
 
 class Entity{
@@ -36,13 +34,15 @@ public:
 	Vec2i tile_dest;		//dest tile when moving 
 	Vec2i localposition;	//current position within the tile in pixels
 	Vec2i worldposition;	//current position within the world in pixels
+	bool moving;
+
 	
 	//graphics stuff
-//	Vec2i s_offset;	
 	Animation *animlist[MAX_ANIMS][NUM_ANIM_DIRS]; //all animations this entity can have
 	AnimDir direction;				//direction facing (default: south)
 	int animation;				//current animation
 	int numAnims;					//number of animations this entity is currently using
+	bool drawn;				//were we drawn yet this frame?
 	
 	bool talks;			
 	char dialoguepath[64];		//path to the dialogue file for this npc
@@ -79,5 +79,7 @@ void FreeOverworldEnt();
 void ClearEntList();
 
 void AddToWorld(OverworldEnt *e, int xpos, int ypos);
+void SetEntAnims(OverworldEnt *ent, Sprite *spr);
+
 
 #endif

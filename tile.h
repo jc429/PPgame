@@ -30,6 +30,7 @@ typedef struct Tile_T{
 //changing stuff	
 	bool free;				//is the tile unoccupied?
 	OverworldEnt *contents;		//who or what is in this tile?
+	class OverworldCharacter *character;	//if it's a who put it here
 }Tile;
 
 Tile* LoadTile(bool fr, int ht, Sprite *sheet,  int baseframe, int floorframe, int wallframe = 0);
@@ -37,7 +38,7 @@ void DrawTilesLower(); //depreciated
 void DrawTilesUpper(); //depreciated 
 
 void DrawWorld();
-void DrawWorld2();
+//void DrawWorld2();
 void DrawRow(int row, int layer);
 
 bool CheckTileAvailable(Tile *t);

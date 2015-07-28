@@ -60,10 +60,10 @@ typedef struct CombatEnt_T:public Entity{
 	Animation *animlist[MAX_ANIMS]; //all animations this CombatEnt can have
 	int animation;					//current animation
 	int numAnims;
-
+/*
 	Technique *TechniqueList[MAX_TECHS];
 	Status status;
-
+	*/
 	queue<ActionEvent> events;
 //	queue<EntMotion> motions;
 

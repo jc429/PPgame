@@ -17,7 +17,7 @@ Camera uiCamera;				//the UI camera
 Camera combatCamera;			//battle camea
 
 extern Tile *World[WORLD_W][WORLD_H];
-extern Player *_Player;
+extern OverworldCharacter *_Player;
 
 int framecheck;
 
@@ -155,6 +155,17 @@ Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl, int off_x, int 
 	return &SpriteList[i];
 }
 
+Sprite *GetSprite(char *filename){
+	for(int i = 0; i < NumSprites; i++){
+		if(strncmp(filename,SpriteList[i].filename,40)==0){
+			SpriteList[i].used++;
+			return &SpriteList[i];
+		}
+	}
+	printf("sprite not found :( \n");
+	return NULL;
+}
+
 void FreeSprite(Sprite *spr){
 	if(spr==NULL) return;
 	spr->used--;
@@ -282,36 +293,38 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
 }
 
-void DrawRect(SDL_Rect *rect, Camera *c, Uint32 color){
-	rect->x -= c->viewport.x;
-	rect->y -= c->viewport.y;
+void DrawRect(SDL_Rect rect, Camera *c, Uint32 color){
+	rect.x -= c->viewport.x;
+	rect.y -= c->viewport.y;
 	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
-	SDL_RenderDrawRect(mainRenderer, rect);
+	SDL_RenderDrawRect(mainRenderer, &rect);
 }
 
-void DrawRectFill(SDL_Rect *rect, Camera *c, Uint32 color){
-	rect->x -= c->viewport.x;
-	rect->y -= c->viewport.y;
+void DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color){
+	rect.x -= c->viewport.x;
+	rect.y -= c->viewport.y;
 	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
-	SDL_RenderFillRect(mainRenderer, rect);
+	SDL_RenderFillRect(mainRenderer, &rect);
 }
 
 void DrawTile(Vec2i pos){
 	SDL_Rect tile = {pos.x*TILE_W,pos.y*TILE_H,TILE_W,TILE_H}; // Just some random rect
 
 	tile.y -= World[pos.x][pos.y]->structure->height<<2;
-	DrawRect(&tile,&mainCamera);
+	DrawRect(tile,&mainCamera);
 }
 
 void DrawFacingCursor(Vec2i pos){
 	SDL_Rect tile = {pos.x*TILE_W+0.4*TILE_W,pos.y*TILE_H+0.4*TILE_H,TILE_W*0.2,TILE_H*0.2}; // Just some random rect
 	if(World[pos.x][pos.y] != NULL)
 		tile.y -= World[pos.x][pos.y]->structure->height<<2;
-	DrawRect(&tile,&mainCamera);
+	DrawRect(tile,&mainCamera);
 }
 
 
 void DrawPanel(SDL_Rect rect, Sprite *spr){
+//	DrawRect(rect,&uiCamera);
+
 	Vec2i tile_size;
 	Vec2i loc;
 	SetVec2i(tile_size,spr->w,spr->h);
@@ -319,7 +332,7 @@ void DrawPanel(SDL_Rect rect, Sprite *spr){
 	loc = loc - tile_size;
 	DrawSprite(spr,0,loc,&uiCamera);
 	loc.x += tile_size.x;
-	while((loc.x) <= (rect.x + rect.w)){		
+	while((loc.x) < (rect.x + rect.w)){		
 		DrawSprite(spr,1,loc,&uiCamera);
 		loc.x += tile_size.x;
 	}
@@ -330,7 +343,7 @@ void DrawPanel(SDL_Rect rect, Sprite *spr){
 	while(loc.y < (rect.y + rect.h)){
 		DrawSprite(spr,3,loc,&uiCamera);
 		loc.x += tile_size.x;
-		while((loc.x) <= (rect.x + rect.w)){		
+		while((loc.x) < (rect.x + rect.w)){		
 			DrawSprite(spr,4,loc,&uiCamera);
 			loc.x += tile_size.x;
 		}
@@ -341,7 +354,7 @@ void DrawPanel(SDL_Rect rect, Sprite *spr){
 
 	DrawSprite(spr,6,loc,&uiCamera);
 	loc.x += tile_size.x;
-	while((loc.x) <= (rect.x + rect.w)){		
+	while((loc.x) < (rect.x + rect.w)){		
 		DrawSprite(spr,7,loc,&uiCamera);
 		loc.x += tile_size.x;
 	}
@@ -406,15 +419,26 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking so
 						//this is gross but idk a better way to do this
 						if((World[col][row+1] != NULL)&&(World[col][row+1]->contents == contents))
 							continue;	//basically if this same entity is also on a tile south of us, don't draw it yet
-						if((World[col-1][row+1] != NULL)&&(World[col-1][row+1]->contents == contents))
-							continue;	//also check for diagonals obviously
+						if(col > 0)
+							if((World[col-1][row+1] != NULL)&&(World[col-1][row+1]->contents == contents))
+								continue;	//also check for diagonals obviously
 						if((World[col+1][row+1] != NULL)&&(World[col+1][row+1]->contents == contents))
 							continue;
+
+						if(row > 0){
+							if((World[col][row-1] != NULL)&&(World[col][row-1]->contents != NULL)&&(World[col][row-1]->contents != contents)){	//if there's something behind us
+								//continue;
+								World[col][row-1]->contents->Draw();
+								ents_drawn[num_ents] = World[col][row-1]->contents;
+								num_ents++;
+							}
+						}
 
 						contents->Draw();
 						ents_drawn[num_ents] = contents;
 						num_ents++;
 						
+
 					}
 				}
 			}
@@ -422,7 +446,7 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking so
 	}
 }
 
-
+/*
 void DrawWorld2(){	//draws the game in stacked layers based on their height. doesn't work.
 	int row;
 	static OverworldEnt *ents_drawn[MAX_ENTS];
@@ -497,7 +521,7 @@ void DrawWorld2(){	//draws the game in stacked layers based on their height. doe
 		}
 	}
 }
-
+*/
 
 void DrawRow(int row, int layer){
 	return;

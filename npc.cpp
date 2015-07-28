@@ -4,38 +4,21 @@
 
 extern Tile *World[WORLD_W][WORLD_H];
 extern Camera mainCamera;
-extern Player *_Player;
+extern OverworldCharacter *_Player;
 
-NPC::NPC (int xpos, int ypos, char *entName){
-	static int id;
+extern OverworldCharacter *CharList[MAX_CHARACTERS];
+
+NPC::NPC (int xpos, int ypos, char *entName):OverworldCharacter(xpos,ypos, entName){
 	
-	if(entName == NULL)
-		entName = "Some Guy";
-	chardata = LoadCharData(ID_NPC+id);
-	++id;
-	copy_string(chardata->name,entName);
 //	name = NULL;
-
-	//Facing
-	facing.x = 0;		//These should never both be zero
-	facing.y = 1;		//Face south to begin i guess
-	direction = ANIM_DIR_S;
 	rotates = true;
-
-	//Movement
-	tomove.x = 0;	
-	tomove.y = 0;
-	moving = false;
-//	movelock = false;
-
-	//Speeds and stuff
-	movespeed = 2;
 	
-	//Position
-	tile.x = xpos;
-	tile.y = ypos;
-	localposition.x = TILE_W>>1;
-	localposition.y = TILE_H>>1;
+	moves = false;
+
+		//Dialogue and misc
+	talks = false;
+	msg = NULL;
+	actiontimer = 100;
 
 	//Graphics
 	numAnims = 0;
@@ -44,25 +27,9 @@ NPC::NPC (int xpos, int ypos, char *entName){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	////////////////////////////////////////////////////////////////// there has to be a better way to do this
-	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,32,32,5,16,20);
+	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,32,32,5,16,24);
 	///Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,5,5,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,5,5,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_NE] = LoadAnimation(s,5,5,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_N] = LoadAnimation(s,10,10,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_NW] = LoadAnimation(s,15,15,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_W] = LoadAnimation(s,15,15,1,1,1);
-	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SW] = LoadAnimation(s,15,15,1,1,1);
-
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_S] = LoadAnimation(s,0,0,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_SE] = LoadAnimation(s,5,5,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_E] = LoadAnimation(s,5,5,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_NE] = LoadAnimation(s,5,5,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_N] = LoadAnimation(s,10,10,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_NW] = LoadAnimation(s,15,15,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_W] = LoadAnimation(s,15,15,4,1,1);
-	animlist[ANIM_CHAR_WALK][ANIM_DIR_SW] = LoadAnimation(s,15,15,4,1,1);
+	SetEntAnims(this,s);
 	//animlist[1] = LoadAnimation(s2,0,0,2,1,0);
 
 	numAnims = 2;
@@ -71,42 +38,74 @@ NPC::NPC (int xpos, int ypos, char *entName){
 	s_offset.y = animlist[animation][0]->sprite->h>>1;
 	s_offset.y += 8;*/
 
-	//Dialogue and misc
-	talks = false;
-	talking = false;
-	msg = NULL;
-	actiontimer = 100;
-	passable = false;
-	type = Ent_NPC;
 
 
 
-	//get us started on a tile
-	AddToWorld(this, xpos, ypos);
-	UpdateTile(this);
-
-	worldposition.x = tile.x*TILE_W+localposition.x;
-	worldposition.y = tile.y*TILE_H+localposition.y;
-
-	if(DEBUG){
-//		fprintf(stdout,"NPC on %i %i \n",tile.x,tile.y);
-	}
 }
 
 void NPC::Update(){
+	OverworldCharacter::Update();
+	
+	if(IsPlayer()) return;
+
 	actiontimer--;
 	if(actiontimer <=0){
 		if(rotates && !talking){
 			facing.x = RandomIntInclusive(-1,1);
 			facing.y = RandomIntInclusive(-1,1);
+			
+			if(moves){
+				Vec2i wanttomove;
+				wanttomove.x = RandomIntInclusive(-1,1);
+				wanttomove.y = RandomIntInclusive(-1,1); 
+				Move(wanttomove);
+			}
 		}
 		actiontimer = 100;
 	}
 	UpdateDirection(this);
 }
 
-void NPC::Draw(){
-	DrawAnimation(animlist[animation][direction],worldposition,&mainCamera);
+void NPC::Move(Vec2i want_to_move){
+	if(want_to_move.x * want_to_move.y != 0){ //if we want to move diagonally, 
+		if((CheckTileAvailable(World[tile.x+want_to_move.x][tile.y+want_to_move.y])) //and we can move diagonally,
+		&&(CheckTileHeights(World[tile.x+want_to_move.x][tile.y+want_to_move.y],World[tile.x][tile.y]))){
+			//check that an adjacent tile is free to pass through
+			if(((CheckTileAvailable(World[tile.x+want_to_move.x][tile.y]))
+			&&!(CheckTileAvailable(World[tile.x+want_to_move.x][tile.y+want_to_move.y])))
+			||!(CheckTileHeights(World[tile.x][tile.y+want_to_move.y],World[tile.x][tile.y]))){
+				want_to_move.y = 0;
+			}
+			if(((CheckTileAvailable(World[tile.x][tile.y+want_to_move.y]))
+			&&!(CheckTileAvailable(World[tile.x+want_to_move.x][tile.y+want_to_move.y])))
+			||!(CheckTileHeights(World[tile.x+want_to_move.x][tile.y],World[tile.x][tile.y]))){
+				want_to_move.x = 0;
+			}	
+		}else{	//if the diagonal tile isnt free
+			if((CheckTileAvailable(World[tile.x+want_to_move.x][tile.y]))
+			&&(CheckTileHeights(World[tile.x+want_to_move.x][tile.y],World[tile.x][tile.y]))){		//try going horizontal
+				want_to_move.y = 0;
+			}		
+			else if((CheckTileAvailable(World[tile.x][tile.y+want_to_move.y]))
+			&&(CheckTileHeights(World[tile.x][tile.y+want_to_move.y],World[tile.x][tile.y]))){
+				want_to_move.x = 0;
+			}	
+		}
+	}
+		
+	if(CheckTileAvailable(World[tile.x+want_to_move.x][tile.y+want_to_move.y])){
+		if(CheckTileHeights(World[tile.x+want_to_move.x][tile.y+want_to_move.y],World[tile.x][tile.y]))	{		
+			tomove = want_to_move;
+			moving = true;
+		}
+	}	
+	
+	tile_src.x = tile.x;
+	tile_dest.x = tile.x + tomove.x;
+	tile_src.y =  tile.y;
+	tile_dest.y = tile.y + tomove.y;
+	if(World[tile_dest.x][tile_dest.y] == NULL)
+		tile_dest = tile_src;
 }
 
 void NPC::Talk(Textbox *t){

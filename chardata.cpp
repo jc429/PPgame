@@ -27,14 +27,14 @@ CharData *CreateCharData(char *name){
 
 	copy_string(cd->name,name);
 
-	cd->level = 1;
+//	cd->level = 1;
 	cd->id = numcds;
 
 	return cd;
 }
 
 void LevelUp(CharData *chr){
-	chr->level++;
+//	chr->level++;
 	
 
 }

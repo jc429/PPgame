@@ -43,8 +43,8 @@ void RenderCurrentFrame();
 void NextFrame();
 void FrameDelay(Uint32 delay);
 
-void DrawRect(SDL_Rect *rect, Camera *c, Uint32 color = pCol_White);
-void DrawRectFill(SDL_Rect *rect, Camera *c, Uint32 color = pCol_White);
+void DrawRect(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
+void DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
 
 void InitTG();
 void TestGraphics(int x);

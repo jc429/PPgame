@@ -55,6 +55,10 @@ void SetRect(SDL_Rect &r, int x, int y, int w, int h){
 }
 
 void SetRect(SDL_Rect &dest, SDL_Rect *src){
+	if(src == NULL){
+		printf("Setting a NULL rect!");
+		return;
+	}
 	dest.x = src->x;
 	dest.y = src->y;
 	dest.w = src->w;
@@ -81,7 +85,7 @@ int RandomInt(int min, int max){ //returns a random integer, from min to max (no
 }
 
 int RandomIntInclusive(int min, int max){//returns a random integer, from min to max (inclusive)
-	return RandomInt(min, max+1);
+	return RandomInt(min-1, max+1);
 }
 
 bool Toggle(bool b){

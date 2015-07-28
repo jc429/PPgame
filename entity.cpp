@@ -23,7 +23,7 @@ void OverworldEnt::Talk(Textbox *t){
 void AddToWorld(OverworldEnt *e, int xpos, int ypos){
 	if(World[xpos][ypos] == NULL) return;
 	World[xpos][ypos]->contents = e;
-	World[xpos][ypos]->free = e->passable;
+	World[xpos][ypos]->free = false;
 }
 
 InteractableObject::InteractableObject(int xpos, int ypos){
@@ -102,7 +102,7 @@ InteractableObject::~InteractableObject(){
 }
 
 void InteractableObject::Update(){
-
+	drawn = false;
 }
 
 void InteractableObject::Draw(){
@@ -157,3 +157,22 @@ void ClearEntList(){
 	numEnts = 0;
 }
 
+void SetEntAnims(OverworldEnt *ent, Sprite *s){
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_N] = LoadAnimation(s,5,5,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_W] = LoadAnimation(s,10,10,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,15,15,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_SW] = LoadAnimation(s,20,20,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,25,25,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_NW] = LoadAnimation(s,30,30,1);
+	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_NE] = LoadAnimation(s,35,35,1);
+
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_S] = LoadAnimation(s,0,0,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_N] = LoadAnimation(s,5,5,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_W] = LoadAnimation(s,10,10,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_E] = LoadAnimation(s,15,15,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_SW] = LoadAnimation(s,20,20,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_SE] = LoadAnimation(s,25,25,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_NW] = LoadAnimation(s,30,30,4);
+	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_NE] = LoadAnimation(s,35,35,4);
+}

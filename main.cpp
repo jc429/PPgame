@@ -24,8 +24,9 @@ InputNode *_Inputs;
 
 Tile* World[WORLD_W][WORLD_H];
 
-Player *_Player;
-NPC *NPCList[MAX_NPC];
+extern OverworldCharacter *_Player;
+//NPC *NPCList[MAX_NPC];
+extern OverworldCharacter *CharList[MAX_CHARACTERS];
 
 extern int framecheck;
 
@@ -43,14 +44,20 @@ extern vector<struct Menu_T*> _MenuStack;
 //Menu _MenuStack[MAX_MENUS];
 //std::vector<Menu_T> MenuStack;
 
-void OpenPauseMenu();
-Menu *pauseMenu;
+//void OpenPauseMenu();
+//Menu *pauseMenu;
 
 bool _Dialogue;	//are we currently talking?
+Menu *quitMenu;
 
-extern vector<CombatEnt*> enemylist;
-extern int CombatPartyIDs[MAX_PARTY_COMBAT];
-extern int EnemyIDs[MAX_ENEMIES];
+
+typedef enum Program_Mode{
+	M_GAME,
+	M_EDIT_MAP,
+	M_EDIT_CHAR,
+};
+
+const Program_Mode _Mode = M_GAME;
 
 int main (int argc, char* argv[]){
 	done = 0;
@@ -63,21 +70,23 @@ int main (int argc, char* argv[]){
 
 	InitGame();
 
-	do{
-		//The basic game loop:
-		//read inputs
-		//update game
-		//draw everything
-		PollEvents();
-
-		UpdateGame();
-		
-		DrawGame();
-		
-		
-
-		NextFrame();
-	}while(!done);
+	if(_Mode == M_GAME){
+		do{
+			//The basic game loop:
+			//read inputs
+			//update game
+			//draw everything
+			PollEvents();
+			UpdateGame();		
+			DrawGame();	
+			NextFrame();
+		}while(!done);
+	}
+	else if(_Mode == M_EDIT_MAP){
+		do{
+			done = true;
+		}while(!done);
+	}
 
 	exit(0);
 	return 0;		//just for the compiler
@@ -97,51 +106,52 @@ void InitGame(){
 	InitChunkList();
 
 	InitFont();
-
-	InitItemTable();
-	InitInventory();
-	InitParty();
+	
+	for(int i = 0; i < MAX_CHARACTERS; i++){
+		CharList[i] = NULL;
+	}
 	
 	numMenus = 0;
 /////////////////////
-	LoadWallet();
-	InitCombat();
+//	InitCombat();
 
-	InitMainTextbox(&mainTextbox,2,30,LoadSprite(SPATH_MAIN_TEXTBOX,160,40,1));
-	pauseMenu = LoadPauseMenu();
+	InitMainTextbox(&mainTextbox,3,GAME_RES_X,LoadSprite(SPATH_MAIN_TEXTBOX,160,35,1));
+//	pauseMenu = LoadPauseMenu();
+
+	quitMenu = LoadCustomMenu(2);
+	SetMenuItemAction(quitMenu->items[0],ExitGame,"Exit Game");
+	SetMenuItemAction(quitMenu->items[1],CancelMenu,"Return");
 
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//test stuff goes between the squiggles
 	
 	_CurrentScene = new Overworld();
 	
-	AddMoney(6000);
-	AddItem(300);
-	AddItem(600);
-	AddItem(300);
-	AddItem(600);
-	AddItem(601);
-	AddItem(10);
-	AddItem(301);
 
 
 	LoadDialogue();
 
-
-	LoadCombatBG();
 	
 	//Music *m = LoadMusic("sounds/GV.mp3",40);
 	//Sound *s = LoadSound("sounds/gui.wav",35);	
 	//PlayMusic(m);
 	//PlaySound(s);
-
-/////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	_Player = new Player;
-	mainCamera.target = _Player;
-	mainCamera.trackPlayer = true;
-
+	
 	_MessageStack = NULL;
+/////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/*
+	_Player = new NPC(2,3,"Hero");
+	Message *msg;
+	CreateMessage(msg,". . .",_Player); 
+	GiveNPCMessage(_Player,msg);*/
+	Sprite *s = LoadSprite("sprites/player.png",32,32,5,16,24);
+	SetEntAnims(CharList[0],s);
+	CharList[0]->SetPlayer(true);
+	
+	SDL_Rect tr = {0,10,80,50};	//x and y are the offset from center
+	SDL_Rect sr = {0,10,48,18};	//x and y dont matter
+	InitCamera(&mainCamera,GAME_RES_X,GAME_RES_Y,true,CharList[0],&tr,&sr);
+
 //	SDL_ShowCursor(SDL_DISABLE);	//turns off the cursor
 
 	if(!DEBUG){
@@ -177,20 +187,19 @@ void PollEvents(){
 	DeleteInputNode(inputNode, INPUTS_HISTORY);
 
 	if(DEBUG){
-		if(InputPressed(PPINPUT_ESC)){
-			if(_GameState == INVENTORY){
-				CloseInventory();
-			}else if(_GameState == COMBAT){
-				ExitCombat();
-			}else{
-				if(!_MenuStack.empty())
-					CancelMenu();
-				else
-					done = 1;
-			}
-			
+		if(InputPressed(PPINPUT_ESC)){			
+			if(!_MenuStack.empty())
+				CancelMenu();
+			else
+				done = 1;
 		}
-
+	}else{
+		if(InputPressed(PPINPUT_ESC)){			
+			if(!_MenuStack.empty())
+				CancelMenu();
+			else
+				OpenMenu(quitMenu);
+		}
 	}
 
 }
@@ -277,7 +286,7 @@ void DrawGame(){
 bool InCombat(){
 	return (_SceneStack.back()->type == COMBAT);
 }
-
+/*
 void EnterCombat(){
 	//only go to combat if enemies are loaded
 	for(int i = 0; i < MAX_ENEMIES; i++){
@@ -294,7 +303,7 @@ void ExitCombat(){
 	StopMusic();
 	_SceneStack.pop_back();
 }
-
+*/
 void LoadLevel(){
 //	Chunk *ch = LoadChunk("testfiles/chunk2.json");
 	Area *a = LoadArea("testfiles/area1.json");
@@ -313,8 +322,8 @@ void LoadLevel(){
 	Level *level = new Level;
 	if((LoadCFG(level,lvpath)!=0)||(FORCE_DEBUG_LEVEL))
 		InitWorld();*/
-	enemylist = LoadEnemyDataCFG("testfiles/enemy-test.json");
-	SetEnemies(2, enemylist.at(1)->chardata->id, enemylist.at(1)->chardata->id);
+//	enemylist = LoadEnemyDataCFG("testfiles/enemy-test.json");
+//	SetEnemies(2, enemylist.at(1)->chardata->id, enemylist.at(1)->chardata->id);
 }
 
 void Overworld::Update(){
@@ -330,11 +339,17 @@ void Overworld::Update(){
 				}
 		}*/
 	UpdateWorld();
+
+	for(int i = 0; i < MAX_CHARACTERS; i++){
+		if(CharList[i] != NULL)
+			CharList[i]->Update();
+	}
+
 	if(!_MenuStack.empty()){
 		_CurrentMenu = _MenuStack.back();
 		UpdateMenu(_MenuStack.back());
 	}else{
-		UpdatePlayer(_Player);
+	//	UpdatePlayer(_Player);
 	}
 	UpdateCamera(&mainCamera);
 }
@@ -342,7 +357,7 @@ void Overworld::Update(){
 void Overworld::Draw(){
 	DrawWorld();
 	if(DEBUG_DRAW_RECTS){
-		DrawFacingCursor(_Player->tile+_Player->facing);
+	//	DrawFacingCursor(_Player->tile+_Player->facing);
 	}
 
 	if(_Dialogue)
@@ -353,7 +368,7 @@ void Overworld::Draw(){
 		}
 	}
 
-	DrawWallet();
+
 }
 
 
@@ -362,27 +377,7 @@ void Overworld::Draw(){
 
 
 
-void StartCombat(){
-	_CurrentScene = new Combat();
-}
-
-void OpenInventory(){
-	UpdateInvText();
-	_CurrentScene = new InventoryPage();
-}
-
-void CloseInventory(){
-	_SceneStack.pop_back();
-}
-
-void OpenParty(){
-	_CurrentScene = new PartyView();
-}
-
-void CloseParty(){
-	_SceneStack.pop_back();
-}
-
+/*
 Menu *LoadPauseMenu(){
 	char* names[6] =  {"Party ","Items ","FIGHT ","Save  ","Options","Exit "};
 	Menu *m = LoadMenu(MENU_PAUSE);
@@ -391,17 +386,17 @@ Menu *LoadPauseMenu(){
 	}
 	SetMenuItemAction(m->items[0],OpenParty);
 	SetMenuItemAction(m->items[1],OpenInventory);
-	SetMenuItemAction(m->items[2],EnterCombat);
+//	SetMenuItemAction(m->items[2],EnterCombat);
 	return m;
 }
 
 void OpenPauseMenu(){
 	OpenMenu(pauseMenu);
-}
+}*/
 
 
 //move this prob
-void FightBoss(){
+/*void FightBoss(){
 	SetEnemies(1,enemylist.at(0)->chardata->id);
 	EnterCombat();
-}
+}*/

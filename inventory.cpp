@@ -74,7 +74,7 @@ void InventoryPage::Draw(){
 
 void InitInventory(){
 	_ItemIcons = LoadSprite("sprites/itemicons.png",16,16,16);
-	_PanelSpr = LoadSprite(SPATH_PANEL_DEF,4,4,3);
+	_PanelSpr = LoadSprite(SPATH_PANEL_DEF,2,2,3);
 	SetVec2i(InvCursor.location,0,0);
 	InvCursor.selection = 0;
 	InvCursor.anim = LoadAnimation(LoadSprite("sprites/invcursor.png",20,20,1),0,0,2,1,1,18);
@@ -281,7 +281,7 @@ void DrawInvCursor(){
 /***			 Wallet Stuff				*******************************/
 
 void LoadWallet(){
-	Wallet.spr = LoadSprite(SPATH_PANEL_DEF,4,4,3);
+	Wallet.spr = LoadSprite(SPATH_PANEL_DEF,2,2,3);
 	SetRect(Wallet.location,248,4,64,16);
 	LoadTextbox(&Wallet.textbox,1,8,NULL,Wallet.location);
 	SetText("$000000",&Wallet.textbox,0);

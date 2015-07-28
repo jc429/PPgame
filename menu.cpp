@@ -54,7 +54,7 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 		SetRect(m->location,loc);
 	}
 	
-	m->spr = LoadSprite(SPATH_PANEL_DEF,4,4,3);
+	m->spr = LoadSprite(SPATH_PANEL_DEF,2,2,3);
 	m->type = mtype;
 
 	int cframes = 2; //num frames in cursor animation
@@ -77,7 +77,7 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 
 		for(int i = 0; i < m->numItems; i++){
 			textboxes[i] = new Textbox();
-			LoadTextbox(textboxes[i],1,6,NULL,itemRect);
+			LoadTextbox(textboxes[i],1,30,NULL,itemRect,3);
 			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
 			if(i + 1 < m->numItems){
 				itemRect.y += 10;
@@ -98,49 +98,17 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 		m->location = itemRect;
 
 		textboxes[0] = new Textbox();
-		LoadTextbox(textboxes[0],1,3,NULL,itemRect);
+		LoadTextbox(textboxes[0],1,30,NULL,itemRect,3);
 		m->items[0] = LoadMenuItem(itemRect,NULL,textboxes[0],"Yes");
 
 		itemRect.y += 18;
 		m->location.h += 18;
 
 		textboxes[1] = new Textbox();
-		LoadTextbox(textboxes[1],1,3,NULL,itemRect);
+		LoadTextbox(textboxes[1],1,30,NULL,itemRect);
 		m->items[1] = LoadMenuItem(itemRect,NULL,textboxes[1],"No");
 		break;
-	case MENU_BATTLE:		////////////////////////////////////////////////////////
-		m->location.x = 190;
-		m->location.y = 164;
-		m->numItems = 4;
-		m->itemsPerRow = 2;
-		itemRect.x = m->location.x;
-		itemRect.y = m->location.y;
-		itemRect.w = 60;
-		itemRect.h = 16;
-
-		m->location = itemRect;
-		m->location.w += 64;
-		m->location.h += 16;
-
-
-		textboxes[0] = new Textbox;
-		//bg = LoadSprite(SPATH_MENU_BG_COMBAT,64,16,1);
-		char* menulist[4];
-		menulist[0] = "Attack";
-		menulist[1] = "Item";
-		menulist[2] = "Cry";
-		menulist[3] = "Flee";
-		for(int k = 0; k < 2; k++){
-			for(int j = 0; j < 2; j++){
-				textboxes[0] = new Textbox;
-				itemRect.x = m->location.x + j*64;
-				itemRect.y = m->location.y + k*16;
-				LoadTextbox(textboxes[0],1,6,NULL,itemRect);
-				m->items[j + (2*k)] = LoadMenuItem(itemRect,NULL,textboxes[0],menulist[j + (2*k)]);
-			}
-		}
-		
-		break;
+	
 	default:
 		break;
 	}
@@ -255,7 +223,7 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	Textbox *textboxes[8];
 	SDL_Rect itemRect;
 	Vec2i loc;
-	SetVec2i(loc,100,79 - (numItems * 18));
+	SetVec2i(loc,92, 72 - (numItems * 10));
 	switch(numItems){
 	case 6:
 		m = LoadMenu(MENU_CUSTOM_6,&loc);
@@ -274,14 +242,18 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 		break;
 	}
 
-	SetRect(m->location,loc.x,loc.y,48,16);
+	SetRect(m->location,loc.x,loc.y,60,16);
 	itemRect = m->location;
 	for(int i = 0; i < 8; i++)
 		textboxes[i] = NULL;
 	for(int i = 0; i < numItems; i++){
 		textboxes[i] = new Textbox();
-		LoadTextbox(textboxes[i],1,10,NULL,itemRect);
-		m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
+		LoadTextbox(textboxes[i],1,64,NULL,itemRect,3);
+
+		if(itemNames != NULL)
+			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
+		else
+			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
 
 		if(i + 1 < numItems){
 			itemRect.y += 10;
@@ -290,20 +262,40 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	}
 	m->numItems = numItems;
 	m->itemsPerRow = 1;
-	switch(numItems){
-	case 6:
-		SetMenuItemAction(m->items[5],SelectAnswer6,itemNames[5]);
-	case 5:
-		SetMenuItemAction(m->items[4],SelectAnswer5,itemNames[4]);
-	case 4:
-		SetMenuItemAction(m->items[3],SelectAnswer4,itemNames[3]);
-	case 3:
-		SetMenuItemAction(m->items[2],SelectAnswer3,itemNames[2]);
-	case 2:
-		SetMenuItemAction(m->items[1],SelectAnswer2,itemNames[1]);
-	default:
-		SetMenuItemAction(m->items[0],SelectAnswer1,itemNames[0]);
-		break;
+	
+	if(itemNames != NULL){
+		switch(numItems){
+		case 6:
+			SetMenuItemAction(m->items[5],SelectAnswer6,itemNames[5]);
+		case 5:
+			SetMenuItemAction(m->items[4],SelectAnswer5,itemNames[4]);
+		case 4:
+			SetMenuItemAction(m->items[3],SelectAnswer4,itemNames[3]);
+		case 3:
+			SetMenuItemAction(m->items[2],SelectAnswer3,itemNames[2]);
+		case 2:
+			SetMenuItemAction(m->items[1],SelectAnswer2,itemNames[1]);
+		default:
+			SetMenuItemAction(m->items[0],SelectAnswer1,itemNames[0]);
+			break;
+		}
+	}
+	else{
+		switch(numItems){
+		case 6:
+			SetMenuItemAction(m->items[5],SelectAnswer6);
+		case 5:
+			SetMenuItemAction(m->items[4],SelectAnswer5);
+		case 4:
+			SetMenuItemAction(m->items[3],SelectAnswer4);
+		case 3:
+			SetMenuItemAction(m->items[2],SelectAnswer3);
+		case 2:
+			SetMenuItemAction(m->items[1],SelectAnswer2);
+		default:
+			SetMenuItemAction(m->items[0],SelectAnswer1);
+			break;
+		}
 	}
 	return m;
 }
@@ -328,8 +320,7 @@ void CancelMenu(){
 	//if(GetCurrentState() == COMBAT)
 	//	return;//fix it so it works in combat
 	curMenuStack->back()->active = false;
-	if(curMenuStack->back()->type == MENU_PAUSE)
-		HideWallet();
+
 	curMenuStack->pop_back();
 }
 

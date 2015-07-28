@@ -5,121 +5,55 @@
 #include "sprites.h"
 #include "pstring.h"
 
-#include <vector>
-using  std::vector;
-
+#include <string>
 using std::string;
 
-
-
+enum Justify{
+	JUSTIFY_LEFT = 0,	
+	JUSTIFY_RIGHT = 1,
+	JUSTIFY_MIDDLE = 2,
+	JUSTIFY_FULL = 3
+};
 
 typedef struct Textbox_T{
-	Sprite *spr;
-	int frame;
-	SDL_Rect box; 
+	Sprite *spr;					//the sprite associated with the textbox (if any)
+	int frame;						
+	SDL_Rect box;					//the rectangle the text is drawn in
 
-	struct Textbox_T *speakerbox;
+	int buf;						//inset from the box edges where drawing text happens
+	int kerning;					//space between each letter sprite
+	Justify justification;			//ooh we fancy
+
+	struct Textbox_T *speakerbox;	//the little speaker textbox above the main textbox -- maybe shouldnt be here 
 	
 	Animation *arrow;				//little arrow at the bottom that signifies there's more text
 	Vec2i arrowpos;					//position of arrow, relative to textbox
-	bool usesArrow;
+	bool usesArrow;					//whether or not we use the arrow at all 
 
+	int vscroll;					//if the textbox scrolls vertically, this is its scroll speed. 0 means no scroll
+	int curline;					//the line number of the top line drawn in the textbox currently - for vscroll
 
 	int linect;						//the number of lines this specific textbox holds
 	int linelength;					//the number of chars per line this textbox holds (default 40)
-	string text;
-	//string lines[LINE_COUNT];		//The textbox can hold a max of 4 lines of 40 characters each
-	int cursor;			//For drawing text one character at a time - set to -1 to draw all text 
-	bool donewriting;
-	struct Message_T *msg;
+
+	std::string text;				//the actual text currently in the textbox
+
+	int cursor;						//For drawing text one character at a time - set to -1 to draw all text at once
+	bool donewriting;				//checks if we have finished writing text
+	struct Message_T *msg;			//if the textbox's text came from a message, it will be referenced here 
+
 }Textbox;
 
-typedef enum MenuType{
-	MENU_EMPTY = 0,
-	MENU_PAUSE = 1,
-	MENU_BATTLE = 2,
-	MENU_YES_NO = 3,
-	
-	MENU_CUSTOM_2,
-	MENU_CUSTOM_3,
-	MENU_CUSTOM_4,
-	MENU_CUSTOM_5,
-	MENU_CUSTOM_6,
-
-	MENU_DEBUG = -1
-};
-
-typedef struct MenuItem_T{
-	SDL_Rect bounds;
-	Sprite *bgsprite;
-	Textbox *tbox;
-
-	bool highlighted;
-	bool selected;
-	void (*action)();
-}MenuItem;
-
-typedef struct MenuCursor_T{
-	int location;		//what item is the cursor currently selecting?
-	SDL_Rect size;
-
-	bool active;
-
-	Animation *anim[4];
-	Animation *anim_active[4];
-	Animation *anim_inactive[4];
-}MenuCursor;
-
-typedef struct Menu_T{
-	bool used;
-
-	bool active;
-
-	Sprite *spr;
-
-	MenuType type;
-	SDL_Rect location;
-
-	int numItems;				//number of items in the menu list
-	int itemsPerRow;			//how many menu items are in each row? 
-	MenuItem *items[MAX_MENU_ITEMS];
-
-	MenuCursor cursor;			
-}Menu;
 
 
+void InitFont();
+void InitMainTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr);
+void LoadTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr, SDL_Rect r, int buffer = 0);
 
-MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* msg = NULL);
-void FreeMenuItem(MenuItem *m);
-void SetMenuItemAction(MenuItem *m, void (*func)(), char* name = NULL);
-Menu *LoadMenu(MenuType type, Vec2i *loc = NULL);
-void FreeMenu(Menu *m);
-void UpdateMenu(Menu *m);
-void DrawMenu(Menu *m);
-void DrawMenuSprite(Menu *m);
-void IncrementCursor(Menu *m);
-void DecrementCursor(Menu *m);
+void TextboxSettings(Textbox *t, int buffer = 0, int just = 0, int vscroll = 0, int kerning = 0, bool useArrow = false);
 
-
-Menu *LoadPauseMenu();
-Menu *LoadMenuYesNo(Vec2i *loc = NULL, char* yes = NULL, char* no = NULL, void (*YesFunc)() = NULL,void (*NoFunc)() = NULL);
-Menu *LoadCustomMenu(int numItems, char itemNames[6][16]);
-
-
-void OpenMenu(Menu *m,vector<struct Menu_T*> *stack = NULL);
-
-void CancelMenu();
-void AdvanceText(int steps = 0);
-void AdvanceAndCancel(int steps = 0);
-void SelectAnswer1();
-void SelectAnswer2();
-void SelectAnswer3();
-void SelectAnswer4();
-void SelectAnswer5();
-void SelectAnswer6();
-
-static bool _InMenu;
-
-
+void DrawTextbox(Textbox *t, int offset_x = 0, int offset_y = 0);
+void DrawText(Textbox *t);
+void DrawLine(string msg,SDL_Rect location, int kerning);
 
 #endif

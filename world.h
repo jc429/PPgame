@@ -44,5 +44,7 @@ typedef struct Area_T{
 Area *LoadArea(char *areapath);
 int LoadAreaCFG(Area *area, char *areapath, char chunkpaths[MAX_CHUNKS][40], Vec2i chunklocs[MAX_CHUNKS]);
 
+void InitWorld();
+void UpdateWorld();
 
 #endif

@@ -2,6 +2,7 @@
 #define _PSTRING_
 
 #include <stdio.h>
+#include <string>
 
 typedef enum CharCode_T{		//maps chars to where they are on my sprites
 	CH_CODE_a	=	1	,
@@ -75,7 +76,10 @@ typedef enum CharCode_T{		//maps chars to where they are on my sprites
 	CH_CODE_EXC	=	74	,
 	CH_CODE_APO =	78	,
 	CH_CODE_QUO	=	79	,
+	CH_CODE_PRL =	88	,	//l parenthesis
+	CH_CODE_PRR	=	89	,	//r parenthesis
 
+	CH_CODE_ERR =	0	,	//error/test character - this should never show up
 }CharCode;
 
 typedef struct Letter_T{
@@ -84,6 +88,8 @@ typedef struct Letter_T{
 }Letter;
 
 char *copy_string(char *destination,const char *source);
-Letter GetCharCode(char ch);
+Letter GetLetter(char ch);
+int GetCharWidth(char ch);
+int GetWordWidth(std::string str, int kerning = 0);
 
 #endif

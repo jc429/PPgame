@@ -11,7 +11,7 @@ using std::vector;
 #define ID_ENEMY	600
 #define ID_MISC		900
 
-
+/*
 typedef struct Stats_T{
 	int max_health;
 	int max_stamina;
@@ -56,12 +56,13 @@ typedef struct Technique_T{
 	int icon;
 	char* displayName;
 	char* description;
-}Technique;
+}Technique;*/
 
 typedef struct CharData_T{
 	int id;
 	char name[32];
-	int level;
+
+/*	int level;
 	int exp;
 
 	int health;
@@ -69,6 +70,7 @@ typedef struct CharData_T{
 	Stats stats_base;		//base stats, i.e. the ones that go up with each level and stuff
 	Stats stats_mod;		//temporary stat modifiers, reset at battle end or w/e. added or subtracted to base stats
 	Stats growths;			//growth rates, stored as int/100 probably. used for level ups
+*/
 }CharData;
 
 

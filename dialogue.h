@@ -4,7 +4,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include "global.h"
-#include "ptext.h"
+#include "menu.h"
 #include "chardata.h"
 #include "pfile.h"
 
@@ -45,10 +45,6 @@ typedef struct Message_T{
 	};
 }Message;
 
-void InitFont();
-void InitMainTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr);
-void LoadTextbox(Textbox *t,int numLines,int lineLen, Sprite *spr, SDL_Rect r, bool hasArrow = false);
-void DrawTextbox(Textbox *t, int offset_x = 0, int offset_y = 0);
 
 Message *NewMessage();
 void CreateMessage(Message *msg = NULL, char* text = NULL, class OverworldEnt *speaker = NULL);
@@ -64,10 +60,9 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt = 0, Message *msg 
 char *ParseText(char *text);
 char *InjectString(char *text,char *str, int location);
 char *CutString(char *text, int location, int length);
+int GetNextWordLength(std::string str);
 
-void DrawText(Textbox *t);
-void DrawLine(string msg,SDL_Rect location);
-void RenderText();
+
 
 void LoadDialogue();
 Message *OpenDialogue(char *path);

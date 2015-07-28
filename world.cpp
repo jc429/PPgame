@@ -4,6 +4,8 @@
 #include <rapidjson\document.h>
 #include <rapidjson\filereadstream.h>
 
+extern Tile* World[WORLD_W][WORLD_H];
+
 /* 
 Tile - A single Tile in the game world;
 Chunk - a fixed size 2d array of Tiles (not Tile pointers) - does not have to be the same size every time, but an individual chunk's size is not dynamic.
@@ -240,4 +242,60 @@ void ClearTile(Tile *t){
 	t->spritesheet = NULL;*/
 	t->contents = NULL;
 	t->structure = NULL;
+}
+
+
+
+void InitWorld(){/*
+	world.w = WORLD_W*TILE_W;
+	world.h = WORLD_H*TILE_H;
+
+	return;////////////////////////////
+	TileStructure *st = new TileStructure;
+	st->spritesheet = LoadSprite("sprites/grasstile.png",32,32,1);
+	st->height = 0;
+	for(int i = 0; i < WORLD_W; i++){
+		for(int j = 0; j < WORLD_H; j++){
+			World[i][j] = new Tile;
+			World[i][j]->position.x = i*TILE_W;
+			World[i][j]->position.y = j*TILE_H;
+			World[i][j]->structure = st;
+			if((i != 0)&&(j != 0)&&(i+1 != WORLD_W)&&(j+1 != WORLD_H))
+				World[i][j]->free = true;
+			else{
+				World[i][j]->free = false;
+		//		World[i][j]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+			}
+	//		World[i][j]->lowerspr = (Sprite*)malloc(sizeof(Sprite));
+		//	World[i][j]->upperspr = (Sprite*)malloc(sizeof(Sprite));
+			
+//			World[i][j]->debugFill = LoadSprite("sprites/shade.png",32,32,1);
+		}
+	}
+	World[2][6]->free = false;
+//	World[2][6]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	/*
+	World[5][2]->height = 1;
+	World[6][2]->height = 2;
+	World[7][2]->height = 3;
+	World[7][3]->height = 2;
+	World[7][4]->height = 1;*/
+/*	World[5][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[6][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][2]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][3]->upperspr = LoadSprite("sprites/shade.png",32,32,1);
+	World[7][4]->upperspr = LoadSprite("sprites/shade.png",32,32,1);*/
+}
+
+void UpdateWorld(){
+	for(int i = 0; i < WORLD_W; i++){
+		for(int j = 0; j < WORLD_H; j++){
+			if(World[i][j] != NULL){
+				if(World[i][j]->contents!=NULL){
+					OverworldEnt *contents = World[i][j]->contents;
+				//	contents->Update();	//this shouldn't be here
+				}
+			}
+		}
+	}
 }

@@ -48,9 +48,10 @@ typedef enum AnimDir{
 
 void InitSpriteList();
 Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl, int off_x = 0, int off_y = 0);
+Sprite *GetSprite(char *filename);
 void FreeSprite(Sprite *spr);
 
-Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play, bool loop = true, int delay = FRAMESPERDRAW, void(*finish)() = NULL);
+Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play = true, bool loop = true, int delay = FRAMESPERDRAW, void(*finish)() = NULL);
 void FreeAnimation(Animation *a);
 
 void AdvanceAnimFrame(Animation *a);

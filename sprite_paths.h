@@ -10,15 +10,14 @@
 #define SPATH_COMBAT_TEXTBOX "sprites/combox.png"
 #define SPATH_COMBAT_CURSOR "sprites/curs.png"
 
-#define SPATH_PANEL_DEF "sprites/menu-def.png"
+#define SPATH_PANEL_DEF "sprites/menu2.png"
 #define SPATH_MENU_BG "sprites/menubg.png"
 #define SPATH_MENU_BG_COMBAT "sprites/battlemenubg.png"
 #define SPATH_MENU_CURSOR_SMALL "sprites/menucursor.png"
 #define SPATH_MENU_CURSOR_LARGE "sprites/menucursor-l.png"
 
 
-#define SPATH_PLAYER_OVERWORLD "sprites/player.png"
-#define SPATH_NPC_GENERIC "sprites/skeleton_base.png"
+#define SPATH_NPC_GENERIC "sprites/player.png"
 #define SPATH_SIGN_GENERIC "sprites/sign.png"
 
 #define SPATH_ENEMY_GENERIC "sprites/enemies/begg.png"

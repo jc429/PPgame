@@ -29,18 +29,13 @@ static struct PartyCursor_T{
 
 void InitParty(){
 	partybg = LoadAnimation(LoadSprite("sprites/grid.png",320,240,1),0,0,1,1);
-	_PanelSpr = LoadSprite(SPATH_PANEL_DEF,4,4,3);
+	_PanelSpr = LoadSprite(SPATH_PANEL_DEF,2,2,3);
 	_PartySpr = LoadSprite("sprites/partyicons.png",20,20,4);
 	_PartyAnims[0][0] = LoadAnimation(_PartySpr,0,0,1,1);
 }
 
 void PartyView::Update(){
-	if(InputPressed(PPINPUT_B)){
-		if(_PartyMenuStack.empty())
-			CloseParty();
-		else
-			CancelMenu();
-	}
+
 }
 
 void PartyView::Draw(){

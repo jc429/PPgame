@@ -107,35 +107,51 @@ NPC **LoadEntitiesCFG(char *path){
 
 		if(strcmp(itr->name.GetString(),"info")==0)
 			continue;
+		else if(strcmp(itr->name.GetString(),"sprites")==0){
+			const rapidjson::Value& spr_parse = doc[itr->name];
+			for(rapidjson::Value::ConstMemberIterator itr2 = spr_parse.MemberBegin(); itr2 != spr_parse.MemberEnd(); ++itr2){
+				ParseSprite(spr_parse[itr2->name]);
+			}
+		}else{
 
-		const rapidjson::Value& npc_parse = doc[itr->name];
-		copy_string(name,npc_parse["name"].GetString());
+			const rapidjson::Value& npc_parse = doc[itr->name];
+			copy_string(name,npc_parse["name"].GetString());
 		
-		posx = npc_parse["pos_x"].GetInt();
-		posy = npc_parse["pos_y"].GetInt();
-		npclist[i] = new NPC(posx,posy,name);
+			posx = npc_parse["pos_x"].GetInt();
+			posy = npc_parse["pos_y"].GetInt();
+			npclist[i] = new NPC(posx,posy,name);
 
-		/* NPC dialogue can be stored within the NPC's structure or loaded from a separate json file*/
-		if(npc_parse.HasMember("dialogue_file")){
-			assert(npc_parse["dialogue_file"].IsString());
-			copy_string(npclist[i]->dialoguepath,npc_parse["dialogue_file"].GetString());
-			msg = OpenDialogue(npclist[i]->dialoguepath);
-			GiveNPCMessage(npclist[i],msg);
-		}
-		else if(npc_parse.HasMember("dialogue")){
-			const rapidjson::Value& dialogue_parse = npc_parse["dialogue"];
-			msg = ParseDialogueCFG(msg, dialogue_parse);
-			GiveNPCMessage(npclist[i],msg);
+			if(npc_parse.HasMember("sprite")){
+				printf("yo \n");
+				char sprpath[40];
+				copy_string(sprpath,npc_parse["sprite"].GetString());
+				Sprite *spr = GetSprite(sprpath);
+			//	printf("%i %i %i \n",spr->w,spr->h,spr->framesperline);
+				SetEntAnims(npclist[i],spr);
+			}
+
+			/* NPC dialogue can be stored within the NPC's structure or loaded from a separate json file*/
+			if(npc_parse.HasMember("dialogue_file")){
+				assert(npc_parse["dialogue_file"].IsString());
+				copy_string(npclist[i]->dialoguepath,npc_parse["dialogue_file"].GetString());
+				msg = OpenDialogue(npclist[i]->dialoguepath);
+				GiveNPCMessage(npclist[i],msg);
+			}
+			else if(npc_parse.HasMember("dialogue")){
+				const rapidjson::Value& dialogue_parse = npc_parse["dialogue"];
+				msg = ParseDialogueCFG(msg, dialogue_parse);
+				GiveNPCMessage(npclist[i],msg);
 		
-		}
+			}
 
-		i++;
+			i++;
+		}
 	}
 
 	return npclist;
 }
 
-
+/*
 CombatEnt *LoadCombatEntCFG(char *path){
 	CombatEnt *ent;
 	int id;
@@ -208,7 +224,7 @@ vector<CombatEnt*> LoadEnemyDataCFG(char *path){
 	}
 
 	return enemies;
-}
+}*/
 
 CharData *ParseCharData(const rapidjson::Value& cd_parse){
 	CharData *cd;
@@ -367,7 +383,7 @@ void LoadItemCFG(char *path){
 			value = item_parse["sell_value"].GetInt();
 		}
 
-		LoadItemData(id,name,desc,icon,type,attributes,value);
+	//	LoadItemData(id,name,desc,icon,type,attributes,value);
 	}
 
 }
@@ -404,7 +420,7 @@ Animation *ParseAnimation(const rapidjson::Value& anim_parse){
 
 	if(anim_parse.HasMember("sprite")){
 		copy_string(path,anim_parse["sprite"].GetString());	
-		spr = LoadSprite(path,0,0,0);
+		spr = GetSprite(path);
 	}else
 		spr = NULL;
 

@@ -11,7 +11,7 @@
 #include "dialogue.h"
 #include "level.h"
 #include "audio.h"
-#include "combat.h"
+//#include "combat.h"
 #include "gamestate.h"
 #include "world.h"
 #include "inventory.h"
