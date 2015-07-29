@@ -57,6 +57,7 @@ void SetMessagePrompts(Message *msg);
 void SetMessageEndFunction(Message *msg, void (*func)());
 
 void SetText(char *text, Textbox *t, bool scroll, bool prompt = 0, Message *msg = NULL);
+void SetSpeakerbox(Textbox *t, char *speaker);
 char *ParseText(char *text);
 char *InjectString(char *text,char *str, int location);
 char *CutString(char *text, int location, int length);

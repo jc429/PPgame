@@ -14,9 +14,7 @@ extern SDL_Renderer *mainRenderer;
 extern Camera uiCamera;
 
 
-Textbox mainTextbox; //the main dialogue box for now
-
-
+Textbox mainTextbox;	//the main dialogue box where all the text is drawn during conversations and stuff
 
 ////externs for text parsing -- i dont like doing this and will probably change it 
 //extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
@@ -105,6 +103,12 @@ void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*fu
 		msg->promptFunctions[i] = NULL;
 }
 
+void SetSpeakerbox(Textbox *sb, char *speaker){
+	string speakerstr(speaker);
+	sb->box.w = sb->buf*4 + GetWordWidth(speakerstr);
+	SetText(speaker,sb,0);
+}
+
 void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	//sets a textbox up for display
 
@@ -145,7 +149,7 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 		if(msg != NULL){
 			t->msg = msg;
 			if(msg->hasSpeaker)
-				SetText( t->msg->speaker->name,t->speakerbox,0); 
+				SetSpeakerbox(t->speakerbox,t->msg->speaker->name); 
 		}
 	t->donewriting = false;
 }

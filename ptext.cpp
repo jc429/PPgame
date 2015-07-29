@@ -30,7 +30,7 @@ void InitMainTextbox(Textbox *t,int numLines, int lineLen,Sprite *spr){
 	r.h = TEXTAREA_H;
 	LoadTextbox(t,numLines,lineLen,spr,r,2);
 	TextboxSettings(t,2,0,1,0,true);
-	SDL_Rect s = {4,r.y-10,72,10};
+	SDL_Rect s = {4,r.y-10,72,10};		//width doesn't matter it'll be adjusted dynamically. x technically wont matter either
 	t->speakerbox = new Textbox();
 	LoadTextbox(t->speakerbox,1,72,NULL,s,1);
 
@@ -88,6 +88,14 @@ void TextboxSettings(Textbox *t, int buffer, int just, int vscroll, int kerning,
 }
 
 void DrawTextbox(Textbox *t, int offset_x, int offset_y){
+	if(t->msg && t->msg->hasSpeaker){
+		if(t->msg->speaker != NULL){
+			Vec2i speakerpos;
+			speakerpos.x = t->speakerbox->box.x + (t->speakerbox->box.w>>1);	
+			speakerpos.y = t->speakerbox->box.y + t->speakerbox->box.h;
+			DrawAnimation(t->msg->speaker->portrait,speakerpos,&uiCamera);
+		}
+	}
 	t->box.x += offset_x;
 	t->box.y += offset_y;
 	//DrawRect(&t->box,&uiCamera,pCol_Blue);

@@ -70,6 +70,8 @@ InteractableObject *LoadSign(int xpos, int ypos){
 	Sprite *s = LoadSprite(SPATH_SIGN_GENERIC,32,32,1,16,24);
 	ent->animlist[0][0] = LoadAnimation(s,0,0,1,1,1);
 	ent->numAnims = 1;
+
+	ent->chardata->portrait = LoadAnimation(LoadSprite("sprites/sign-spk.png",64,64,1,32,64),0,0,1);
 	////////////////////////////////////////////////////////////////////////
 /*	ent->s_offset.x = ent->animlist[ent->animation][0]->sprite->w>>1;
 	ent->s_offset.y = ent->animlist[ent->animation][0]->sprite->h>>1;

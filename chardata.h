@@ -2,6 +2,7 @@
 #define _CHARDATA_
 
 #include "global.h"
+#include "sprites.h"
 #include <vector>
 using std::vector;
 
@@ -62,6 +63,7 @@ typedef struct CharData_T{
 	int id;
 	char name[32];
 
+	Animation *portrait;	//portrait used for dialogue
 /*	int level;
 	int exp;
 

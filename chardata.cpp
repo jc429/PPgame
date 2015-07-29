@@ -13,10 +13,11 @@ CharData *LoadCharData(int charid){
 			return  &_CharDataList[i];
 	}
 
+
 	cd = &_CharDataList[numcds];
 	numcds++;
 	cd->id = charid; //FIX: make it a number that isnt already used 
-
+	cd->portrait = LoadAnimation(LoadSprite("sprites/speaker-gen.png",64,64,1,32,64),0,0,1);
 	return cd;
 }
 
@@ -27,8 +28,9 @@ CharData *CreateCharData(char *name){
 
 	copy_string(cd->name,name);
 
-//	cd->level = 1;
 	cd->id = numcds;
+
+	cd->portrait = LoadAnimation(LoadSprite("sprites/speaker-gen.png",64,64,1,32,64),0,0,1);
 
 	return cd;
 }
