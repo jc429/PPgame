@@ -30,7 +30,7 @@ extern OverworldCharacter *CharList[MAX_CHARACTERS];
 
 extern int framecheck;
 
-extern Textbox mainTextbox; //the main dialogue box for now
+extern TextboxEX mainTextbox; //the main dialogue box for now
 //extern bool dialogue;	//are we currently talking?
 //extern bool inMenu;		//are we currently in a menu?
 
@@ -115,7 +115,7 @@ void InitGame(){
 /////////////////////
 //	InitCombat();
 
-	InitMainTextbox(&mainTextbox,3,GAME_RES_X,LoadSprite(SPATH_MAIN_TEXTBOX,160,35,1));
+	InitMainTextbox(&mainTextbox,3,LoadSprite(SPATH_MAIN_TEXTBOX,160,35,1));
 //	pauseMenu = LoadPauseMenu();
 
 	quitMenu = LoadCustomMenu(2);
@@ -361,7 +361,7 @@ void Overworld::Draw(){
 	}
 
 	if(_Dialogue)
-		DrawTextbox(&mainTextbox);
+		DrawTextboxEX(&mainTextbox);
 	if(!_MenuStack.empty()){
 		for(int i = 0; i < (int)_MenuStack.size(); i++){
 			DrawMenu(_MenuStack[i]);

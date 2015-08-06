@@ -97,6 +97,8 @@ void NPC::Move(Vec2i want_to_move){
 		if(CheckTileHeights(World[tile.x+want_to_move.x][tile.y+want_to_move.y],World[tile.x][tile.y]))	{		
 			tomove = want_to_move;
 			moving = true;
+			movex = (tomove.x != 0);
+			movey = (tomove.y != 0);
 		}
 	}	
 	
@@ -108,16 +110,16 @@ void NPC::Move(Vec2i want_to_move){
 		tile_dest = tile_src;
 }
 
-void NPC::Talk(Textbox *t){
+void NPC::Talk(TextboxEX *t){
 	talking = true;
 	if(rotates){
 		//make our direction mirror the player's (you face someone when you talk to them right)
-		Vec2i mirror = {-1,-1};
+		Vec2i mirror(-1,-1);
 		facing = _Player->facing * mirror;
 	}
 	UpdateDirection(this);
 	if(msg != NULL)
-		SetText(msg->text,t,1,msg->hasPrompt,msg);
+		SetTextEX(msg->text,t,1,msg->hasPrompt,msg);
 }
 
 

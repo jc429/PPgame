@@ -1,6 +1,6 @@
 #include "pfile.h"
 #include "dialogue.h"
-#include "combat_ent.h"
+
 #include "player.h"
 #include "item.h"
 
@@ -313,7 +313,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 			msg->hasPrompt = true;
 			msg->prompt = LoadCustomMenu(optcount,options);
 			SetAnswers(msg,optcount);
-			
+			SetAnchor(msg->prompt,ANCHOR_TEXTBOX_RIGHT, 4);
 		}
 	}
 	return msg;

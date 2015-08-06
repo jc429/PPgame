@@ -21,22 +21,24 @@ void InitFont(){
 
 }
 
-void InitMainTextbox(Textbox *t,int numLines, int lineLen,Sprite *spr){
+void InitMainTextbox(TextboxEX *t,int numLines,Sprite *spr){
 	textBlip = LoadSound("sounds/blip.wav",30);
 	SDL_Rect r;
+	int buf = 2; //the indent to compensate for the main textbox edges
 	r.x = 0;
 	r.y = GAME_RES_Y - spr->h;
 	r.w = TEXTAREA_W;
 	r.h = TEXTAREA_H;
-	LoadTextbox(t,numLines,lineLen,spr,r,2);
+	LoadTextbox(t,numLines,r,buf);
+	t->bgspr = spr;
 	TextboxSettings(t,2,0,1,0,true);
 	SDL_Rect s = {4,r.y-10,72,10};		//width doesn't matter it'll be adjusted dynamically. x technically wont matter either
 	t->speakerbox = new Textbox();
-	LoadTextbox(t->speakerbox,1,72,NULL,s,1);
+	LoadTextbox(t->speakerbox,1,s,1);
 
 }
 
-void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rect, int buffer){
+void LoadTextbox(Textbox *t, int numLines, SDL_Rect rect, int buffer){
 	if(!t) return;
 
 	if(numLines > LINE_COUNT)
@@ -44,9 +46,8 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 	t->linect = numLines;
 /*	if(lineLen > LINE_LENGTH)
 		lineLen = LINE_LENGTH;*/
-	t->linelength = lineLen;
+//	t->linelength = lineLen;
 	
-	t->spr = spr;
 	t->box = rect;
 	t->buf = buffer;
 
@@ -54,8 +55,6 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 	t->kerning = DEFAULT_KERNING;
 	t->vscroll = 0;
 	t->curline = 0;
-
-	t->speakerbox = NULL;
 	
 	t->usesArrow = false;
 	t->arrow = NULL;
@@ -67,7 +66,6 @@ void LoadTextbox(Textbox *t, int numLines, int lineLen,Sprite *spr, SDL_Rect rec
 	}
 	SetText(NULL,t,0);
 	t->donewriting = false;
-	t->msg = NULL;
 }
 
 void TextboxSettings(Textbox *t, int buffer, int just, int vscroll, int kerning, bool useArrow){
@@ -88,6 +86,23 @@ void TextboxSettings(Textbox *t, int buffer, int just, int vscroll, int kerning,
 }
 
 void DrawTextbox(Textbox *t, int offset_x, int offset_y){
+
+	t->box.x += offset_x;
+	t->box.y += offset_y;
+	//DrawRect(&t->box,&uiCamera,pCol_Blue);
+	Vec2i loc;
+	loc.x = t->box.x;
+	loc.y = t->box.y;
+//	DrawSprite(t->bgspr,t->frame,loc,&uiCamera);
+	DrawRect(t->box,&uiCamera);
+	
+	DrawText(t);
+
+	t->box.x -= offset_x;
+	t->box.y -= offset_y;
+}
+
+void DrawTextboxEX(TextboxEX *t, int offset_x, int offset_y){
 	if(t->msg && t->msg->hasSpeaker){
 		if(t->msg->speaker != NULL){
 			Vec2i speakerpos;
@@ -102,9 +117,10 @@ void DrawTextbox(Textbox *t, int offset_x, int offset_y){
 	Vec2i loc;
 	loc.x = t->box.x;
 	loc.y = t->box.y;
-	DrawSprite(t->spr,t->frame,loc,&uiCamera);
+	DrawSprite(t->bgspr,t->frame,loc,&uiCamera);
+	DrawRect(t->box,&uiCamera);
 	
-	DrawText(t);
+	DrawTextEX(t);
 
 	if(t->msg && t->msg->hasSpeaker){
 		if(t->msg->speaker != NULL){
@@ -117,15 +133,8 @@ void DrawTextbox(Textbox *t, int offset_x, int offset_y){
 	t->box.y -= offset_y;
 }
 
-
-void DrawText(Textbox *t){
-	//draws the text in a textbox
-
-	if(t->text.empty()) return;
-
-	int buf = t->buf;	//the buffer around all edges of the textbox
-	SDL_Rect temp = {t->box.x+buf,t->box.y+buf,t->box.w-(2*buf),t->box.h-(2*buf)};	//the rectangle that text will actually be drawn in
-
+void DrawTextEX(TextboxEX *t){
+	DrawText(t);
 	if(t->donewriting == true){			//if the whole message has been displayed to the screen
 		if(t->usesArrow)				//draw the arrow sprite if we have one 
 			DrawAnimation(t->arrow,t->arrowpos,&uiCamera);		
@@ -138,6 +147,17 @@ void DrawText(Textbox *t){
 		}
 	}
 
+}
+
+void DrawText(Textbox *t){
+	//draws the text in a textbox
+
+	if(t->text.empty()) return;
+
+	int buf = t->buf;	//the buffer around all edges of the textbox
+	SDL_Rect temp = {t->box.x+buf,t->box.y+buf,t->box.w-(2*buf),t->box.h-(2*buf)};	//the rectangle that text will actually be drawn in
+
+	
 	if((t->cursor >= 0)&&(t->cursor < t->text.length())){	//if the text is being written letter by letter
 															//and we haven't reached the end of it yet
 		++t->cursor;		//increment the cursor first. No point in drawing nothing for the first frame.	
@@ -203,7 +223,7 @@ void DrawText(Textbox *t){
 			}
 
 			int nextlen = GetNextWordLength(t->text.substr(curpos));	
-			int nextwidth = GetWordWidth(t->text.substr(curpos,nextlen),t->kerning);
+			int nextwidth = GetStringWidth(t->text.substr(curpos,nextlen),t->kerning);
 
 			//check that the next word fits
 			if((linewidth + nextwidth) < temp.w){	//if the word fits

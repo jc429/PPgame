@@ -29,13 +29,14 @@ public:
 	CharData *chardata;
 
 	//position stuff
-	Vec2i tile;				//tile we are currently standing on
+	Vec2i tile;				//tile of the world we are currently standing on
 	Vec2i tile_src;			//source tile when moving
 	Vec2i tile_dest;		//dest tile when moving 
-	Vec2i localposition;	//current position within the tile in pixels
-	Vec2i worldposition;	//current position within the world in pixels
+	Vec2f localposition;	//current position within the tile in pixel-sized units
+	Vec2f worldposition;	//current position within the world in pixel-sized units
 	bool moving;
-
+	bool movex;
+	bool movey;
 	
 	//graphics stuff
 	Animation *animlist[MAX_ANIMS][NUM_ANIM_DIRS]; //all animations this entity can have
@@ -51,7 +52,7 @@ public:
 
 	virtual void Update();
 	virtual void Draw();
-	virtual void Talk(Textbox *t);
+	virtual void Talk(TextboxEX *t);
 
 };
 
@@ -63,7 +64,7 @@ public:
 
 	void Update();
 	void Draw();
-	void Talk(Textbox *t);
+	void Talk(TextboxEX *t);
 
 	InteractableObject(int xpos, int ypos);
 	~InteractableObject();

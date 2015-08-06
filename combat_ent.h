@@ -22,8 +22,8 @@ typedef enum EventType_T{
 }EventType;
 
 typedef struct EntMotion_T{  //A scripted motion, for attacks and stuff
-	Vec2d src;
-	Vec2d dest;
+	Vec2f src;
+	Vec2f dest;
 	int duration;		//duration, in frames, of the movement
 }EntMotion;
 
@@ -52,9 +52,9 @@ typedef struct CombatEnt_T:public Entity{
 
 	bool friendly;				//good or bad?
 
-	Vec2d position_base;		//where the combat ent generally resides
-	Vec2d position;			//where the ent is currently
-	Vec2d position_target;	//used for motion events
+	Vec2f position_base;		//where the combat ent generally resides
+	Vec2f position;			//where the ent is currently
+	Vec2f position_target;	//used for motion events
 
 //	Vec2i s_offset;					//sprite offset
 	Animation *animlist[MAX_ANIMS]; //all animations this CombatEnt can have
@@ -87,8 +87,8 @@ void SetStats(CombatEnt *ent);
 
 //Event stuff
 void PerformCurrentEvent(CombatEnt *ent);
-void AddMotion(CombatEnt *ent, Vec2d dest, int duration);
-void AddMotionRelative(CombatEnt *ent, Vec2d dest, int duration);
+void AddMotion(CombatEnt *ent, Vec2f dest, int duration);
+void AddMotionRelative(CombatEnt *ent, Vec2f dest, int duration);
 void AddDamage(CombatEnt *ent, CombatEnt *target, int damage);
 
 void PerformMotion(CombatEnt *ent, EntMotion m);

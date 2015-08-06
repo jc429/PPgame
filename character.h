@@ -24,7 +24,7 @@ public:
 	//world position and movement stuff
 	Vec2i facing;
 	Vec2i tomove;			//where we're moving, in tiles
-	int movespeed;
+	float movespeed;
 	bool movelock;
 
 	//animation stuff 

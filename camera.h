@@ -21,8 +21,9 @@ void InitCamera(Camera *c,int w, int h, bool tracks = false, OverworldEnt *targ 
 void UpdateCamera(Camera *c);
 
 int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c);
-int AdvanceFrame(Sprite *spr, int frame);
+int DrawPartialSprite(Sprite* spr, int frame, SDL_Rect subrect, Vec2i pos, Camera *c);
 
 void DrawAnimation(Animation *anim, Vec2i pos, Camera *c);
+void DrawPartialAnimation(Animation *anim, SDL_Rect subrect, Vec2i pos, Camera *c);
 
 #endif

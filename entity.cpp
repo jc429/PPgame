@@ -16,7 +16,7 @@ void OverworldEnt::Update(){
 void OverworldEnt::Draw(){
 	return;
 }
-void OverworldEnt::Talk(Textbox *t){
+void OverworldEnt::Talk(TextboxEX *t){
 	return;
 }
 
@@ -113,8 +113,8 @@ void InteractableObject::Draw(){
 	DrawAnimation(animlist[animation][direction],worldposition - heightoffset,&mainCamera);
 }
 
-void InteractableObject::Talk(Textbox *t){
-	SetText(flavortext->text,t,1,flavortext->hasPrompt,flavortext);
+void InteractableObject::Talk(TextboxEX *t){
+	SetTextEX(flavortext->text,t,1,flavortext->hasPrompt,flavortext);
 }
 
 

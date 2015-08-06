@@ -96,17 +96,8 @@ Letter GetLetter(char ch){
 int GetCharWidth(char ch){
 	return GetLetter(ch).width;
 }
-/*
-int GetWordWidth(char *str){
-	int sum;
-	int i;
-	while(str[i] != '\0'){
-		sum += GetCharWidth(str[i]);
-		++i;
-	}
-	return sum;
-}*/
-int GetWordWidth(std::string str, int kerning){
+
+int GetStringWidth(std::string str, int kerning){
 	int sum = 0;
 	int i = 0;
 	while(i < str.length()){
@@ -115,3 +106,4 @@ int GetWordWidth(std::string str, int kerning){
 	}
 	return sum;
 }
+

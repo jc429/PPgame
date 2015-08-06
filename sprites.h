@@ -54,6 +54,7 @@ void FreeSprite(Sprite *spr);
 Animation *LoadAnimation(Sprite *spr, int curFrame, int seed, int len, bool play = true, bool loop = true, int delay = FRAMESPERDRAW, void(*finish)() = NULL);
 void FreeAnimation(Animation *a);
 
+int AdvanceFrame(Sprite *spr, int frame);
 void AdvanceAnimFrame(Animation *a);
 
 void DrawTile(Vec2i pos);

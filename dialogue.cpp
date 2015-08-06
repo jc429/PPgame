@@ -14,7 +14,7 @@ extern SDL_Renderer *mainRenderer;
 extern Camera uiCamera;
 
 
-Textbox mainTextbox;	//the main dialogue box where all the text is drawn during conversations and stuff
+TextboxEX mainTextbox;	//the main dialogue box where all the text is drawn during conversations and stuff
 
 ////externs for text parsing -- i dont like doing this and will probably change it 
 //extern CombatEnt *CombatParty[MAX_PARTY_COMBAT];
@@ -104,21 +104,21 @@ void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*fu
 }
 
 void SetSpeakerbox(Textbox *sb, char *speaker){
+	
 	string speakerstr(speaker);
-	sb->box.w = sb->buf*4 + GetWordWidth(speakerstr);
+	sb->box.w = sb->buf*4 + GetStringWidth(speakerstr);
 	SetText(speaker,sb,0);
 }
 
 void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	//sets a textbox up for display
 
-	int ptr = 0;			//what character we're currently drawing up to
-	int offset = 0;			//offset for the lines
 	int i;
 	bool done = false;
 
 	if(text == NULL) return;
-	string parsed_text = string(text); //this isn't actually parsed bc that fucked up whoops
+	string parsed_text = string(text); 
+	//Longterm goal: add a function that will properly parse and rebuild the text (e.g. "[VAR-NAME]" will be replaced with a name) 
 	
 //	if(DEBUG)
 //		printf("%s \n",parsed_text.c_str());
@@ -128,33 +128,26 @@ void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
 	}
 	else{
 		t->cursor = -1;
-	//	done = true;
 	}
-	
-	for(i = 0; i < t->linect; i++){
-		//string line = t->lines[i];
-		if(parsed_text.empty()){
-			done = true;
-		}
+	t->text = parsed_text;
 
-		t->text = parsed_text;
-
-
-
-		offset += t->linelength;
-		ptr = 0;
-	}
-//	if((t->donewriting)&&(prompt))
-//	if(prompt){
-		if(msg != NULL){
-			t->msg = msg;
-			if(msg->hasSpeaker)
-				SetSpeakerbox(t->speakerbox,t->msg->speaker->name); 
-		}
 	t->donewriting = false;
 }
 
+void SetTextEX(char *text, TextboxEX *t, bool scroll, bool prompt, Message *msg){
+	//sets a textbox up for display
+	SetText(text,t,scroll,prompt);
+
+	if(msg != NULL){
+		t->msg = msg;
+		if(msg->hasSpeaker)
+			SetSpeakerbox(t->speakerbox,t->msg->speaker->name); 
+	}
+}
+
 char* ParseText(char *text){
+
+	// DONT USE THIS -- BROKEN AND BAD
 	if(text == NULL) return NULL;
 	static char parse_key[32];
 	memset(&parse_key[0], 0, sizeof(parse_key));
@@ -231,7 +224,7 @@ void SetMessageEndFunction(Message *msg, void (*func)()){
 void AdvanceText(int steps){
 	if(mainTextbox.msg->next[steps] != NULL){
 		mainTextbox.msg = mainTextbox.msg->next[steps];
-		SetText(mainTextbox.msg->text,&mainTextbox,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
+		SetTextEX(mainTextbox.msg->text,&mainTextbox,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
 	}
 }
 

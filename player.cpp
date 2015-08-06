@@ -5,7 +5,7 @@
 extern Tile *World[WORLD_W][WORLD_H];
 extern Camera mainCamera;
 extern OverworldCharacter *_Player;
-extern Textbox mainTextbox; //the main dialogue box for now
+extern TextboxEX mainTextbox; //the main dialogue box for now
 extern InputNode *_Inputs;
 extern OverworldCharacter *CharList[MAX_CHARACTERS];
 extern bool _Dialogue;	//are we currently talking?
@@ -200,6 +200,8 @@ void PlayerMovement(OverworldCharacter *p){
 		if((p->tomove.x!=0)||(p->tomove.y!=0)){
 			p->animation = ANIM_CHAR_WALK;
 			p->moving=true;
+			p->movex = (p->tomove.x != 0);
+			p->movey = (p->tomove.y != 0);
 			UpdateTile(p);
 			p->tile_src.x = p->tile.x;
 			p->tile_dest.x = p->tile.x+p->tomove.x;

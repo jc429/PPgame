@@ -19,7 +19,7 @@ public:
 
 	void Update();
 	void Move(Vec2i want_to_move);
-	void Talk(Textbox *t);
+	void Talk(TextboxEX *t);
 };
 
 

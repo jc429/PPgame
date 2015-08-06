@@ -27,9 +27,11 @@ OverworldCharacter::OverworldCharacter(int xpos, int ypos, char *entName){
 	tomove.x = 0;	
 	tomove.y = 0;
 	moving = false;
+	movex = false;
+	movey = false;
 
 	//Speeds and stuff
-	movespeed = 1;
+	movespeed = 1.5;
 	
 	//Position
 	tile.x = xpos;
@@ -162,13 +164,18 @@ void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest){
 	else if(src->position.y > dest->position.y)
 		movement.y = -c->movespeed;
 
-	c->localposition = c->localposition + movement;
-
+	c->localposition.x += movement.x;
+	c->localposition.y += movement.y;
+	
 //	dest->contents = c;
 
-	if((std::abs(c->localposition.x)%TILE_W==0.5*TILE_W)&&(std::abs(c->localposition.y)%TILE_H==0.5*TILE_H)){
+	//if we're in the center of the tile
+	if((std::abs((int)c->localposition.x)%TILE_W==0.5*TILE_W)
+		&&(std::abs((int)c->localposition.y)%TILE_H==0.5*TILE_H)){
 	//	UpdateTile(c);
 		c->moving = false;
+		c->movex = false;
+		c->movey = false;
 	}
 }
 

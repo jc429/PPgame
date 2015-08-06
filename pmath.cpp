@@ -41,10 +41,29 @@ void SetVec2i(Vec2i &v, int x, int y){
 	v.x = x;
 	v.y = y;
 }
+void SetVec2i(Vec2i &dest, Vec2i src){
+	dest.x = src.x;
+	dest.y = src.y;
+}
 
-void SetVec2i(Vec2i &dest, Vec2i *src){
-	dest.x = src->x;
-	dest.y = src->y;
+void SetVec2f(Vec2f &v, float x, float y){
+	v.x = x;
+	v.y = y;
+}
+void SetVec2f(Vec2f &dest, Vec2f src){
+	dest.x = src.x;
+	dest.y = src.y;
+}
+
+void SetVec3f(Vec3f &v, float x, float y, float z){
+	v.x = x;
+	v.y = y;
+	v.z = z;
+}
+void SetVec3f(Vec3f &dest, Vec3f src){
+	dest.x = src.x;
+	dest.y = src.y;
+	dest.z = src.z;
 }
 
 void SetRect(SDL_Rect &r, int x, int y, int w, int h){
@@ -54,30 +73,61 @@ void SetRect(SDL_Rect &r, int x, int y, int w, int h){
 	if(h) r.h = h;
 }
 
-void SetRect(SDL_Rect &dest, SDL_Rect *src){
-	if(src == NULL){
-		printf("Setting a NULL rect!");
-		return;
-	}
-	dest.x = src->x;
-	dest.y = src->y;
-	dest.w = src->w;
-	dest.h = src->h;
+void SetRect(SDL_Rect &dest, SDL_Rect src){
+	dest.x = src.x;
+	dest.y = src.y;
+	dest.w = src.w;
+	dest.h = src.h;
+}
+void SetRect(SDL_Rect &dest, Vec2i src){
+	dest.x = src.x;
+	dest.y = src.y;
 }
 
-void SetRect(SDL_Rect &dest, Vec2i *src){
-	dest.x = src->x;
-	dest.y = src->y;
+///////////////////////////
+
+bool NumsWithinRange(int a, int b, int range){	//checks if a is within range of b
+	if(std::abs(a - b) < range)
+		return true;
+	return false;
 }
+
+bool NumsWithinRange(float a, float b, float range){	//checks if a is within range of b
+	if(std::abs(a - b) < range)
+		return true;
+	return false;
+}
+
+
+int Max(int a, int b){
+	if(a > b) return a;
+	return b;
+}
+
+float Max(float a, float b){
+	if(a > b) return a;
+	return b;
+}
+
+int Min(int a, int b){
+	if(a < b) return a;
+	return b;
+}
+
+float Min(float a, float b){
+	if(a < b) return a;
+	return b;
+}
+///////////////////////////
 
 int RandomInt(int min, int max){ //returns a random integer, from min to max (non-inclusive)
-	double r;		// a decimal between 0 and 1
+	float r;		// a decimal between 0 and 1
 	int range;		//the range between the two numbers
 	int random;		//our random number
 
 	range = (max) - min;
 
-	r = ((double) rand() / (RAND_MAX));
+	r = ((float) rand() / (RAND_MAX));
 
 	random = (r * range) + min;
 

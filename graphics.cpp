@@ -246,19 +246,45 @@ int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c){
 
 	targetarea.x = (pos.x - spr->s_offset_x) - c->viewport.x;
 	targetarea.y = (pos.y - spr->s_offset_y) - c->viewport.y;
-	targetarea.w = spr->w;
-	targetarea.h = spr->h;
+	targetarea.w = src.w;
+	targetarea.h = src.h;
 	
 //	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
 		SDL_RenderCopy(mainRenderer,spr->image,&src,&targetarea);
-	
-	/*
-	if(framecheck == 1){
-		frame = AdvanceFrame(spr,frame);
-	}*/
+
 	return frame;
 }
 
+int DrawPartialSprite(Sprite* spr, int frame, SDL_Rect subrect, Vec2i pos, Camera *c){
+	if(spr == NULL) return 0;
+	if(spr->image == NULL) return 0;
+
+	SDL_Rect targetarea;
+	SDL_Rect src;
+	src.x = (frame%spr->framesperline * spr->w) + subrect.x;
+	src.y = (frame/spr->framesperline * spr->h) + subrect.y;
+    src.w = subrect.w;
+    src.h = subrect.h;
+	if(src.x < 0){			//if we're past the left margin of the spritesheet
+		src.w += src.x;		//crop the rectangle
+		src.x = 0;
+	}
+	if(src.y < 0){			//if we're past the upper margin of the spritesheet
+		src.h += src.y;		
+		src.y = 0;
+	}
+
+	targetarea.x = (pos.x - spr->s_offset_x) - c->viewport.x;
+	targetarea.y = (pos.y - spr->s_offset_y) - c->viewport.y;
+	targetarea.w = src.w;
+	targetarea.h = src.h;
+	
+//	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
+		SDL_RenderCopy(mainRenderer,spr->image,&src,&targetarea);
+
+	return frame;
+
+}
 
 void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	if(anim==NULL) return;
@@ -281,8 +307,8 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 
 	targetarea.x = (pos.x - anim->sprite->s_offset_x) - c->viewport.x;
 	targetarea.y = (pos.y - anim->sprite->s_offset_y) - c->viewport.y;
-	targetarea.w = anim->sprite->w;
-	targetarea.h = anim->sprite->h;
+	targetarea.w = src.w;
+	targetarea.h = src.h;
 
 	if(framecheck%anim->delay == 0){
 		AdvanceAnimFrame(anim);
@@ -292,6 +318,47 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	
 		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
 }
+void DrawPartialAnimation(Animation *anim, SDL_Rect subrect, Vec2i pos, Camera *c){
+	if(anim==NULL) return;
+	if(anim->sprite==NULL) return;
+	SDL_RendererFlip flip;
+	SDL_Rect targetarea;
+	SDL_Rect src;
+
+	flip = SDL_FLIP_NONE;
+	if(anim->mirror.x!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_HORIZONTAL);
+	if(anim->mirror.y!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_VERTICAL);
+
+
+	src.x = (anim->curFrame % anim->sprite->framesperline * anim->sprite->w) + subrect.x;
+	src.y = (anim->curFrame / anim->sprite->framesperline * anim->sprite->h) + subrect.y;
+	src.w = subrect.w;
+	src.h = subrect.h;
+	if(src.x < 0){			//if we're past the left margin of the spritesheet
+		src.w += src.x;		//crop the rectangle
+		src.x = 0;
+	}
+	if(src.y < 0){			//if we're past the upper margin of the spritesheet
+		src.h += src.y;		
+		src.y = 0;
+	}
+
+	targetarea.x = (pos.x - anim->sprite->s_offset_x) - c->viewport.x;
+	targetarea.y = (pos.y - anim->sprite->s_offset_y) - c->viewport.y;
+	targetarea.w = src.w;
+	targetarea.h = src.h;
+
+	if(framecheck%anim->delay == 0){
+		AdvanceAnimFrame(anim);
+	}
+//	if(RectTouch(targetarea,c->viewport))		//only draw whats actually within the camera
+	//	SDL_RenderCopy(mainRenderer,anim->sprite->image,&src,&targetarea);
+	
+		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
+}
+
 
 void DrawRect(SDL_Rect rect, Camera *c, Uint32 color){
 	rect.x -= c->viewport.x;
@@ -322,41 +389,65 @@ void DrawFacingCursor(Vec2i pos){
 }
 
 
-void DrawPanel(SDL_Rect rect, Sprite *spr){
+void DrawPanel(SDL_Rect rect, Sprite *spr){		//takes a spritesheet (3 tiles x 3 tiles) and draws the specified rect using it
 //	DrawRect(rect,&uiCamera);
 
-	Vec2i tile_size;
+	Vec2i tile_size;		//the size of the sprite tiles
+	SDL_Rect subrect;		//used when only part of the sprite may end up being drawn
 	Vec2i loc;
 	SetVec2i(tile_size,spr->w,spr->h);
 	SetVec2i(loc,rect.x,rect.y);
+	SetRect(subrect,0,0,tile_size.x,tile_size.y);	
+
+	//top left corner
 	loc = loc - tile_size;
 	DrawSprite(spr,0,loc,&uiCamera);
+
+	//top edge
 	loc.x += tile_size.x;
 	while((loc.x) < (rect.x + rect.w)){		
-		DrawSprite(spr,1,loc,&uiCamera);
-		loc.x += tile_size.x;
+		if((loc.x + tile_size.x) > (rect.x + rect.w)){		//check that the current column fits - adjust otherwise
+			subrect.w = (rect.x + rect.w) - loc.x;
+		}
+		DrawPartialSprite(spr,1,subrect,loc,&uiCamera);
+		loc.x += subrect.w;
 	}
+	subrect.w = tile_size.x;		//reset subrect width for the next row
+
+	//top right corner
 	DrawSprite(spr,2,loc,&uiCamera);
 	loc.x = rect.x - tile_size.x;
 	loc.y += tile_size.y;
 
 	while(loc.y < (rect.y + rect.h)){
-		DrawSprite(spr,3,loc,&uiCamera);
+		if((loc.y + tile_size.y) > (rect.y + rect.h)){		//check that the current row fits - adjust otherwise
+			subrect.h = (rect.y + rect.h) - loc.y;
+		}
+		//left edge
+		DrawPartialSprite(spr,3,subrect,loc,&uiCamera);
 		loc.x += tile_size.x;
 		while((loc.x) < (rect.x + rect.w)){		
-			DrawSprite(spr,4,loc,&uiCamera);
-			loc.x += tile_size.x;
+			if((loc.x + tile_size.x) > (rect.x + rect.w)){	//check that the current column fits - adjust otherwise
+				subrect.w = (rect.x + rect.w) - loc.x;
+			}
+			DrawPartialSprite(spr,4,subrect,loc,&uiCamera);
+			loc.x += subrect.w;
 		}
-		DrawSprite(spr,5,loc,&uiCamera);
+		subrect.w = tile_size.x;		//reset subrect width for the next row
+		DrawPartialSprite(spr,5,subrect,loc,&uiCamera);
 		loc.x = rect.x - tile_size.x;
-		loc.y += tile_size.y;
+		loc.y += subrect.h;
 	}
+	subrect.h = tile_size.y;		//reset subrect height for the next row
 
 	DrawSprite(spr,6,loc,&uiCamera);
 	loc.x += tile_size.x;
 	while((loc.x) < (rect.x + rect.w)){		
-		DrawSprite(spr,7,loc,&uiCamera);
-		loc.x += tile_size.x;
+		if((loc.x + tile_size.x) > (rect.x + rect.w)){		//check that the current column fits - adjust otherwise
+			subrect.w = (rect.x + rect.w) - loc.x;
+		}
+		DrawPartialSprite(spr,7,subrect,loc,&uiCamera);
+		loc.x += subrect.w;
 	}
 	DrawSprite(spr,8,loc,&uiCamera);
 
@@ -383,7 +474,7 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking so
 			for(int col = 0; col < WORLD_W; col++){
 				if (World[col][row] != NULL){
 					if(World[col][row]->structure->spritesheet == NULL) continue;
-					Vec2i loc = {col*TILE_W,row*TILE_H};
+					Vec2i loc(col*TILE_W,row*TILE_H);
 					loc = World[col][row]->position;
 					//draw the base height tile
 					World[col][row]->structure->baseframe = DrawSprite(World[col][row]->structure->spritesheet,World[col][row]->structure->baseframe,loc,&mainCamera);

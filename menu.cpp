@@ -36,7 +36,7 @@ void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
 	}
 }
 
-Menu *LoadMenu(MenuType mtype,Vec2i *loc){	
+Menu *LoadMenu(MenuType mtype,Vec2i *loc, CursorType ct, AnchorPoint a, int padding){	
 	//Loads a menu, with special conditions based on type
 
 	Textbox *textboxes[8];
@@ -51,33 +51,53 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 
 	m->cursor.location = 0;
 	if(loc != NULL){
-		SetRect(m->location,loc);
+		SetRect(m->location,*loc);
 	}
+
+	m->anchor = a;
+	m->padding = padding;
 	
-	m->spr = LoadSprite(SPATH_PANEL_DEF,2,2,3);
+	m->panel = LoadSprite(SPATH_PANEL_DEF,2,2,3);
 	m->type = mtype;
-
-	int cframes = 2; //num frames in cursor animation
-	cursorSpr = LoadSprite("sprites/menucursor.png",8,8,4);
-	for(int i = 0; i < 4; i++){
-		m->cursor.anim_active[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,2,1,1,18);
-		m->cursor.anim_inactive[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,1,1,1,18); //should be different eventually
-		m->cursor.anim[i] = m->cursor.anim_active[i];
+	m->cursor.type = ct;
+	
+	int cframes;
+	switch(ct){
+	case CURSTYPE_ARROW_LEFT:
+	case CURSTYPE_ARROW_TOP:
+		cframes = 2; //num frames in cursor animation
+		cursorSpr = LoadSprite("sprites/menuarrow.png",8,8,2,4,4);
+		for(int i = 0; i < 4; i++){
+			m->cursor.anim_active[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,2,1,1,18);
+			m->cursor.anim_inactive[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,1,1,1,18); //should be different eventually
+			m->cursor.anim[i] = m->cursor.anim_active[i];
+		}
+		break;
+	case CURSTYPE_RECT:
+	default:
+		cframes = 2; //num frames in cursor animation
+		cursorSpr = LoadSprite("sprites/menucursor.png",8,8,4);
+		for(int i = 0; i < 4; i++){
+			m->cursor.anim_active[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,2,1,1,18);
+			m->cursor.anim_inactive[i] = LoadAnimation(cursorSpr,i*cframes,i*cframes,1,1,1,18); //should be different eventually
+			m->cursor.anim[i] = m->cursor.anim_active[i];
+		}
+		break;
 	}
-
 	switch(mtype){
 	case MENU_PAUSE:
 		m->location.x = 10;
 		m->location.y = 10;
 		m->numItems = 6;
 		m->itemsPerRow = 1;
-		SetRect(itemRect,m->location.x,m->location.y,30,16);
+	//	SetRect(itemRect,m->location.x,m->location.y,30,16);
+		SetRect(itemRect,0,0,30,16);
 		m->location = itemRect;
 		
 
 		for(int i = 0; i < m->numItems; i++){
 			textboxes[i] = new Textbox();
-			LoadTextbox(textboxes[i],1,30,NULL,itemRect,3);
+			LoadTextbox(textboxes[i],1,itemRect,3);
 			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
 			if(i + 1 < m->numItems){
 				itemRect.y += 10;
@@ -94,18 +114,18 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc){
 		m->numItems = 2;
 		m->itemsPerRow = 1;
 
-		SetRect(itemRect,m->location.x,m->location.y,30,16);
+		SetRect(itemRect,0,0,30,16);
 		m->location = itemRect;
 
 		textboxes[0] = new Textbox();
-		LoadTextbox(textboxes[0],1,30,NULL,itemRect,3);
+		LoadTextbox(textboxes[0],1,itemRect,3);
 		m->items[0] = LoadMenuItem(itemRect,NULL,textboxes[0],"Yes");
 
 		itemRect.y += 18;
 		m->location.h += 18;
 
 		textboxes[1] = new Textbox();
-		LoadTextbox(textboxes[1],1,30,NULL,itemRect);
+		LoadTextbox(textboxes[1],1,itemRect);
 		m->items[1] = LoadMenuItem(itemRect,NULL,textboxes[1],"No");
 		break;
 	
@@ -162,6 +182,107 @@ void DecrementCursor(Menu *m){
 	m->cursor.location = (m->cursor.location+(m->numItems-1))%m->numItems;
 }
 
+void SetAnchor(Menu *m, AnchorPoint a, int padding){
+	m->anchor = a;
+	m->padding = padding;
+}
+
+Vec2i GetAnchorLocation(AnchorPoint a){
+//	extern Textbox mainTextbox;
+	Vec2i loc;
+	switch(a){
+	case ANCHOR_NONE_NONE:
+		SetVec2i(loc,0,0);
+		break;
+	case ANCHOR_TOP_LEFT:
+		SetVec2i(loc,0,0);
+		break;
+	case ANCHOR_TOP_CENTER:
+		SetVec2i(loc,0.5*GAME_RES_X,0);
+		break;
+	case ANCHOR_TOP_RIGHT:
+		SetVec2i(loc,GAME_RES_X,0);
+		break;
+
+	case ANCHOR_CENTER_LEFT:
+		SetVec2i(loc,0,0.5*GAME_RES_Y);
+		break;
+	case ANCHOR_CENTER_CENTER:
+		SetVec2i(loc,0.5*GAME_RES_X,0.5*GAME_RES_Y);
+		break;
+	case ANCHOR_CENTER_RIGHT:
+		SetVec2i(loc,GAME_RES_X,0.5*GAME_RES_Y);
+		break;
+
+	case ANCHOR_BOTTOM_LEFT:
+		SetVec2i(loc,0,GAME_RES_Y);
+		break;
+	case ANCHOR_BOTTOM_CENTER:
+		SetVec2i(loc,0.5*GAME_RES_X,GAME_RES_Y);
+		break;
+	case ANCHOR_BOTTOM_RIGHT:
+		SetVec2i(loc,GAME_RES_X,GAME_RES_Y);
+		break;
+
+	case ANCHOR_TEXTBOX_LEFT:
+		SetVec2i(loc,0,GAME_RES_Y - TEXTAREA_H);
+		break;
+	case ANCHOR_TEXTBOX_CENTER:
+		SetVec2i(loc,0.5*GAME_RES_X,GAME_RES_Y - TEXTAREA_H);
+		break;
+	case ANCHOR_TEXTBOX_RIGHT:
+		SetVec2i(loc,GAME_RES_X,GAME_RES_Y - TEXTAREA_H);
+		break;
+	}
+	return loc;
+}
+SDL_Rect AnchorRect(SDL_Rect src, AnchorPoint a, int padding){
+	//takes a given rect and "docks" it to a location
+	Vec2i anchorbase = GetAnchorLocation(a);
+
+	switch(a){		//x positioning
+	case ANCHOR_TOP_LEFT:
+	case ANCHOR_CENTER_LEFT:
+	case ANCHOR_BOTTOM_LEFT:
+	case ANCHOR_TEXTBOX_LEFT:
+		src.x = anchorbase.x + padding;
+		break;
+	case ANCHOR_TOP_CENTER:
+	case ANCHOR_CENTER_CENTER:
+	case ANCHOR_BOTTOM_CENTER:
+	case ANCHOR_TEXTBOX_CENTER:
+		src.x = anchorbase.x - (0.5*src.w);
+		break;
+	case ANCHOR_TOP_RIGHT:
+	case ANCHOR_CENTER_RIGHT:
+	case ANCHOR_BOTTOM_RIGHT:
+	case ANCHOR_TEXTBOX_RIGHT:
+		src.x = anchorbase.x - (src.w + padding);
+		break;
+	}
+	switch(a){		//y positioning
+	case ANCHOR_TOP_LEFT:
+	case ANCHOR_TOP_CENTER:
+	case ANCHOR_TOP_RIGHT:
+		src.y = anchorbase.y + padding;
+		break;
+	case ANCHOR_CENTER_LEFT:
+	case ANCHOR_CENTER_CENTER:
+	case ANCHOR_CENTER_RIGHT:
+		src.y = anchorbase.y + (0.5*src.h);
+		break;
+	case ANCHOR_BOTTOM_LEFT:
+	case ANCHOR_BOTTOM_CENTER:
+	case ANCHOR_BOTTOM_RIGHT:
+	case ANCHOR_TEXTBOX_LEFT:
+	case ANCHOR_TEXTBOX_CENTER:
+	case ANCHOR_TEXTBOX_RIGHT:
+		src.y = anchorbase.y - (src.h + padding);
+		break;
+	}
+	return src;
+}
+
 void ClearMenus(){
 
 }
@@ -171,33 +292,45 @@ void DrawMenu(Menu *m){
 	Vec2i loc;
 	loc.x = m->location.x;
 	loc.y = m->location.y;
-	DrawMenuSprite(m);
+	DrawMenuPanel(m);
 
 	for(int i = 0; i < m->numItems; i++){
-		loc.x = m->items[i]->bounds.x;
-		loc.y = m->items[i]->bounds.y;
-
+		loc.x = m->location.x + m->items[i]->bounds.x;
+		loc.y = m->location.y + m->items[i]->bounds.y;
 		DrawSprite(m->items[i]->bgsprite,0,loc,&uiCamera);
+
+		
+		m->items[i]->tbox->box.x = loc.x;
+		m->items[i]->tbox->box.y = loc.y;
 		DrawTextbox(m->items[i]->tbox);
+//		DrawRect(m->items[i]->tbox->box,&uiCamera);
 	}
 
-	loc.x = m->items[m->cursor.location]->bounds.x; 
-	loc.y = m->items[m->cursor.location]->bounds.y; 
-
-	DrawAnimation(m->cursor.anim[0],loc,&uiCamera);		//upper left corner
-	loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;
-	DrawAnimation(m->cursor.anim[1],loc,&uiCamera);		//upper right corner
-	loc.x = m->items[m->cursor.location]->bounds.x;
-	loc.y += m->items[m->cursor.location]->bounds.h - m->cursor.anim[0]->sprite->h;
-	DrawAnimation(m->cursor.anim[2],loc,&uiCamera);		//lower left corner
-	loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;	
-	DrawAnimation(m->cursor.anim[3],loc,&uiCamera);		//lower right corner
-
+	switch(m->cursor.type){
+	case CURSTYPE_ARROW_LEFT:
+		loc.x = m->location.x + m->items[m->cursor.location]->bounds.x - 6; 
+		loc.y = m->location.y + m->items[m->cursor.location]->bounds.y + m->items[m->cursor.location]->bounds.h*0.5;
+		DrawAnimation(m->cursor.anim[DIR_RIGHT],loc,&uiCamera);
+		break;
+	case CURSTYPE_RECT:
+	default:
+		loc.x = m->location.x + m->items[m->cursor.location]->bounds.x; 
+		loc.y = m->location.y + m->items[m->cursor.location]->bounds.y; 
+		DrawAnimation(m->cursor.anim[0],loc,&uiCamera);		//upper left corner
+		loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;
+		DrawAnimation(m->cursor.anim[1],loc,&uiCamera);		//upper right corner
+		loc.x = m->location.x + m->items[m->cursor.location]->bounds.x;
+		loc.y += m->items[m->cursor.location]->bounds.h - m->cursor.anim[0]->sprite->h;
+		DrawAnimation(m->cursor.anim[2],loc,&uiCamera);		//lower left corner
+		loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;	
+		DrawAnimation(m->cursor.anim[3],loc,&uiCamera);		//lower right corner
+		break;
+	}
 }
 
-void DrawMenuSprite(Menu *m){
+void DrawMenuPanel(Menu *m){
 
-	DrawPanel(m->location,m->spr);
+	DrawPanel(m->location,m->panel);
 }
 
 
@@ -243,12 +376,14 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	}
 
 	SetRect(m->location,loc.x,loc.y,60,16);
-	itemRect = m->location;
+	SetRect(itemRect,0,0,60,16);
+	
+
 	for(int i = 0; i < 8; i++)
 		textboxes[i] = NULL;
 	for(int i = 0; i < numItems; i++){
 		textboxes[i] = new Textbox();
-		LoadTextbox(textboxes[i],1,64,NULL,itemRect,3);
+		LoadTextbox(textboxes[i],1,itemRect,3);
 
 		if(itemNames != NULL)
 			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
@@ -301,6 +436,18 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 }
 
 void OpenMenu(Menu *m,vector<struct Menu_T*> *stack){
+	int maxwidth = 0;	//the width of the widest item in the menu
+	for(int i = 0; i < m->numItems; i++){
+		m->items[i]->bounds.w = (2*m->items[i]->tbox->buf) + GetStringWidth(m->items[i]->tbox->text);
+		maxwidth = Max(maxwidth,m->items[i]->bounds.w);
+	}
+	m->location.w = maxwidth;
+	m->location = AnchorRect(m->location,m->anchor,m->padding);
+
+
+		//FIXME: add buffer amounts or something idk
+//	printf("%i\n",m->location.w);
+
 	m->active = true;
 	m->cursor.location = 0;
 	if(stack != NULL){

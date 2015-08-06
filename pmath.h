@@ -3,10 +3,14 @@
 
 #include "SDL.h"
 
-//Custom 2 dimensional vector type (feat. operators)
-typedef struct Vec2i_T{
+//Custom 2 dimensional int vector type (feat. operators)
+typedef struct Vec2i{
 	int x;
 	int y;
+	Vec2i(int x = 0, int y = 0){
+		this->x = x;
+		this->y = y;
+	};
 }Vec2i;
 
 static Vec2i operator + (Vec2i a, Vec2i b){
@@ -39,54 +43,108 @@ static bool operator == (Vec2i a, Vec2i b){
 }
 
 
-typedef struct Vec2d_T{
-	double x;
-	double y;
+//Custom 2 dimensional float vector 
+typedef struct Vec2f{
+	float x;
+	float y;
+
+	Vec2f(float x = 0, float y = 0){
+		this->x = x;
+		this->y = y;
+	};
+
 	operator Vec2i() const { 
 		Vec2i vi; 
 		vi.x = (int)x;
 		vi.y = (int)y; 
 		return vi;
 	}
-}Vec2d;
+}Vec2f;
 
-static Vec2d operator + (Vec2d a, Vec2d b){
-	Vec2d c;
+static Vec2f operator + (Vec2f a, Vec2f b){
+	Vec2f c;
 	c.x = a.x + b.x;
 	c.y = a.y + b.y;
 	return c;
 }
-static Vec2d operator - (Vec2d a, Vec2d b){
-	Vec2d c;
+static Vec2f operator - (Vec2f a, Vec2f b){
+	Vec2f c;
 	c.x = a.x - b.x;
 	c.y = a.y - b.y;
 	return c;
 }
-static Vec2d operator * (Vec2d a, Vec2d b){
-	Vec2d c;
+static Vec2f operator * (Vec2f a, Vec2f b){
+	Vec2f c;
 	c.x = a.x * b.x;
 	c.y = a.y * b.y;
 	return c;
 }
-static Vec2d operator / (Vec2d a, Vec2d b){
-	Vec2d c;
+static Vec2f operator / (Vec2f a, Vec2f b){
+	Vec2f c;
 	c.x = a.x / b.x;
 	c.y = a.y / b.y;
 	return c;
 }
 
-
-
-static bool operator == (Vec2d a, Vec2d b){
+static bool operator == (Vec2f a, Vec2f b){
 	return ((a.x == b.x)&&(a.y == b.y));
 }
 
+
+//Custom 3 dimensional float vector 
+typedef struct Vec3f:Vec2f{		//inherit Vec2f so a 3d vector can function as a 2d vector if needed
+	float x;
+	float y;
+	float z;
+	Vec3f(float x = 0, float y = 0, float z = 0){
+		this->x = x;
+		this->y = y;
+		this->z = z;
+	}
+}Vec3f;
+
+static Vec3f operator + (Vec3f a, Vec3f b){
+	Vec3f c;
+	c.x = a.x + b.x;
+	c.y = a.y + b.y;
+	c.z = a.z + b.z;
+	return c;
+}
+static Vec3f operator - (Vec3f a, Vec3f b){
+	Vec3f c;
+	c.x = a.x - b.x;
+	c.y = a.y - b.y;
+	c.z = a.z - b.z;
+	return c;
+}
+
+static bool operator == (Vec3f a, Vec3f b){
+	return ((a.x == b.x)&&(a.y == b.y)&&(a.z == b.z));
+}
+
+
+
+
 void SetVec2i(Vec2i &v, int x, int y);
 void SetVec2i(Vec2i &dest, Vec2i src);
-void SetRect(SDL_Rect &dest, Vec2i *src);
 
+void SetVec2f(Vec2f &v, float x, float y);
+void SetVec2f(Vec2f &dest, Vec2f src);
+
+void SetVec3f(Vec3f &v, float x, float y, float z);
+void SetVec3f(Vec3f &dest, Vec3f src);
+
+void SetRect(SDL_Rect &dest, Vec2i src);
 void SetRect(SDL_Rect &r, int x, int y, int w = 0, int h = 0);
-void SetRect(SDL_Rect &dest, SDL_Rect *src);
+void SetRect(SDL_Rect &dest, SDL_Rect src);
+
+bool NumsWithinRange(int a, int b, int range);
+bool NumsWithinRange(float a, float b, float range);
+
+int Max(int a, int b);
+float Max(float a, float b);
+int Min(int a, int b);
+float Min(float a, float b);
 
 inline bool PointInRect(int x, int y, SDL_Rect rect);
 inline bool PointOnRect(int x, int y, SDL_Rect rect);
