@@ -22,9 +22,8 @@ private:
 
 public:
 	//world position and movement stuff
-	Vec2i facing;
 	Vec2i tomove;			//where we're moving, in tiles
-	float movespeed;
+	float movespeed;		//how quickly this character moves - a speed of 1 moves the character 1 tile in 1 second (frame independent?)
 	bool movelock;
 
 	//animation stuff 
@@ -36,17 +35,23 @@ public:
 	void Update();
 	void Draw();
 
+	void StepOutOfTile(Tile *tile);
+	void StepIntoTile(Tile *tile);
+	void MoveToTile(Tile *src, Tile *dest);
+	void UpdateTile();
+	void UpdateDirection();
+
 	void SetPlayer(bool p);
 	bool IsPlayer(){
 		return isPlayer;
 	}
 };
 
-void StepOutOfTile(OverworldCharacter *c,Tile *tile);
-void StepIntoTile(OverworldCharacter *c,Tile *tile);
-void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest);
-void UpdateTile(OverworldCharacter *c);
-void UpdateDirection(OverworldCharacter *c);
+//void StepOutOfTile(OverworldCharacter *c,Tile *tile);
+//void StepIntoTile(OverworldCharacter *c,Tile *tile);
+//void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest);
+//void UpdateTile(OverworldCharacter *c);
+//void UpdateDirection(OverworldCharacter *c);
 
 void TransferPlayer(OverworldCharacter *src, OverworldCharacter *dest);
 

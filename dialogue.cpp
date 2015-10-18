@@ -45,20 +45,20 @@ void CreateMessage(Message *msg, char* text, OverworldEnt *speaker){
 	msg->numFunctions = 0;
 //	_MessageStack = msg;
 
-	SetSpeaker(msg,speaker->chardata);
+	msg->SetSpeaker(speaker->chardata);
 }
 
-void SetSpeaker(Message *msg, CharData *speaker){
-	if(speaker != NULL){
-		msg->speaker = speaker;
-		msg->hasSpeaker = true;
+void Message::SetSpeaker(CharData *speakerData){
+	if(speakerData != NULL){
+		this->speaker = speakerData;
+		hasSpeaker = true;
 	}else{
-		msg->speaker = NULL;
-		msg->hasSpeaker = false;
+		this->speaker = NULL;
+		hasSpeaker = false;
 	}
 	for(int i = 0; i < 6; i++){
-		if(msg->next[i] != NULL){
-			SetSpeaker(msg->next[i], speaker);
+		if(next[i] != NULL){
+			next[i]->SetSpeaker(speakerData);
 		}	
 	}
 }
@@ -81,16 +81,17 @@ void CreateMonologue(Message *msg, OverworldEnt *speaker, int numMessages, ...){
 	va_end(args);
 }
 
-void SetPrompt(Message *msg, MenuType type, Vec2i *loc){
+void SetPrompt(Message *msg, MenuType type, int numitems, Vec2i *loc){
 	msg->hasPrompt = 1;
 	if(type == MENU_YES_NO)
 		msg->prompt = LoadMenuYesNo(loc);
 	else 
-		msg->prompt = LoadMenu(type,loc);
+		msg->prompt = LoadMenu(type,numitems,loc);
 	
 }
 
-void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*func3)(), void(*func4)(), void(*func5)(), void(*func6)()){
+void SetAnswers(Message *msg, int num,  void(*func1)(int val), void(*func2)(int val), 
+	void(*func3)(int val), void(*func4)(int val), void(*func5)(int val), void(*func6)(int val)){
 	msg->numFunctions = num;
 
 	msg->promptFunctions[0] = func1;	
@@ -103,45 +104,43 @@ void SetAnswers(Message *msg, int num,  void(*func1)(), void(*func2)(), void(*fu
 		msg->promptFunctions[i] = NULL;
 }
 
-void SetSpeakerbox(Textbox *sb, char *speaker){
-	
-	string speakerstr(speaker);
-	sb->box.w = sb->buf*4 + GetStringWidth(speakerstr);
-	SetText(speaker,sb,0);
-}
 
-void SetText(char *text, Textbox *t, bool scroll, bool prompt, Message *msg){
+void Textbox::SetText(char *text, bool scroll, bool prompt){
 	//sets a textbox up for display
 
-	int i;
+
 	bool done = false;
 
-	if(text == NULL) return;
-	string parsed_text = string(text); 
+	if(text != NULL){
+		string parsed_text = string(text); 
+		this->text = parsed_text;
+	}
 	//Longterm goal: add a function that will properly parse and rebuild the text (e.g. "[VAR-NAME]" will be replaced with a name) 
 	
 //	if(DEBUG)
 //		printf("%s \n",parsed_text.c_str());
-	t->curline = 0;
+	curline = 0;
 	if(scroll){
-		t->cursor = 0;
+		cursor = 0;
 	}
 	else{
-		t->cursor = -1;
+		cursor = -1;
 	}
-	t->text = parsed_text;
 
-	t->donewriting = false;
+	donewriting = false;
 }
 
-void SetTextEX(char *text, TextboxEX *t, bool scroll, bool prompt, Message *msg){
+void TextboxEX::SetTextEX(char *text,  bool scroll, bool prompt, struct Message_T *msg){
 	//sets a textbox up for display
-	SetText(text,t,scroll,prompt);
+	SetText(text,scroll,prompt);
 
 	if(msg != NULL){
-		t->msg = msg;
-		if(msg->hasSpeaker)
-			SetSpeakerbox(t->speakerbox,t->msg->speaker->name); 
+		this->msg = msg;
+		if(msg->hasSpeaker){
+			string speakerstr(msg->speaker->name);
+			speakerbox->box.w = speakerbox->buf*4 + GetStringWidth(speakerstr);
+			speakerbox->SetText(msg->speaker->name,0);
+		}
 	}
 }
 
@@ -203,28 +202,28 @@ char *CutString(char *text, int location, int length){
 
 int GetNextWordLength(std::string str){
 	int ct = 0;
-	while((ct < str.length())&&!isspace(str.at(ct))){
+	while((ct < (int)str.length())&&!isspace(str.at(ct))){
 		ct++;
 	}
 	return ct;
 }
 
 
-void SetMessagePrompts(Message *msg){
-	for (int i = 0; i < msg->numFunctions; i++){ 
-		msg->prompt->items[i]->action = msg->promptFunctions[i] ;
+void Message::SetMessagePrompts(){
+	for (int i = 0; i < numFunctions; i++){ 
+		prompt->items[i]->action = promptFunctions[i] ;
 	}
 }
 
-void SetMessageEndFunction(Message *msg, void (*func)()){
+void Message::SetMessageEndFunction(void (*func)()){
 	// not sure if this works yet
-	msg->atEnd = func;
+	atEnd = func;
 }
 
 void AdvanceText(int steps){
 	if(mainTextbox.msg->next[steps] != NULL){
 		mainTextbox.msg = mainTextbox.msg->next[steps];
-		SetTextEX(mainTextbox.msg->text,&mainTextbox,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
+		mainTextbox.SetTextEX(mainTextbox.msg->text,1,mainTextbox.msg->hasPrompt,mainTextbox.msg);
 	}
 }
 

@@ -6,7 +6,10 @@
 #include "sprites.h"
 #include "dialogue.h"
 
-
+typedef enum MoveType{
+	MoveType_Grid,
+	MoveType_Free,
+};
 
 typedef enum EntAnim{
 	ANIM_ENT_DEFAULT = 0,
@@ -23,7 +26,10 @@ public:
 };
 
 class OverworldEnt:public Entity{
+private:
+	Vec2f worldposition;	//current position within the world in pixel-sized units
 public:
+	Vec2i facing;
 	EntType type;
 	int used;
 	CharData *chardata;
@@ -33,7 +39,7 @@ public:
 	Vec2i tile_src;			//source tile when moving
 	Vec2i tile_dest;		//dest tile when moving 
 	Vec2f localposition;	//current position within the tile in pixel-sized units
-	Vec2f worldposition;	//current position within the world in pixel-sized units
+	MoveType moveType;
 	bool moving;
 	bool movex;
 	bool movey;
@@ -50,9 +56,14 @@ public:
 	bool talking;
 	bool passable;
 
+	//functions
 	virtual void Update();
 	virtual void Draw();
 	virtual void Talk(TextboxEX *t);
+	void UpdateWorldPosition();
+	Vec2f WorldPosition();
+	void AddToWorld(int xpos, int ypos);
+	void SetEntAnims(Sprite *spr);
 
 };
 
@@ -71,16 +82,14 @@ public:
 };
 
 
-InteractableObject *LoadSign(int xpos, int ypos);
-InteractableObject *LoadEgg(int xpos, int ypos);
-
 void InitEntList();
 OverworldEnt* NewOverworldEnt();
 void FreeOverworldEnt();
 void ClearEntList();
 
-void AddToWorld(OverworldEnt *e, int xpos, int ypos);
-void SetEntAnims(OverworldEnt *ent, Sprite *spr);
+/*** these functions are dumb and probably bad ***/
+InteractableObject *LoadSign(int xpos, int ypos);
+InteractableObject *LoadEgg(int xpos, int ypos);
 
 
 #endif

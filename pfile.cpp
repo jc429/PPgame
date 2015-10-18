@@ -2,7 +2,7 @@
 #include "dialogue.h"
 
 #include "player.h"
-#include "item.h"
+
 
 //Keeping all the rapidjson stuff together in case I decide to replace it
 
@@ -10,9 +10,9 @@
 #include <rapidjson\document.h>
 #include <rapidjson\filereadstream.h>
 
-using namespace rapidjson;
+//using namespace rapidjson;
 
-Document ParseFile(char* path);
+rapidjson::Document ParseFile(char* path);
 Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse);
 Sprite *ParseSprite(const rapidjson::Value& sprite_parse);
 Animation *ParseAnimation(const rapidjson::Value& anim_parse);
@@ -25,9 +25,9 @@ void What(){ //sample rapidjson stuff
 	
 	FILE* pFile = fopen("testfiles/test.json", "rb");
 	char buffer[65536];
-	FileReadStream is(pFile, buffer, sizeof(buffer));
-	Document document;
-	document.ParseStream<0, UTF8<>, FileReadStream>(is);
+	rapidjson::FileReadStream is(pFile, buffer, sizeof(buffer));
+	rapidjson::Document document;
+	document.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(is);
 
 
     assert(document.IsObject());
@@ -60,9 +60,9 @@ inline rapidjson::Document ParseFile(char* path){
 	//sadly doesnt work?
 	FILE* pFile = fopen(path, "rb");
 	char buffer[65536];
-	FileReadStream is(pFile, buffer, sizeof(buffer));
-	Document document;
-	document.ParseStream<0, UTF8<>, FileReadStream>(is);
+	rapidjson::FileReadStream is(pFile, buffer, sizeof(buffer));
+	rapidjson::Document document;
+	document.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(is);
 	assert(document.IsObject());
 	fclose(pFile);
 	return document;
@@ -74,9 +74,9 @@ Message *OpenDialogue(char *path){ // "testfiles/test.json"
 	/////
 	FILE* pFile = fopen(path, "rb");
 	char buffer[65536];
-	FileReadStream is(pFile, buffer, sizeof(buffer));
-	Document dialogue;
-	dialogue.ParseStream<0, UTF8<>, FileReadStream>(is);
+	rapidjson::FileReadStream is(pFile, buffer, sizeof(buffer));
+	rapidjson::Document dialogue;
+	dialogue.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(is);
 	assert(dialogue.IsObject());
 	fclose(pFile);
 
@@ -89,9 +89,9 @@ Message *OpenDialogue(char *path){ // "testfiles/test.json"
 NPC **LoadEntitiesCFG(char *path){
 	FILE* pFile = fopen(path, "rb");
 	char buffer[65536];
-	FileReadStream is(pFile, buffer, sizeof(buffer));
-	Document doc;
-	doc.ParseStream<0, UTF8<>, FileReadStream>(is);
+	rapidjson::FileReadStream is(pFile, buffer, sizeof(buffer));
+	rapidjson::Document doc;
+	doc.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(is);
 	assert(doc.IsObject());
 	fclose(pFile);
 
@@ -127,7 +127,7 @@ NPC **LoadEntitiesCFG(char *path){
 				copy_string(sprpath,npc_parse["sprite"].GetString());
 				Sprite *spr = GetSprite(sprpath);
 			//	printf("%i %i %i \n",spr->w,spr->h,spr->framesperline);
-				SetEntAnims(npclist[i],spr);
+				npclist[i]->SetEntAnims(spr);
 			}
 
 			/* NPC dialogue can be stored within the NPC's structure or loaded from a separate json file*/
@@ -254,10 +254,10 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 		if(dialogue_parse.HasMember("prompt")){
 			char options[6][16];
 			int optcount = 0;
-			const Value& prompt = dialogue_parse["prompt"];
+			const rapidjson::Value& prompt = dialogue_parse["prompt"];
 			assert(prompt.IsObject());
 			if(prompt.HasMember("option1")){
-				const Value& option1 = prompt["option1"];
+				const rapidjson::Value& option1 = prompt["option1"];
 				assert(option1.IsObject());
 				if(option1.HasMember("answer")){
 					copy_string(options[0],option1["answer"].GetString());
@@ -266,7 +266,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 				optcount++;
 			}
 			if(prompt.HasMember("option2")){
-				const Value& option2 = prompt["option2"];
+				const rapidjson::Value& option2 = prompt["option2"];
 				assert(option2.IsObject());
 				if(option2.HasMember("answer")){
 					copy_string(options[1],option2["answer"].GetString());
@@ -275,7 +275,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 				optcount++;
 			}
 			if(prompt.HasMember("option3")){
-				const Value& option3 = prompt["option3"];
+				const rapidjson::Value& option3 = prompt["option3"];
 				assert(option3.IsObject());
 				if(option3.HasMember("answer")){
 					copy_string(options[2],option3["answer"].GetString());
@@ -284,7 +284,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 				optcount++;
 			}
 			if(prompt.HasMember("option4")){
-				const Value& option4 = prompt["option4"];
+				const rapidjson::Value& option4 = prompt["option4"];
 				assert(option4.IsObject());
 				if(option4.HasMember("answer")){
 					copy_string(options[3],option4["answer"].GetString());
@@ -293,7 +293,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 				optcount++;
 			}
 			if(prompt.HasMember("option5")){
-				const Value& option5 = prompt["option5"];
+				const rapidjson::Value& option5 = prompt["option5"];
 				assert(option5.IsObject());
 				if(option5.HasMember("answer")){
 					copy_string(options[4],option5["answer"].GetString());
@@ -302,7 +302,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 				optcount++;
 			}
 			if(prompt.HasMember("option6")){
-				const Value& option6 = prompt["option6"];
+				const rapidjson::Value& option6 = prompt["option6"];
 				assert(option6.IsObject());
 				if(option6.HasMember("answer")){
 					copy_string(options[5],option6["answer"].GetString());
@@ -318,7 +318,7 @@ Message *ParseDialogueCFG(Message *msg, const rapidjson::Value& dialogue_parse){
 	}
 	return msg;
 }
-
+/*
 void LoadItemCFG(char *path){
 	FILE* pFile = fopen(path, "rb");
 	char buffer[65536];
@@ -387,7 +387,7 @@ void LoadItemCFG(char *path){
 	}
 
 }
-
+*/
 
 Sprite *ParseSprite(const rapidjson::Value& sprite_parse){
 	char path[40];
@@ -416,7 +416,8 @@ Sprite *ParseSprite(const rapidjson::Value& sprite_parse){
 Animation *ParseAnimation(const rapidjson::Value& anim_parse){
 	Sprite *spr;
 	char path[40];
-	int startf,seed,length,play,loop,delay;
+	int startf,seed,length,delay;
+	bool play,loop;
 
 	if(anim_parse.HasMember("sprite")){
 		copy_string(path,anim_parse["sprite"].GetString());	
@@ -434,12 +435,12 @@ Animation *ParseAnimation(const rapidjson::Value& anim_parse){
 		length = anim_parse["length"].GetInt();
 	}
 	if(anim_parse.HasMember("play")){
-		play = anim_parse["play"].GetInt();
+		play = anim_parse["play"].GetBool();
 	}else
 		play = 1;
 
 	if(anim_parse.HasMember("loop")){
-		loop = anim_parse["loop"].GetInt();
+		loop = anim_parse["loop"].GetBool();
 	}else
 		loop = 1;
 

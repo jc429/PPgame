@@ -1,67 +1,155 @@
 
 #include "dialogue.h"
 #include "graphics.h"
-#include "inventory.h"
+#include "gamestate.h"
 
 extern Camera uiCamera;
 extern InputNode *_Inputs;
 Menu *_CurrentMenu;
-vector<struct Menu_T*> _MenuStack;
-vector<struct Menu_T*> *curMenuStack = NULL;
+//vector<struct Menu_T*> _OverworldMenuStack;
+//vector<struct Menu_T*> *curMenuStack = NULL;
 //extern vector<struct Menu_T*> _CombatMenuStack;
 
-MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
-	MenuItem *m = new MenuItem;
-	m->bounds.x = box.x;
-	m->bounds.y = box.y;
-	m->bounds.w = box.w;
-	m->bounds.h = box.h;
-	m->bgsprite = spr;
-	m->tbox = t;
-/*	m->tbox->box.y -= 6;*/
-	SetText(text,m->tbox,0);
-	return m;
+
+MenuItem *AddMenuItem(Menu *m, char *text, void (*action)(int val)){
+	SDL_Rect itemRect;
+	SetRect(itemRect,0,0,30,15);
+	if(m->numItems > 0)
+		itemRect.y = m->items.back()->bounds.y + 10;	//10 is default spacing 
+	if(!m->scrolling)
+		m->location.h += 10;
+
+	Textbox *tbox = new Textbox();
+	LoadTextbox(tbox,1,itemRect,3);
+	MenuItem *mi = LoadMenuItem(itemRect,NULL,tbox,text);
+	if(action != NULL)
+		SetMenuItemAction(mi,action,text);
+	else
+		SetMenuItemAction(mi,CancelMenu);
+	
+	m->items.push_back(mi);
+	m->numItems++;
+	return mi;
 }
 
-void FreeMenuItem(MenuItem *m){
-	FreeSprite(m->bgsprite);
+MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text){
+	MenuItem *mi = new MenuItem;
+	mi->bounds.x = box.x;
+	mi->bounds.y = box.y;
+	mi->bounds.w = box.w;
+	mi->bounds.h = box.h;
+	mi->bgsprite = spr;
+	mi->tbox = t;
+	mi->tbox->box = mi->bounds;
+/*	m->tbox->box.y -= 6;*/
+	mi->tbox->SetText(text,0);
+
+	return mi;
+}
+
+void FreeMenuItem(MenuItem *mi){
+	FreeSprite(mi->bgsprite);
 //	delete(m->text);
 //	delete(m);
 }
 
-void SetMenuItemAction(MenuItem *m, void (*func)(), char* name){
-	m->action = func;
-	if(name){
-		SetText(name,m->tbox,0);
+void SetMenuItemAction(MenuItem *mi, void (*func)(int val), char* text){
+	mi->action = func;
+	if(text){
+		mi->tbox->SetText(text,0);
 	}
 }
 
-Menu *LoadMenu(MenuType mtype,Vec2i *loc, CursorType ct, AnchorPoint a, int padding){	
+Menu *LoadMenu(MenuType mtype, int numitems,Vec2i *loc, CursorType ct, AnchorPoint a, int padding){	
 	//Loads a menu, with special conditions based on type
 
-	Textbox *textboxes[8];
-	for(int i = 0; i < 8; i++){
-		textboxes[i] = NULL;
-	}
-
 	SDL_Rect itemRect;
-	Sprite *cursorSpr = NULL;
+	Textbox *tbox;
 
 	Menu *m = new Menu();
 
+	m->type = mtype;
+	
+	m->item_offset_y = 0;
+	m->parent = NULL;
+	m->active = false;
 	m->cursor.location = 0;
 	if(loc != NULL){
 		SetRect(m->location,*loc);
-	}
+		m->location.w = 0;
+		m->location.h = 5;
+	}else
+		SetRect(m->location,0,0,0,5);
 
 	m->anchor = a;
 	m->padding = padding;
 	
 	m->panel = LoadSprite(SPATH_PANEL_DEF,2,2,3);
-	m->type = mtype;
+	
+	LoadCursor(m,ct);
+	m->itemsPerRow = 1;
+	m->numItems = numitems;
+
+	m->scrolling = false;
+	SetRect(itemRect,0,0,30,15);
+	//m->location = itemRect;
+	m->item_offset_y = 0;
+	switch(mtype){
+	case MENU_SCROLLING:
+		//if scrolling, numitems describes the number of items displayed on screen at one time 
+		m->numItems = 0;
+		m->location.h += 10*(numitems-1);
+
+		m->scrolling = true;
+		m->scrollspeed = 1;
+		m->cursor_buf_top = 0;
+		m->cursor_buf_bottom = 0;
+		break;
+
+	case MENU_YES_NO:
+		if(loc == NULL){
+			SetRect(m->location,125,58);
+		}
+		m->numItems = 2;
+		m->itemsPerRow = 1;
+
+		SetRect(itemRect,0,0,30,15);
+		m->location = itemRect;
+
+		tbox = new Textbox();
+		LoadTextbox(tbox,1,itemRect,3);
+		m->items.push_back(LoadMenuItem(itemRect,NULL,tbox,"Yes"));
+
+		itemRect.y += 10;
+		m->location.h += 10;
+
+		tbox = new Textbox();
+		LoadTextbox(tbox,1,itemRect);
+		m->items.push_back(LoadMenuItem(itemRect,NULL,tbox,"No"));
+		return m;
+		break;
+	
+	default:
+		break;
+	}
+
+	for(int i = 0; i < m->numItems; i++){
+		tbox = new Textbox();
+		LoadTextbox(tbox,1,itemRect,3);
+		m->items.push_back(LoadMenuItem(itemRect,NULL,tbox));
+		if(i + 1 < m->numItems){
+			itemRect.y += 10;
+			m->location.h += 10;
+		}
+	}
+	return m;
+}
+
+void LoadCursor(Menu *m, CursorType ct){
+	Sprite *cursorSpr = NULL;
+	int cframes;
 	m->cursor.type = ct;
 	
-	int cframes;
 	switch(ct){
 	case CURSTYPE_ARROW_LEFT:
 	case CURSTYPE_ARROW_TOP:
@@ -84,56 +172,6 @@ Menu *LoadMenu(MenuType mtype,Vec2i *loc, CursorType ct, AnchorPoint a, int padd
 		}
 		break;
 	}
-	switch(mtype){
-	case MENU_PAUSE:
-		m->location.x = 10;
-		m->location.y = 10;
-		m->numItems = 6;
-		m->itemsPerRow = 1;
-	//	SetRect(itemRect,m->location.x,m->location.y,30,16);
-		SetRect(itemRect,0,0,30,16);
-		m->location = itemRect;
-		
-
-		for(int i = 0; i < m->numItems; i++){
-			textboxes[i] = new Textbox();
-			LoadTextbox(textboxes[i],1,itemRect,3);
-			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
-			if(i + 1 < m->numItems){
-				itemRect.y += 10;
-				m->location.h += 10;
-			}
-		}
-
-
-		break;
-	case MENU_YES_NO:
-		if(loc == NULL){
-			SetRect(m->location,125,58);
-		}
-		m->numItems = 2;
-		m->itemsPerRow = 1;
-
-		SetRect(itemRect,0,0,30,16);
-		m->location = itemRect;
-
-		textboxes[0] = new Textbox();
-		LoadTextbox(textboxes[0],1,itemRect,3);
-		m->items[0] = LoadMenuItem(itemRect,NULL,textboxes[0],"Yes");
-
-		itemRect.y += 18;
-		m->location.h += 18;
-
-		textboxes[1] = new Textbox();
-		LoadTextbox(textboxes[1],1,itemRect);
-		m->items[1] = LoadMenuItem(itemRect,NULL,textboxes[1],"No");
-		break;
-	
-	default:
-		break;
-	}
-	
-	return m;
 }
 
 void FreeMenu(Menu *m){
@@ -169,8 +207,8 @@ void UpdateMenu(Menu *m){
 			m->cursor.location += m->itemsPerRow;
 	}
 	if(InputPressed(PPINPUT_A)){
-		if(m->items[m->cursor.location]->action != NULL)
-			m->items[m->cursor.location]->action();
+		if(m->items.at(m->cursor.location)->action != NULL)
+			m->items.at(m->cursor.location)->action(m->cursor.location);
 	}
 }
 
@@ -287,6 +325,14 @@ void ClearMenus(){
 
 }
 
+
+void Menu::Draw(){
+	if(this->scrolling)
+		DrawScrollingMenu(this);
+	else
+		DrawMenu(this);
+};
+
 void DrawMenu(Menu *m){
 	if(m==NULL) return;
 	Vec2i loc;
@@ -294,55 +340,126 @@ void DrawMenu(Menu *m){
 	loc.y = m->location.y;
 	DrawMenuPanel(m);
 
+/*	m->location.x += RandomIntInclusive(-1,1);
+	m->location.y += RandomIntInclusive(-1,1);*/
+
 	for(int i = 0; i < m->numItems; i++){
-		loc.x = m->location.x + m->items[i]->bounds.x;
-		loc.y = m->location.y + m->items[i]->bounds.y;
-		DrawSprite(m->items[i]->bgsprite,0,loc,&uiCamera);
+		loc.x = m->location.x + m->items.at(i)->bounds.x;
+		loc.y = m->location.y + m->items.at(i)->bounds.y;
+		DrawSprite(m->items.at(i)->bgsprite,0,loc,&uiCamera);
 
 		
-		m->items[i]->tbox->box.x = loc.x;
-		m->items[i]->tbox->box.y = loc.y;
-		DrawTextbox(m->items[i]->tbox);
+		m->items.at(i)->tbox->box.x = loc.x;
+		m->items.at(i)->tbox->box.y = loc.y;
+		m->items.at(i)->tbox->Draw(0,-1*m->item_offset_y);
 //		DrawRect(m->items[i]->tbox->box,&uiCamera);
 	}
+	DrawMenuCursor(m);
+	
+}
 
+void DrawScrollingMenu(Menu *m){
+	if(m==NULL) return;
+	Vec2i loc;
+	loc.x = m->location.x;
+	loc.y = m->location.y;
+	DrawMenuPanel(m);
+
+	//first make sure the cursor is still on screen
+	if((m->items.at(m->cursor.location)->bounds.y + m->items.at(m->cursor.location)->bounds.h) 
+		> (m->location.h + m->item_offset_y)){
+			m->item_offset_y++;
+		//	printf("%i \n",m->item_offset_y);
+	}
+	if(m->items.at(m->cursor.location)->bounds.y < (m->item_offset_y)){
+			m->item_offset_y--;
+		//	printf("%i \n",m->item_offset_y);
+	}
+	
+	for(int i = 0; i < (int)m->items.size(); i++){
+		if(((m->items.at(i)->bounds.y + m->items.at(i)->bounds.h) <= (m->location.h + m->item_offset_y))
+			&&(m->items.at(i)->bounds.y >= (m->item_offset_y))){
+			loc.x = m->location.x + m->items.at(i)->bounds.x;
+			loc.y = m->location.y + m->items.at(i)->bounds.y - m->item_offset_y;
+			DrawSprite(m->items.at(i)->bgsprite,0,loc,&uiCamera);
+			m->items.at(i)->tbox->box.x = loc.x;
+			m->items.at(i)->tbox->box.y = loc.y;
+			m->items.at(i)->tbox->Draw(0,0);
+		}
+
+	/*	
+		m->items.at(i)->tbox->box.x = loc.x;
+		m->items.at(i)->tbox->box.y = loc.y;*/
+//		DrawRect(m->items.at(i)->bounds,&uiCamera);
+	}
+
+	DrawScrollingMenuCursor(m);
+}
+
+
+void DrawMenuPanel(Menu *m){
+	SDL_Rect rect = m->location;
+//	Vec2i loc = m->GetPosition();
+	DrawPanel(m->location,m->panel);
+}
+
+void DrawMenuCursor(Menu *m){
+	Vec2i loc;
 	switch(m->cursor.type){
 	case CURSTYPE_ARROW_LEFT:
-		loc.x = m->location.x + m->items[m->cursor.location]->bounds.x - 6; 
-		loc.y = m->location.y + m->items[m->cursor.location]->bounds.y + m->items[m->cursor.location]->bounds.h*0.5;
+		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x - 6; 
+		loc.y = m->location.y + m->items.at(m->cursor.location)->bounds.y + m->items.at(m->cursor.location)->bounds.h*0.5;
 		DrawAnimation(m->cursor.anim[DIR_RIGHT],loc,&uiCamera);
 		break;
 	case CURSTYPE_RECT:
 	default:
-		loc.x = m->location.x + m->items[m->cursor.location]->bounds.x; 
-		loc.y = m->location.y + m->items[m->cursor.location]->bounds.y; 
+		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x; 
+		loc.y = m->location.y + m->items.at(m->cursor.location)->bounds.y; 
 		DrawAnimation(m->cursor.anim[0],loc,&uiCamera);		//upper left corner
-		loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;
+		loc.x += m->items.at(m->cursor.location)->bounds.w - m->cursor.anim[0]->sprite->w;
 		DrawAnimation(m->cursor.anim[1],loc,&uiCamera);		//upper right corner
-		loc.x = m->location.x + m->items[m->cursor.location]->bounds.x;
-		loc.y += m->items[m->cursor.location]->bounds.h - m->cursor.anim[0]->sprite->h;
+		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x;
+		loc.y += m->items.at(m->cursor.location)->bounds.h - m->cursor.anim[0]->sprite->h;
 		DrawAnimation(m->cursor.anim[2],loc,&uiCamera);		//lower left corner
-		loc.x += m->items[m->cursor.location]->bounds.w - m->cursor.anim[0]->sprite->w;	
+		loc.x += m->items.at(m->cursor.location)->bounds.w - m->cursor.anim[0]->sprite->w;	
+		DrawAnimation(m->cursor.anim[3],loc,&uiCamera);		//lower right corner
+		break;
+	}
+}
+void DrawScrollingMenuCursor(Menu *m){
+	Vec2i loc;
+	switch(m->cursor.type){
+	case CURSTYPE_ARROW_LEFT:
+		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x - 6; 
+		loc.y = m->location.y - m->item_offset_y + m->items.at(m->cursor.location)->bounds.y + m->items.at(m->cursor.location)->bounds.h*0.5;
+		DrawAnimation(m->cursor.anim[DIR_RIGHT],loc,&uiCamera);
+		break;
+	case CURSTYPE_RECT:
+	default:
+		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x; 
+		loc.y = m->location.y + m->items.at(m->cursor.location)->bounds.y - m->item_offset_y; 
+		DrawAnimation(m->cursor.anim[0],loc,&uiCamera);		//upper left corner
+		loc.x += m->items.at(m->cursor.location)->bounds.w - m->cursor.anim[0]->sprite->w;
+		DrawAnimation(m->cursor.anim[1],loc,&uiCamera);		//upper right corner
+		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x;
+		loc.y += m->items.at(m->cursor.location)->bounds.h - m->cursor.anim[0]->sprite->h;
+		DrawAnimation(m->cursor.anim[2],loc,&uiCamera);		//lower left corner
+		loc.x += m->items.at(m->cursor.location)->bounds.w - m->cursor.anim[0]->sprite->w;	
 		DrawAnimation(m->cursor.anim[3],loc,&uiCamera);		//lower right corner
 		break;
 	}
 }
 
-void DrawMenuPanel(Menu *m){
 
-	DrawPanel(m->location,m->panel);
-}
-
-
-Menu *LoadMenuYesNo(Vec2i *loc, char *yes, char *no, void (*YesFunc)(),void (*NoFunc)()){
+Menu *LoadMenuYesNo(Vec2i *loc, char *yes, char *no, void (*YesFunc)(int val),void (*NoFunc)(int val)){
 	//_InMenu = true;
-	Menu *m = LoadMenu(MENU_YES_NO,loc);
-	SetMenuItemAction(m->items[0],SelectAnswer1,yes);
-	SetMenuItemAction(m->items[1],SelectAnswer2,no);
+	Menu *m = LoadMenu(MENU_YES_NO,2,loc);
+	SetMenuItemAction(m->items.at(0),SelectAnswer,yes);
+	SetMenuItemAction(m->items.at(1),SelectAnswer,no);
 	if(*YesFunc != NULL)
-		SetMenuItemAction(m->items[0],YesFunc);
+		SetMenuItemAction(m->items.at(0),YesFunc);
 	if(*NoFunc != NULL)
-		SetMenuItemAction(m->items[1],NoFunc);
+		SetMenuItemAction(m->items.at(1),NoFunc);
 	return m;
 }
 
@@ -357,24 +474,9 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	SDL_Rect itemRect;
 	Vec2i loc;
 	SetVec2i(loc,92, 72 - (numItems * 10));
-	switch(numItems){
-	case 6:
-		m = LoadMenu(MENU_CUSTOM_6,&loc);
-		break;
-	case 5:
-		m = LoadMenu(MENU_CUSTOM_5,&loc);
-		break;
-	case 4:
-		m = LoadMenu(MENU_CUSTOM_4,&loc);
-		break;
-	case 3:
-		m = LoadMenu(MENU_CUSTOM_3,&loc);
-		break;
-	default:
-		m = LoadMenu(MENU_CUSTOM_2,&loc);
-		break;
-	}
 
+	m = LoadMenu(MENU_CUSTOM,numItems,&loc);
+	
 	SetRect(m->location,loc.x,loc.y,60,16);
 	SetRect(itemRect,0,0,60,16);
 	
@@ -386,9 +488,9 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 		LoadTextbox(textboxes[i],1,itemRect,3);
 
 		if(itemNames != NULL)
-			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
+			m->items.at(i) = LoadMenuItem(itemRect,NULL,textboxes[i],itemNames[i]);
 		else
-			m->items[i] = LoadMenuItem(itemRect,NULL,textboxes[i]);
+			m->items.at(i) = LoadMenuItem(itemRect,NULL,textboxes[i]);
 
 		if(i + 1 < numItems){
 			itemRect.y += 10;
@@ -399,47 +501,23 @@ Menu *LoadCustomMenu(int numItems, char itemNames[6][16]){
 	m->itemsPerRow = 1;
 	
 	if(itemNames != NULL){
-		switch(numItems){
-		case 6:
-			SetMenuItemAction(m->items[5],SelectAnswer6,itemNames[5]);
-		case 5:
-			SetMenuItemAction(m->items[4],SelectAnswer5,itemNames[4]);
-		case 4:
-			SetMenuItemAction(m->items[3],SelectAnswer4,itemNames[3]);
-		case 3:
-			SetMenuItemAction(m->items[2],SelectAnswer3,itemNames[2]);
-		case 2:
-			SetMenuItemAction(m->items[1],SelectAnswer2,itemNames[1]);
-		default:
-			SetMenuItemAction(m->items[0],SelectAnswer1,itemNames[0]);
-			break;
+		for(int i = 0; i < numItems; i++){
+			SetMenuItemAction(m->items.at(i),SelectAnswer,itemNames[i]);
 		}
 	}
 	else{
-		switch(numItems){
-		case 6:
-			SetMenuItemAction(m->items[5],SelectAnswer6);
-		case 5:
-			SetMenuItemAction(m->items[4],SelectAnswer5);
-		case 4:
-			SetMenuItemAction(m->items[3],SelectAnswer4);
-		case 3:
-			SetMenuItemAction(m->items[2],SelectAnswer3);
-		case 2:
-			SetMenuItemAction(m->items[1],SelectAnswer2);
-		default:
-			SetMenuItemAction(m->items[0],SelectAnswer1);
-			break;
+		for(int i = 0; i < numItems; i++){
+			SetMenuItemAction(m->items.at(i),SelectAnswer);
 		}
 	}
 	return m;
 }
 
-void OpenMenu(Menu *m,vector<struct Menu_T*> *stack){
+void OpenMenu(Menu *m,vector<Menu*> *stack){
 	int maxwidth = 0;	//the width of the widest item in the menu
 	for(int i = 0; i < m->numItems; i++){
-		m->items[i]->bounds.w = (2*m->items[i]->tbox->buf) + GetStringWidth(m->items[i]->tbox->text);
-		maxwidth = Max(maxwidth,m->items[i]->bounds.w);
+		m->items.at(i)->bounds.w = (2*m->items.at(i)->tbox->buf) + GetStringWidth(m->items.at(i)->tbox->text);
+		maxwidth = Max(maxwidth,m->items.at(i)->bounds.w);
 	}
 	m->location.w = maxwidth;
 	m->location = AnchorRect(m->location,m->anchor,m->padding);
@@ -450,25 +528,21 @@ void OpenMenu(Menu *m,vector<struct Menu_T*> *stack){
 
 	m->active = true;
 	m->cursor.location = 0;
+	m->item_offset_y = 0;
 	if(stack != NULL){
-		curMenuStack = stack;
+		stack->push_back(m);
 	}else
-		curMenuStack = &_MenuStack;
+		CurrentScene()->MenuStack.push_back(m);
 		
-	curMenuStack->push_back(m);
 }
 
 
 
-void CancelMenu(){
-	if(GetCurrentState() == OVERWORLD)
-		curMenuStack = &_MenuStack;
-	
-	//if(GetCurrentState() == COMBAT)
-	//	return;//fix it so it works in combat
-	curMenuStack->back()->active = false;
+void CancelMenu(int val){
 
-	curMenuStack->pop_back();
+	CurrentScene()->MenuStack.back()->active = false;
+
+	CurrentScene()->MenuStack.pop_back();
 }
 
 void AdvanceAndCancel(int steps){
@@ -476,21 +550,26 @@ void AdvanceAndCancel(int steps){
 	CancelMenu();
 }
 
-void SelectAnswer1(){
+void SelectAnswer(int answer){
+	//maybe fill this out better
+	AdvanceAndCancel(answer);
+}
+
+void SelectAnswer1(int val){
 	AdvanceAndCancel(0);
 }
-void SelectAnswer2(){
+void SelectAnswer2(int val){
 	AdvanceAndCancel(1);
 }
-void SelectAnswer3(){
+void SelectAnswer3(int val){
 	AdvanceAndCancel(2);
 }
-void SelectAnswer4(){
+void SelectAnswer4(int val){
 	AdvanceAndCancel(3);
 }
-void SelectAnswer5(){
+void SelectAnswer5(int val){
 	AdvanceAndCancel(4);
 }
-void SelectAnswer6(){
+void SelectAnswer6(int val){
 	AdvanceAndCancel(5);
 }

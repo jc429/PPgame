@@ -19,10 +19,17 @@ void OverworldEnt::Draw(){
 void OverworldEnt::Talk(TextboxEX *t){
 	return;
 }
+void OverworldEnt::UpdateWorldPosition(){
+	worldposition.x = tile.x*TILE_W+localposition.x;
+	worldposition.y = tile.y*TILE_H+localposition.y;
+}
+Vec2f OverworldEnt::WorldPosition(){
+	return (this->worldposition);
+}
 
-void AddToWorld(OverworldEnt *e, int xpos, int ypos){
+void OverworldEnt::AddToWorld(int xpos, int ypos){
 	if(World[xpos][ypos] == NULL) return;
-	World[xpos][ypos]->contents = e;
+	World[xpos][ypos]->contents = this;
 	World[xpos][ypos]->free = false;
 }
 
@@ -33,16 +40,13 @@ InteractableObject::InteractableObject(int xpos, int ypos){
 
 	//name = NULL;
 
-
-	
-
 	//Position
 	tile.x = xpos;
 	tile.y = ypos;
 	localposition.x = TILE_W>>1;
 	localposition.y = TILE_H>>1;
-	worldposition.x = tile.x*TILE_W+localposition.x;
-	worldposition.y = tile.y*TILE_H+localposition.y;
+	UpdateWorldPosition();
+	
 
 	//Graphics
 	numAnims = 0;
@@ -52,13 +56,11 @@ InteractableObject::InteractableObject(int xpos, int ypos){
 		for(int j = 0; j < NUM_ANIM_DIRS; j++)
 			animlist[i][j]=NULL;
 	//////////////////////////////////////////////////////////////////
-	
-
 	//Dialogue and misc
 	type = Ent_IntObj;
 
 	//get us started on a tile
-	AddToWorld(this, xpos, ypos);
+	AddToWorld(xpos, ypos);
 	
 //	if(DEBUG)
 	//	fprintf(stdout,"Starting on %i %i \n",localposition.x,localposition.y);
@@ -110,11 +112,11 @@ void InteractableObject::Update(){
 void InteractableObject::Draw(){
 	Vec2i heightoffset;
 	SetVec2i(heightoffset,0,World[tile.x][tile.y]->structure->height<<2);
-	DrawAnimation(animlist[animation][direction],worldposition - heightoffset,&mainCamera);
+	DrawAnimation(animlist[animation][direction],WorldPosition() - heightoffset,&mainCamera);
 }
 
 void InteractableObject::Talk(TextboxEX *t){
-	SetTextEX(flavortext->text,t,1,flavortext->hasPrompt,flavortext);
+	t->SetTextEX(flavortext->text,1,flavortext->hasPrompt,flavortext);
 }
 
 
@@ -159,22 +161,22 @@ void ClearEntList(){
 	numEnts = 0;
 }
 
-void SetEntAnims(OverworldEnt *ent, Sprite *s){
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_N] = LoadAnimation(s,5,5,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_W] = LoadAnimation(s,10,10,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,15,15,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_SW] = LoadAnimation(s,20,20,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,25,25,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_NW] = LoadAnimation(s,30,30,1);
-	ent->animlist[ANIM_CHAR_IDLE][ANIM_DIR_NE] = LoadAnimation(s,35,35,1);
+void OverworldEnt::SetEntAnims(Sprite *s){
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_N] = LoadAnimation(s,5,5,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_W] = LoadAnimation(s,10,10,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_E] = LoadAnimation(s,15,15,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SW] = LoadAnimation(s,20,20,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_SE] = LoadAnimation(s,25,25,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_NW] = LoadAnimation(s,30,30,1);
+	animlist[ANIM_CHAR_IDLE][ANIM_DIR_NE] = LoadAnimation(s,35,35,1);
 
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_S] = LoadAnimation(s,0,0,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_N] = LoadAnimation(s,5,5,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_W] = LoadAnimation(s,10,10,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_E] = LoadAnimation(s,15,15,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_SW] = LoadAnimation(s,20,20,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_SE] = LoadAnimation(s,25,25,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_NW] = LoadAnimation(s,30,30,4);
-	ent->animlist[ANIM_CHAR_WALK][ANIM_DIR_NE] = LoadAnimation(s,35,35,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_S] = LoadAnimation(s,0,0,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_N] = LoadAnimation(s,5,5,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_W] = LoadAnimation(s,10,10,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_E] = LoadAnimation(s,15,15,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_SW] = LoadAnimation(s,20,20,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_SE] = LoadAnimation(s,25,25,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_NW] = LoadAnimation(s,30,30,4);
+	animlist[ANIM_CHAR_WALK][ANIM_DIR_NE] = LoadAnimation(s,35,35,4);
 }

@@ -39,15 +39,16 @@
 
 void InitWindow();
 
-void RenderCurrentFrame();
-void NextFrame();
-void FrameDelay(Uint32 delay);
-
+namespace Graphics{
+	void RenderCurrentFrame();
+	void NextFrame();
+	void FrameDelay(Uint32 delay);
+	//void InitTG();
+	//void TestGraphics(int x);
+}
 void DrawRect(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
 void DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
 
-void InitTG();
-void TestGraphics(int x);
 
 
 #endif

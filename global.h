@@ -7,24 +7,28 @@
 
 
 typedef enum{
-	MAIN_MENU,
-	OPTIONS,
-	OVERWORLD,
-	INVENTORY,
-	PARTY,
-	COMBAT,		
-	CUTSCENE,				
-	DIALOGUE_OVERLAY,	//Maybe unnecessary?
-	DIALOGUE_FULL,
-	DATE			
+	GS_MAIN_MENU,
+	GS_OPTIONS,
+	GS_OVERWORLD,
+	GS_INVENTORY,
+	GS_SAVE_LOAD,
+	GS_STATUS,
+
+	GS_CUTSCENE,				
+	GS_DIALOGUE_OVERLAY,	//Maybe unnecessary?
+	GS_DIALOGUE_FULL			
 }GameState;
+
+namespace GlobalSettings{
+	
+}
+
 
 //Any globally accessible functions get declared here
 /*
 void EnterCombat();
 void ExitCombat();
 bool InCombat();*/
-GameState GetCurrentState();
 
 //void FightBoss();
 

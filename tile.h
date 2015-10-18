@@ -25,7 +25,7 @@ typedef struct Tile_Structure_T{
 typedef struct Tile_T{
 	TileStructure *structure;
 //stuff that is unique to an individual tile
-	Vec2i position;			//world position
+	Vec2i position;			//world position (measured from top left corner)
 
 //changing stuff	
 	bool free;				//is the tile unoccupied?

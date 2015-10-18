@@ -2,24 +2,22 @@
 #define _MENU_
 
 #include "ptext.h"
+#include "ui.h"
 #include <vector>
 using  std::vector;
 
 
 
 typedef enum MenuType{
-	MENU_EMPTY = 0,
-	MENU_PAUSE = 1,
-	MENU_BATTLE = 2,
-	MENU_YES_NO = 3,
-	
-	MENU_CUSTOM_2,
-	MENU_CUSTOM_3,
-	MENU_CUSTOM_4,
-	MENU_CUSTOM_5,
-	MENU_CUSTOM_6,
+	MENU_EMPTY = 0,		//a blank menu. probably never used.
 
-	MENU_DEBUG = -1
+	MENU_YES_NO,		//a simple yes/no menu. occurs frequently enough that it probably deserves its own "express" build.
+	
+	MENU_CUSTOM,		//the most common menu type (probably), not much is preset on one of these
+
+	MENU_SCROLLING,		//scrolls through a large number of items rather than trying to cram them all in the panel at once
+
+	MENU_DEBUG = -1		//debug menus will only exist in debug mode? maybe? idk
 };
 
 typedef struct MenuItem_T{
@@ -29,7 +27,7 @@ typedef struct MenuItem_T{
 
 	bool highlighted;
 	bool selected;
-	void (*action)();
+	void (*action)(int val);
 }MenuItem;
 
 enum CursorType{
@@ -73,12 +71,21 @@ typedef struct MenuCursor_T{
 	Animation *anim_inactive[4];
 }MenuCursor;
 
-typedef struct Menu_T{
+typedef struct Menu:public Panel{
+	/******scrolling menu things******/
+	bool scrolling;
+	int item_offset_y;			
+	int scrollspeed;
+	int cursor_buf_top;		//how far from the top the cursor should rest when scrolling up (in pixels)
+	int cursor_buf_bottom;	//how far from the bottom the cursor should rest when scrolling down (in pixels)
+	/*********************************/
+
+
 	bool used;
 
 	bool active;
 
-	Sprite *panel;
+
 
 	MenuType type;
 	SDL_Rect location;
@@ -87,45 +94,57 @@ typedef struct Menu_T{
 
 	int numItems;				//number of items in the menu list
 	int itemsPerRow;			//how many menu items are in each row? 
-	MenuItem *items[MAX_MENU_ITEMS];
+	//MenuItem *items[MAX_MENU_ITEMS];
+	vector<MenuItem *> items;
+	
+	MenuCursor cursor;	
 
-	MenuCursor cursor;			
+	Menu(){};
+	void Draw();
 }Menu;
 
 
+MenuItem *AddMenuItem(Menu *m,  char* text = NULL, void (*action)(int val) = NULL);
+MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* text = NULL);
+void FreeMenuItem(MenuItem *mi);
+void SetMenuItemAction(MenuItem *mi, void (*func)(int val), char* text = NULL);
 
-MenuItem *LoadMenuItem(SDL_Rect box, Sprite *spr, Textbox *t, char* msg = NULL);
-void FreeMenuItem(MenuItem *m);
-void SetMenuItemAction(MenuItem *m, void (*func)(), char* name = NULL);
-Menu *LoadMenu(MenuType type, Vec2i *loc = NULL, CursorType ct = CURSTYPE_ARROW_LEFT, AnchorPoint a = ANCHOR_NONE_NONE, int padding = 0);
+Menu *LoadMenu(MenuType type, int numitems = 0, Vec2i *loc = NULL, 
+	CursorType ct = CURSTYPE_ARROW_LEFT, AnchorPoint a = ANCHOR_NONE_NONE, int padding = 0);
+void LoadCursor(Menu *m, CursorType ct);
 void FreeMenu(Menu *m);
 void UpdateMenu(Menu *m);
 void DrawMenu(Menu *m);
+void DrawScrollingMenu(Menu *m);
 void DrawMenuPanel(Menu *m);
+void DrawMenuCursor(Menu *m);
+void DrawScrollingMenuCursor(Menu *m);
 void IncrementCursor(Menu *m);
 void DecrementCursor(Menu *m);
 void SetAnchor(Menu *m, AnchorPoint a, int padding = 0);
 Vec2i GetAnchorLocation(AnchorPoint a);
 SDL_Rect AnchorRect(SDL_Rect src, AnchorPoint a, int padding = 0);
 
-Menu *LoadPauseMenu();
-Menu *LoadMenuYesNo(Vec2i *loc = NULL, char* yes = NULL, char* no = NULL, void (*YesFunc)() = NULL,void (*NoFunc)() = NULL);
+
+Menu *LoadMenuYesNo(Vec2i *loc = NULL, char* yes = NULL, char* no = NULL, void (*YesFunc)(int val) = NULL,void (*NoFunc)(int val) = NULL);
 Menu *LoadCustomMenu(int numItems, char itemNames[6][16] = NULL);
 
 
-void OpenMenu(Menu *m,vector<struct Menu_T*> *stack = NULL);
+void OpenMenu(Menu *m,vector<Menu*> *stack = NULL);
 
-void CancelMenu();
+void CancelMenu(int val = 0);
 void AdvanceText(int steps = 0);
 void AdvanceAndCancel(int steps = 0);
-void SelectAnswer1();
-void SelectAnswer2();
-void SelectAnswer3();
-void SelectAnswer4();
-void SelectAnswer5();
-void SelectAnswer6();
+void SelectAnswer(int answer);
 
 static bool _InMenu;
 
+void LoadPauseMenu();
+void OpenPauseMenu(int val = 0);
+void OpenStatus(int val);
+void OpenEncyclopedia(int val);
+void OpenInventory(int val);
+void OpenOptions(int val);
+void OpenSaveLoad(int val);
 
 #endif

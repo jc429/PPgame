@@ -10,7 +10,7 @@
 
 
 
-#define START_MODE OVERWORLD
+#define START_MODE GS_OVERWORLD
 
 //music toggles
 #define SOUNDS_ON 1

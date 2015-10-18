@@ -23,7 +23,7 @@ typedef struct Message_T{
 	bool hasPrompt;
 	Menu *prompt;
 	int numFunctions;
-	void (*promptFunctions[MAX_PROMPT_CHOICES])();
+	void (*promptFunctions[MAX_PROMPT_CHOICES])(int val);
 
 	void (*atEnd)();
 
@@ -43,27 +43,30 @@ typedef struct Message_T{
 		}
 		atEnd = NULL;
 	};
+
+	//functions
+	void SetSpeaker(CharData *speaker);
+	void SetMessagePrompts();
+	void SetMessageEndFunction(void (*func)());
+
+
 }Message;
 
 
 Message *NewMessage();
 void CreateMessage(Message *msg = NULL, char* text = NULL, class OverworldEnt *speaker = NULL);
-void SetSpeaker(Message *msg, CharData *speaker);
 void CreateMonologue(Message *msg, OverworldEnt *speaker, int numMessages, ...);
-void SetPrompt(Message *msg, MenuType type, Vec2i *loc = NULL);
-void SetAnswers(Message *msg, int num,  void(*func1)()=SelectAnswer1, void(*func2)()=SelectAnswer2, void(*func3)()=SelectAnswer3, 
-	void(*func4)()=SelectAnswer4, void(*func5)()=SelectAnswer5, void(*func6)()=SelectAnswer6);
-void SetMessagePrompts(Message *msg);
-void SetMessageEndFunction(Message *msg, void (*func)());
+void SetPrompt(Message *msg, MenuType type, int numitems = 0,Vec2i *loc = NULL);
 
-void SetText(char *text, Textbox *t, bool scroll, bool prompt = 0, Message *msg = NULL);
-void SetTextEX(char *text, TextboxEX *t, bool scroll, bool prompt = 0, Message *msg = NULL);
-void SetSpeakerbox(Textbox *t, char *speaker);
+//this function is bad and probably pointless tbh
+void SetAnswers(Message *msg, int num,  void(*func1)(int val)=SelectAnswer, void(*func2)(int val)=SelectAnswer, 
+	void(*func3)(int val)=SelectAnswer, void(*func4)(int val)=SelectAnswer, 
+	void(*func5)(int val)=SelectAnswer, void(*func6)(int val)=SelectAnswer);
+
 char *ParseText(char *text);
 char *InjectString(char *text,char *str, int location);
 char *CutString(char *text, int location, int length);
 int GetNextWordLength(std::string str);
-
 
 
 void LoadDialogue();
@@ -73,7 +76,6 @@ Message *AskQuestion(char* q, char* a1, char* a2);
 
 static Message *_MessageStack;
 static int numMenus;
-
 
 
 #endif

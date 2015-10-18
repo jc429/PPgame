@@ -1,78 +1,46 @@
-#include "dialogue.h"
+#include "ui.h"
 #include "graphics.h"
-#include "input.h"
-
-//bool inMenu;		//are we currently in a menu?
-Mouse mouse;
-extern Camera uiCamera;
-extern InputNode *_Inputs;
 
 
-//Updates the mouse state (both buttons act as left for now)
-void UpdateMouse(){
-	if(SDL_GetMouseState(&mouse.pos.x,&mouse.pos.y))
-		UpdateInput(&mouse.left,1);
-	else
-		UpdateInput(&mouse.left,0);
+void TextPanel::Draw(){
+	SDL_Rect rect = GetPosition();
+	DrawPanel(rect,panel);	
+
+//	this->text_offset_y++;
+
 	
-}
+};
 
-//Updates an Input struct based on what happened this frame and last frame
-void UpdateInput(Input *input, bool current){
-	input->pressed=0;
-	input->held=0;
-	input->released=0;
-	if(current){
-		if(input->prev==0){
-			input->pressed=1;
-		}else if(input->prev==1){
-			input->held=1;
-		}
-		input->prev = 1;
+void TextPanel::AddTextbox(char *contents){	//adds a textbox at the top of the panel or underneath the most recently added one
+	SDL_Rect location;
+	Textbox *t = new Textbox(); 
+	location.x = this->position.x;
+	location.w = this->position.w;
+	location.h = 13;
+	if(this->textboxes.empty()){
+		location.y = this->position.y;
 	}else{
-		if(input->prev==1){
-			input->released=1;
-		}
-		input->prev = 0;
+		location.y = this->textboxes.back()->box.y + 13;
 	}
+	LoadTextbox(t,1,location,2);
+	t->SetText(contents,0);
+	this->textboxes.push_back(t);
 }
 
-
-void DeleteInputNode(InputNode *node,int steps){
-	if(steps <= 0)
-		delete(node);
-	else{
-		if(node->prev != NULL)
-			DeleteInputNode(node->prev, steps-1);
+void AnimPanel::Draw(){
+	SDL_Rect rect = GetPosition();
+	DrawPanel(rect,panel);	
+	for(int i = 0; i < (int)animations.size(); i++){
+		Vec2i pos = animations.at(i).position;
+		pos.x += rect.x;
+		pos.y += rect.y;
+		DrawAnimation(animations.at(i).anim,pos);
 	}
+};
+
+void AnimPanel::AddAnimPos(Animation *a, Vec2i p){
+	AnimPos ap;
+	ap.anim = a;
+	ap.position = p;
+	this->animations.push_back(ap);
 }
-
-
-bool InputPressed(Uint16 input,InputNode *node){
-	if(node == NULL)
-		node = _Inputs;
-	return ((node->input & input)&&!(node->prev->input & input));
-}
-
-bool InputReleased(Uint8 input,InputNode *node){
-	if(node == NULL)
-		node = _Inputs;
-	return (!(node->input & input)&&(node->prev->input & input));
-}
-
-bool InputBuffered (InputNode *input, int button, int buf){
-	if(buf > INPUTS_HISTORY)
-		buf = INPUTS_HISTORY;
-	if(input->input & button){
-		if(buf == 0)
-			return 1;
-		else{
-			if(input->prev != NULL)
-				return (InputBuffered(input->prev,button,buf-1));
-			else
-				return 0;
-		}
-	}else
-		return 0;
-}
-

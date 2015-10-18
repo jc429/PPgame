@@ -8,7 +8,7 @@
 #include "camera.h"
 #include "player.h"
 
-using namespace std;
+//using namespace std;
 
 SDL_Window *sdlWindow;			//The program window
 SDL_Renderer *mainRenderer;		//The main game renderer
@@ -65,14 +65,14 @@ void InitWindow(){
 }
 
 //Draws the current frame
-void RenderCurrentFrame(){
+void Graphics::RenderCurrentFrame(){
 	SDL_RenderPresent(mainRenderer);	//Draws the frame to the screen
 	
 	SDL_SetRenderDrawColor(mainRenderer, 0, 0, 0, 255);			//resets the bg color of the renderer
 	SDL_RenderClear(mainRenderer);		//Clears the renderer to prepare for the next frame
 }
 //advances the game to the next frame
-void NextFrame(){
+void Graphics::NextFrame(){
 //	Uint32 Then;
 //	Then = NOW;							/*these next few lines  are used to show how long each frame takes to update.  */
 	NOW = SDL_GetTicks();				//Update the time elapsed since program opening (unused)
@@ -81,7 +81,7 @@ void NextFrame(){
 }
 
 //Keeps the framerate as consistent as possible
-void FrameDelay(Uint32 delay){
+void Graphics::FrameDelay(Uint32 delay){
     static Uint32 pass = 100;
     Uint32 dif;
     dif = SDL_GetTicks() - pass;
@@ -305,10 +305,16 @@ void DrawAnimation(Animation *anim, Vec2i pos, Camera *c){
 	src.w = anim->sprite->w;
 	src.h = anim->sprite->h;
 
-	targetarea.x = (pos.x - anim->sprite->s_offset_x) - c->viewport.x;
-	targetarea.y = (pos.y - anim->sprite->s_offset_y) - c->viewport.y;
+
+	targetarea.x = (pos.x - anim->sprite->s_offset_x);
+	targetarea.y = (pos.y - anim->sprite->s_offset_y);
 	targetarea.w = src.w;
 	targetarea.h = src.h;
+
+	if(c != NULL){
+		targetarea.x -= c->viewport.x;
+		targetarea.y -= c->viewport.y;
+	}
 
 	if(framecheck%anim->delay == 0){
 		AdvanceAnimFrame(anim);
@@ -344,11 +350,16 @@ void DrawPartialAnimation(Animation *anim, SDL_Rect subrect, Vec2i pos, Camera *
 		src.h += src.y;		
 		src.y = 0;
 	}
-
-	targetarea.x = (pos.x - anim->sprite->s_offset_x) - c->viewport.x;
-	targetarea.y = (pos.y - anim->sprite->s_offset_y) - c->viewport.y;
+	
+	targetarea.x = (pos.x - anim->sprite->s_offset_x);
+	targetarea.y = (pos.y - anim->sprite->s_offset_y);
 	targetarea.w = src.w;
 	targetarea.h = src.h;
+
+	if(c != NULL){
+		targetarea.x -= c->viewport.x;
+		targetarea.y -= c->viewport.y;
+	}
 
 	if(framecheck%anim->delay == 0){
 		AdvanceAnimFrame(anim);
@@ -358,7 +369,79 @@ void DrawPartialAnimation(Animation *anim, SDL_Rect subrect, Vec2i pos, Camera *
 	
 		SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
 }
+void DrawBGAnimation(Animation *anim,Camera *c){	//draws a tiled bg across the back of the screen
+	if(anim==NULL) return;
+	if(anim->sprite==NULL) return;
+	SDL_RendererFlip flip;
+	SDL_Rect targetarea;
+	SDL_Rect src;
 
+	flip = SDL_FLIP_NONE;
+	if(anim->mirror.x!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_HORIZONTAL);
+	if(anim->mirror.y!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_VERTICAL);
+	
+	src.x = anim->curFrame % anim->sprite->framesperline * anim->sprite->w;
+    src.y = anim->curFrame / anim->sprite->framesperline * anim->sprite->h;
+	src.w = anim->sprite->w;
+	src.h = anim->sprite->h;
+	targetarea.w = src.w;
+	targetarea.h = src.h;
+	Vec2i tilepos(0,0);
+	while(tilepos.y < GAME_RES_Y){
+		while(tilepos.x < GAME_RES_X){
+
+			//draw the animation frame here
+
+			targetarea.x = (tilepos.x - anim->sprite->s_offset_x);
+			targetarea.y = (tilepos.y - anim->sprite->s_offset_y);
+			if(c != NULL){
+				targetarea.x -= c->viewport.x;
+				targetarea.y -= c->viewport.y;
+			}
+			SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
+			tilepos.x += anim->sprite->w;
+		}
+		tilepos.x = 0;
+		tilepos.y += anim->sprite->h;
+	}
+	if(framecheck%anim->delay == 0){
+		AdvanceAnimFrame(anim);
+	}
+}
+void DrawAnimFrame(Animation *anim, Vec2i pos, Camera *c){	//identical to drawanimation but does not advance the frame
+	if(anim==NULL) return;
+	if(anim->sprite==NULL) return;
+	SDL_RendererFlip flip;
+	SDL_Rect targetarea;
+	SDL_Rect src;
+
+	flip = SDL_FLIP_NONE;
+	if(anim->mirror.x!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_HORIZONTAL);
+	if(anim->mirror.y!=1)
+		flip = (SDL_RendererFlip)(flip|SDL_FLIP_VERTICAL);
+
+
+	src.x = anim->curFrame % anim->sprite->framesperline * anim->sprite->w;
+    src.y = anim->curFrame / anim->sprite->framesperline * anim->sprite->h;
+	src.w = anim->sprite->w;
+	src.h = anim->sprite->h;
+
+
+	targetarea.x = (pos.x - anim->sprite->s_offset_x);
+	targetarea.y = (pos.y - anim->sprite->s_offset_y);
+	targetarea.w = src.w;
+	targetarea.h = src.h;
+
+	if(c != NULL){
+		targetarea.x -= c->viewport.x;
+		targetarea.y -= c->viewport.y;
+	}
+
+	SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
+}
 
 void DrawRect(SDL_Rect rect, Camera *c, Uint32 color){
 	rect.x -= c->viewport.x;

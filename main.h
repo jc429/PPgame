@@ -9,13 +9,13 @@
 #include "camera.h"
 #include "tile.h"
 #include "dialogue.h"
-#include "level.h"
+//#include "level.h"
 #include "audio.h"
 //#include "combat.h"
 #include "gamestate.h"
 #include "world.h"
-#include "inventory.h"
-#include "party.h"
+//#include "inventory.h"
+//#include "party.h"
  
  
 static bool _GamePause;

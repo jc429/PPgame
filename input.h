@@ -73,6 +73,6 @@ void DeleteInputNode(InputNode *node,int steps);
 
 bool InputPressed(Uint16 input,InputNode *node = NULL);
 bool InputReleased(Uint16 input,InputNode *node = NULL);
-bool InputBuffered (InputNode *input, int button, int buf);
+bool InputBuffered(InputNode *input, int button, int buf);
 
 #endif

@@ -23,7 +23,10 @@ void UpdateCamera(Camera *c);
 int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c);
 int DrawPartialSprite(Sprite* spr, int frame, SDL_Rect subrect, Vec2i pos, Camera *c);
 
-void DrawAnimation(Animation *anim, Vec2i pos, Camera *c);
-void DrawPartialAnimation(Animation *anim, SDL_Rect subrect, Vec2i pos, Camera *c);
+void DrawAnimation(Animation *anim, Vec2i pos, Camera *c = NULL);
+void DrawPartialAnimation(Animation *anim, SDL_Rect subrect, Vec2i pos, Camera *c = NULL);
+void DrawBGAnimation(Animation *anim,Camera *c = NULL);
+void DrawAnimFrame(Animation *anim, Vec2i pos, Camera *c);	//identical to drawanimation but does not advance the frame
+
 
 #endif

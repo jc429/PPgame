@@ -104,6 +104,8 @@ int GetStringWidth(std::string str, int kerning){
 		sum += GetCharWidth(str.at(i));
 		++i;
 	}
-	return sum;
+	return sum + 1;		
+	//add 1 to compensate for the fact that character tiles have one pixel of space to the left but not the right 
+	//doing this makes the string equally spaced from the left and right ends of the width given
 }
 

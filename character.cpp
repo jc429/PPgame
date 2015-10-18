@@ -4,6 +4,8 @@
 extern Camera mainCamera;
 extern Tile *World[WORLD_W][WORLD_H];
 
+MoveType _GlobalMoveType = MoveType_Grid;
+
 OverworldCharacter *_Player;
 OverworldCharacter *CharList[MAX_CHARACTERS];
 
@@ -31,8 +33,8 @@ OverworldCharacter::OverworldCharacter(int xpos, int ypos, char *entName){
 	movey = false;
 
 	//Speeds and stuff
-	movespeed = 1.5;
-	
+	movespeed = 1.2f;		//needs to be 1 right now..
+			
 	//Position
 	tile.x = xpos;
 	tile.y = ypos;
@@ -56,14 +58,14 @@ OverworldCharacter::OverworldCharacter(int xpos, int ypos, char *entName){
 
 
 	//get us started on a tile
-	AddToWorld(this, xpos, ypos);
-	UpdateTile(this);
+	AddToWorld(xpos, ypos);
+	UpdateTile();
 	if(DEBUG){
 //		printf("Starting on %i %i \n",tile.x,tile.y);
 	}
-	
-	worldposition.x = tile.x*TILE_W+localposition.x;
-	worldposition.y = tile.y*TILE_H+localposition.y;
+	UpdateWorldPosition();
+//	worldposition.x = tile.x*TILE_W+localposition.x;
+//	worldposition.y = tile.y*TILE_H+localposition.y;
 
 }
 
@@ -78,7 +80,7 @@ void OverworldCharacter::Update(){
 void OverworldCharacter::Draw(){
 	if(drawn) return;
 
-	DrawAnimation(animlist[animation][direction],worldposition,&mainCamera);
+	DrawAnimation(animlist[animation][direction],WorldPosition(),&mainCamera);
 	drawn = true;
 }
 
@@ -91,153 +93,161 @@ void OverworldCharacter::SetPlayer(bool p){
 }
 
 void OverworldCharacter::Movement(){
-
-	if(moving){
-		if(animation != ANIM_CHAR_WALK)
-			animation = ANIM_CHAR_WALK;
-		facing = tomove;
+	switch(_GlobalMoveType){
+	case MoveType_Grid:
+		if(moving){
+			if(animation != ANIM_CHAR_WALK)
+				animation = ANIM_CHAR_WALK;
+			facing = tomove;
 		
-		MoveToTile(this,World[tile_src.x][tile_src.y],World[tile_dest.x][tile_dest.y]);
+			MoveToTile(World[tile_src.x][tile_src.y],World[tile_dest.x][tile_dest.y]);
 
-	}else{
-		UpdateTile(this);
+		}else{
+			UpdateTile();
+		}
+		UpdateDirection();
+		UpdateWorldPosition();
+		break;
+	case MoveType_Free:
+
+		break;
 	}
 
-/*	else{
-		UpdateTile(this);
 
-		animation = ANIM_CHAR_IDLE;
-		tomove.x = 0;
-		tomove.y = 0;
-		
-//		printf("%i, %i \n",want_to_move.x,want_to_move.y);
-
-
-		if((p->tomove.x!=0)||(p->tomove.y!=0)){
-			p->animation = ANIM_CHAR_WALK;
-			p->moving=true;
-			UpdateTile(p);
-			p->tile_src.x = p->tile.x;
-			p->tile_dest.x = p->tile.x+p->tomove.x;
-			p->tile_src.y =  p->tile.y;
-			p->tile_dest.y = p->tile.y+p->tomove.y;
-			MoveToTile(p,World[p->tile_src.x][p->tile_src.y],World[p->tile_dest.x][p->tile_dest.y]);
-		}
-	}*/
-	
-	UpdateDirection(this);
-//	fprintf(stdout,"%i\n",p->direction);
-	
-	worldposition.x = tile.x*TILE_W + localposition.x;
-	worldposition.y = tile.y*TILE_H + localposition.y - (World[tile.x][tile.y]->structure->height<<2);
 }
 
 
 
-void StepOutOfTile(OverworldCharacter *c,Tile *tile){
+void OverworldCharacter::StepOutOfTile(Tile *tile){
 	if(tile == NULL) return;
 	tile->free = true;
 	tile->contents = NULL;
 	tile->character = NULL;
 }
 
-void StepIntoTile(OverworldCharacter *c,Tile *tile){
+void OverworldCharacter::StepIntoTile(Tile *tile){
 	if(tile == NULL) return;
 
 	tile->free = false;
-	tile->contents = c;	
-	tile->character = c;
+	tile->contents = this;	
+	tile->character = this;
 }
 
-void MoveToTile(OverworldCharacter *c, Tile *src, Tile *dest){
-	StepIntoTile(c,dest);
+void OverworldCharacter::MoveToTile(Tile *src, Tile *dest){
+	StepIntoTile(dest);
 	//fprintf(stdout,"moving from %i, %i to %i, %i \n",src->position.x/TILE_W,src->position.y/TILE_H,dest->position.x/TILE_W,dest->position.y/TILE_H);
-	Vec2i movement;
-	movement.x = 0;
-	movement.y = 0;
+	Vec2i movedir;
+	movedir.x = 0;
+	movedir.y = 0;
 	if(src->position.x < dest->position.x)
-		movement.x = c->movespeed;
+		movedir.x = 1;
 	else if(src->position.x > dest->position.x)
-		movement.x = -c->movespeed;
+		movedir.x = -1;
 	if(src->position.y < dest->position.y)
-		movement.y = c->movespeed;
+		movedir.y = 1;
 	else if(src->position.y > dest->position.y)
-		movement.y = -c->movespeed;
+		movedir.y = -1;
 
-	c->localposition.x += movement.x;
-	c->localposition.y += movement.y;
+	Vec2f movement;
+	movement.x = movedir.x * movespeed*(FRAMEDELAY/TILE_W);
+	movement.y = movedir.y * movespeed*(FRAMEDELAY/TILE_H);
+
+	if(movement.x > 0){
+		//if moving at our current increment would overshoot the destination, fix it
+		if((WorldPosition().x + movement.x) > (dest->position.x + (0.5f*TILE_W))){	
+			movement.x = (dest->position.x + (0.5f*TILE_W)) - WorldPosition().x;
+		}
+	}
+	else if(movement.x < 0){
+		if((WorldPosition().x + movement.x) < (dest->position.x + (0.5f*TILE_W))){
+			movement.x = (dest->position.x + (0.5f*TILE_W)) - WorldPosition().x;
+		}
+	}
+
+	if(movement.y > 0){
+		//if moving at our current increment would overshoot the destination, fix it
+		if((WorldPosition().y + movement.y) > (dest->position.y + (0.5f*TILE_H))){	
+			movement.y = (dest->position.y + (0.5f*TILE_H)) - WorldPosition().y;
+		}
+	}
+	else if(movement.y < 0){
+		if((WorldPosition().y + movement.y) < (dest->position.y + (0.5f*TILE_H))){	
+			movement.y = (dest->position.y + (0.5f*TILE_H)) - WorldPosition().y;
+		}
+	}
+	//printf("%f,%f",movement.x,movement.y);
 	
-//	dest->contents = c;
+	localposition.x += movement.x;
+	localposition.y += movement.y;
+	
 
-	//if we're in the center of the tile
-	if((std::abs((int)c->localposition.x)%TILE_W==0.5*TILE_W)
-		&&(std::abs((int)c->localposition.y)%TILE_H==0.5*TILE_H)){
-	//	UpdateTile(c);
-		c->moving = false;
-		c->movex = false;
-		c->movey = false;
+	if((WorldPosition().x == dest->position.x + 0.5f*TILE_W)
+		&&(WorldPosition().y == dest->position.y + 0.5f*TILE_H)){
+		moving = false;
+		movex = false;
+		movey = false;
 	}
 }
 
-void UpdateTile(OverworldCharacter *c){
-	StepOutOfTile(c,World[c->tile.x][c->tile.y]);
-	if(c->localposition.x > TILE_W){
-		c->tile.x++;
-		c->localposition.x -= TILE_W;
+void OverworldCharacter::UpdateTile(){
+	StepOutOfTile(World[this->tile.x][this->tile.y]);
+	if(this->localposition.x > TILE_W){
+		this->tile.x++;
+		this->localposition.x -= TILE_W;
 	}
-	if(c->localposition.x < 0){
-		c->tile.x--;
-		c->localposition.x += TILE_W;
+	if(this->localposition.x < 0){
+		this->tile.x--;
+		this->localposition.x += TILE_W;
 	}
-	if(c->localposition.y > TILE_H){
-		c->tile.y++;
-		c->localposition.y -= TILE_H;
+	if(this->localposition.y > TILE_H){
+		this->tile.y++;
+		this->localposition.y -= TILE_H;
 	}
-	if(c->localposition.y < 0){
-		c->tile.y--;
-		c->localposition.y += TILE_H;
+	if(this->localposition.y < 0){
+		this->tile.y--;
+		this->localposition.y += TILE_H;
 	}
-	StepIntoTile(c,World[c->tile.x][c->tile.y]);
+	StepIntoTile(World[this->tile.x][this->tile.y]);
 }
 
-void UpdateDirection(OverworldCharacter *c){
-	switch(c->facing.x){
+void OverworldCharacter::UpdateDirection(){
+	switch(this->facing.x){
 	case 0:
-		switch(c->facing.y){
+		switch(this->facing.y){
 		case 0:
-			c->direction = ANIM_DIR_S;
+			this->direction = ANIM_DIR_S;
 			break;
 		case 1:
-			c->direction = ANIM_DIR_S;
+			this->direction = ANIM_DIR_S;
 			break;
 		case -1:
-			c->direction = ANIM_DIR_N;
+			this->direction = ANIM_DIR_N;
 			break;
 		}
 		break;
 	case 1:
-		switch(c->facing.y){
+		switch(this->facing.y){
 		case 0:
-			c->direction = ANIM_DIR_E;
+			this->direction = ANIM_DIR_E;
 			break;
 		case 1:
-			c->direction = ANIM_DIR_SE;
+			this->direction = ANIM_DIR_SE;
 			break;
 		case -1:
-			c->direction = ANIM_DIR_NE;
+			this->direction = ANIM_DIR_NE;
 			break;
 		}
 		break;
 	case -1:
-		switch(c->facing.y){
+		switch(this->facing.y){
 		case 0:
-			c->direction = ANIM_DIR_W;
+			this->direction = ANIM_DIR_W;
 			break;
 		case 1:
-			c->direction = ANIM_DIR_SW;
+			this->direction = ANIM_DIR_SW;
 			break;
 		case -1:
-			c->direction = ANIM_DIR_NW;
+			this->direction = ANIM_DIR_NW;
 			break;
 		}
 		break;

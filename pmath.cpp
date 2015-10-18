@@ -1,5 +1,5 @@
 #include "pmath.h"
-#include <random>
+#include <random>		// eventually build my own seeded RNG 
 
 //Checks if a point is within a Rectangle (excluding touching edges)
 inline bool PointInRect(int x, int y, SDL_Rect rect){
@@ -69,8 +69,8 @@ void SetVec3f(Vec3f &dest, Vec3f src){
 void SetRect(SDL_Rect &r, int x, int y, int w, int h){
 	r.x = x;
 	r.y = y;
-	if(w) r.w = w;
-	if(h) r.h = h;
+	r.w = w;
+	r.h = h;
 }
 
 void SetRect(SDL_Rect &dest, SDL_Rect src){
@@ -86,16 +86,56 @@ void SetRect(SDL_Rect &dest, Vec2i src){
 
 ///////////////////////////
 
-bool NumsWithinRange(int a, int b, int range){	//checks if a is within range of b
+Vec2f Vec2iToVec2f(Vec2i v){
+	Vec2f vf;
+	SetVec2f(vf,v.x,v.y);
+	return vf;
+}
+
+Vec2f VecScale(Vec2f v, float scale){
+	v.x *= scale;
+	v.y *= scale;
+	return v;
+}
+
+Vec2f Normalize(Vec2f v){	//sets a vec to a magnitude of 1
+	if(IsEqual(v.Length(), 0.0))
+		return v;
+	Vec2f vn = VecScale(v,1/v.Length());
+	return vn;
+}
+
+///////////////////////////
+
+bool IsEqual(float a, float b){
+#define EPSILON 0.0001
+	return (std::fabs(a - b) <= EPSILON);
+}
+
+bool IntsWithinRange(int a, int b, int range){	//checks if a is within range of b
 	if(std::abs(a - b) < range)
 		return true;
 	return false;
 }
 
 bool NumsWithinRange(float a, float b, float range){	//checks if a is within range of b
-	if(std::abs(a - b) < range)
+	if(std::abs(a - b) <= std::abs(range))
 		return true;
 	return false;
+}
+
+float Remainder(float dividend, float divisor){	//idk if i trust this 
+	if(dividend == 0 || divisor == 0)
+		return 0;
+	if(dividend < 0)
+		dividend *= -1;
+	if(divisor < 0)
+		divisor *= -1;
+
+	while(dividend - divisor > 0){
+		dividend -= divisor;
+	}
+	return dividend;
 }
 
 
@@ -120,7 +160,7 @@ float Min(float a, float b){
 }
 ///////////////////////////
 
-int RandomInt(int min, int max){ //returns a random integer, from min to max (non-inclusive)
+int Random::RandomInt(int min, int max){ //returns a random integer, from min to max (non-inclusive)
 	float r;		// a decimal between 0 and 1
 	int range;		//the range between the two numbers
 	int random;		//our random number
@@ -134,11 +174,11 @@ int RandomInt(int min, int max){ //returns a random integer, from min to max (no
 	return random; 
 }
 
-int RandomIntInclusive(int min, int max){//returns a random integer, from min to max (inclusive)
+int Random::RandomIntInclusive(int min, int max){//returns a random integer, from min to max (inclusive)
 	return RandomInt(min-1, max+1);
 }
 
-bool Toggle(bool b){
+bool ToggleBool(bool b){
 	if(b != 0)
 		b = 0;
 	else

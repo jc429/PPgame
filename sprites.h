@@ -4,6 +4,7 @@
 #include "sprite_paths.h"
 #include "global.h"
 #include "pmath.h"
+#include "pdirection.h"
 
 typedef struct Sprite_T{
 	SDL_Texture *image;			/*pointer to the actual image in memory*/
@@ -34,17 +35,12 @@ typedef struct Animation_T{
 	int delay; //amount of draw frames to wait before updating to next frame - higher number = slower
 }Animation;
 
-#define NUM_ANIM_DIRS 8
-typedef enum AnimDir{
-	ANIM_DIR_S = 0,
-	ANIM_DIR_SW = 1,
-	ANIM_DIR_W = 2,
-	ANIM_DIR_NW = 3,
-	ANIM_DIR_N = 4,
-	ANIM_DIR_NE = 5,
-	ANIM_DIR_E = 6,
-	ANIM_DIR_SE = 7,
-};
+typedef struct AnimPos_T{		//an animation and vec2i paired together, useful for some things probably
+	Animation *anim;
+	Vec2i position;
+}AnimPos;
+
+
 
 void InitSpriteList();
 Sprite *LoadSprite(char *filename,int sizex, int sizey, int fpl, int off_x = 0, int off_y = 0);

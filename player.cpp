@@ -1,5 +1,6 @@
 #include "player.h"
 #include "camera.h"
+#include "gamestate.h"
 #include <iostream>
 
 extern Tile *World[WORLD_W][WORLD_H];
@@ -9,7 +10,7 @@ extern TextboxEX mainTextbox; //the main dialogue box for now
 extern InputNode *_Inputs;
 extern OverworldCharacter *CharList[MAX_CHARACTERS];
 extern bool _Dialogue;	//are we currently talking?
-extern vector<struct Menu_T*> _MenuStack;
+//extern vector<struct Menu_T*> _OverworldMenuStack;
 /*
 Player::Player(int xpos, int ypos, char *entName):NPC(xpos,ypos, entName){
 	copy_string(chardata->name,entName);
@@ -104,20 +105,23 @@ void UpdatePlayer(OverworldCharacter *p){
 	}
 	else{
 		if(InputPressed(PPINPUT_A,_Inputs)){
+			//soooo many conditions to check
+			if(CurrentScene()->MenuStack.empty() && GetCurrentState() == GS_OVERWORLD){
 			if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]!=NULL){
-				if(CheckTileHeights(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y],World[p->tile.x][p->tile.y])){
-				if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents!=NULL){
-					if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents->talks){
-						if(!p->talking && !p->moving && !_Dialogue){
-							if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents != p){
-								_Dialogue = true;
-								p->talking = true;
-								World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents->Talk(&mainTextbox);
-								TransferPlayer(World[p->tile.x][p->tile.y]->character,World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->character);
-							}
-						}
-					}
-				}
+			if(CheckTileHeights(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y],World[p->tile.x][p->tile.y])){
+			if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents!=NULL){
+			if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents->talks){
+			if(!p->talking && !p->moving && !_Dialogue){
+			if(World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents != p){
+				_Dialogue = true;
+				p->talking = true;
+				World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->contents->Talk(&mainTextbox);
+				TransferPlayer(World[p->tile.x][p->tile.y]->character,World[p->tile.x+p->facing.x][p->tile.y+p->facing.y]->character);
+			}
+			}
+			}
+			}
+			}
 			}
 			}
 		}
@@ -130,9 +134,9 @@ void UpdatePlayer(OverworldCharacter *p){
 void PlayerMovement(OverworldCharacter *p){
 
 	if(!p->moving){
-		if(!_MenuStack.empty())
+		if(!CurrentScene()->MenuStack.empty())
 			return;
-		UpdateTile(p);
+		p->UpdateTile();
 
 		p->animation = ANIM_CHAR_IDLE;
 		p->tomove.x = 0;
@@ -202,20 +206,20 @@ void PlayerMovement(OverworldCharacter *p){
 			p->moving=true;
 			p->movex = (p->tomove.x != 0);
 			p->movey = (p->tomove.y != 0);
-			UpdateTile(p);
+			p->UpdateTile();
 			p->tile_src.x = p->tile.x;
 			p->tile_dest.x = p->tile.x+p->tomove.x;
 			p->tile_src.y =  p->tile.y;
 			p->tile_dest.y = p->tile.y+p->tomove.y;
-			MoveToTile(p,World[p->tile_src.x][p->tile_src.y],World[p->tile_dest.x][p->tile_dest.y]);
+			p->MoveToTile(World[p->tile_src.x][p->tile_src.y],World[p->tile_dest.x][p->tile_dest.y]);
 			
 			p->facing = p->tomove;
 		}
 	}
 
-	UpdateDirection(p);
+	p->UpdateDirection();
 //	fprintf(stdout,"%i\n",p->direction);
-	
-	p->worldposition.x = p->tile.x*TILE_W+p->localposition.x;
-	p->worldposition.y = p->tile.y*TILE_H+p->localposition.y - (World[p->tile.x][p->tile.y]->structure->height<<2);
+	p->UpdateWorldPosition();
+//	p->worldposition.x = p->tile.x*TILE_W+p->localposition.x;
+//	p->worldposition.y = p->tile.y*TILE_H+p->localposition.y - (World[p->tile.x][p->tile.y]->structure->height<<2);
 }

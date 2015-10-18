@@ -29,7 +29,7 @@ NPC::NPC (int xpos, int ypos, char *entName):OverworldCharacter(xpos,ypos, entNa
 	////////////////////////////////////////////////////////////////// there has to be a better way to do this
 	Sprite *s = LoadSprite(SPATH_NPC_GENERIC,32,32,5,16,24);
 	///Sprite *s2 = LoadSprite("sprites/rainbow.png",32,32,4);
-	SetEntAnims(this,s);
+	SetEntAnims(s);
 	//animlist[1] = LoadAnimation(s2,0,0,2,1,0);
 
 	numAnims = 2;
@@ -51,19 +51,19 @@ void NPC::Update(){
 	actiontimer--;
 	if(actiontimer <=0){
 		if(rotates && !talking){
-			facing.x = RandomIntInclusive(-1,1);
-			facing.y = RandomIntInclusive(-1,1);
+			facing.x = Random::RandomIntInclusive(-1,1);
+			facing.y = Random::RandomIntInclusive(-1,1);
 			
 			if(moves){
 				Vec2i wanttomove;
-				wanttomove.x = RandomIntInclusive(-1,1);
-				wanttomove.y = RandomIntInclusive(-1,1); 
+				wanttomove.x = Random::RandomIntInclusive(-1,1);
+				wanttomove.y = Random::RandomIntInclusive(-1,1); 
 				Move(wanttomove);
 			}
 		}
 		actiontimer = 100;
 	}
-	UpdateDirection(this);
+	UpdateDirection();
 }
 
 void NPC::Move(Vec2i want_to_move){
@@ -117,9 +117,9 @@ void NPC::Talk(TextboxEX *t){
 		Vec2i mirror(-1,-1);
 		facing = _Player->facing * mirror;
 	}
-	UpdateDirection(this);
+	UpdateDirection();
 	if(msg != NULL)
-		SetTextEX(msg->text,t,1,msg->hasPrompt,msg);
+		t->SetTextEX(msg->text,1,msg->hasPrompt,msg);
 }
 
 
@@ -127,5 +127,5 @@ void GiveNPCMessage(NPC *npc, Message *msg){
 	if(msg == NULL) return;
 	npc->msg = msg;
 	npc->talks = true;
-	SetSpeaker(msg,npc->chardata);
+	msg->SetSpeaker(npc->chardata);
 }

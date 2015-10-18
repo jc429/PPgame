@@ -47,4 +47,7 @@ int LoadAreaCFG(Area *area, char *areapath, char chunkpaths[MAX_CHUNKS][40], Vec
 void InitWorld();
 void UpdateWorld();
 
+
+void LoadLevel();
+
 #endif

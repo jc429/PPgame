@@ -3,9 +3,9 @@
 using std::vector;
 
 void InitGame();
-void ExitGame();
+void ExitGame(int val = 0);
 void PollEvents();
-Uint16 PollInputs();
+Uint16 PollKeyInputs();
 void UpdateGame();
 void DrawGame();
 
@@ -40,7 +40,7 @@ extern GameState _GameState;
 
 
 extern Menu *_CurrentMenu;
-extern vector<struct Menu_T*> _MenuStack;
+//extern vector<struct Menu_T*> _OverworldMenuStack;
 //Menu _MenuStack[MAX_MENUS];
 //std::vector<Menu_T> MenuStack;
 
@@ -79,7 +79,7 @@ int main (int argc, char* argv[]){
 			PollEvents();
 			UpdateGame();		
 			DrawGame();	
-			NextFrame();
+			Graphics::NextFrame();
 		}while(!done);
 	}
 	else if(_Mode == M_EDIT_MAP){
@@ -116,7 +116,8 @@ void InitGame(){
 //	InitCombat();
 
 	InitMainTextbox(&mainTextbox,3,LoadSprite(SPATH_MAIN_TEXTBOX,160,35,1));
-//	pauseMenu = LoadPauseMenu();
+
+	LoadPauseMenu();
 
 	quitMenu = LoadCustomMenu(2);
 	SetMenuItemAction(quitMenu->items[0],ExitGame,"Exit Game");
@@ -145,11 +146,11 @@ void InitGame(){
 	CreateMessage(msg,". . .",_Player); 
 	GiveNPCMessage(_Player,msg);*/
 	Sprite *s = LoadSprite("sprites/player.png",32,32,5,16,24);
-	SetEntAnims(CharList[0],s);
+	CharList[0]->SetEntAnims(s);
 	CharList[0]->SetPlayer(true);
 	
-	SDL_Rect tr = {0,10,80,50};	//x and y are the offset from center
-	SDL_Rect sr = {0,10,48,18};	//x and y dont matter
+	SDL_Rect tr = {0,10,40,20};	//x and y are the offset from center
+	SDL_Rect sr = {0,10,48,24};	//x and y dont matter
 	InitCamera(&mainCamera,GAME_RES_X,GAME_RES_Y,true,CharList[0],&tr,&sr);
 
 //	SDL_ShowCursor(SDL_DISABLE);	//turns off the cursor
@@ -165,7 +166,7 @@ void InitGame(){
 		_GameState = START_MODE;
 }
 
-void ExitGame(){
+void ExitGame(int val){
 	done = 1;
 }
 
@@ -179,32 +180,34 @@ void PollEvents(){
 			return;
 		}
 	}
-	curInput = PollInputs();
+	curInput = PollKeyInputs();
 	InputNode *inputNode = new InputNode;
 	inputNode->prev = _Inputs;//_Player->inputs;
 	inputNode->input = curInput;
 	_Inputs = inputNode;	
 	DeleteInputNode(inputNode, INPUTS_HISTORY);
 
-	if(DEBUG){
-		if(InputPressed(PPINPUT_ESC)){			
-			if(!_MenuStack.empty())
-				CancelMenu();
-			else
-				done = 1;
-		}
-	}else{
-		if(InputPressed(PPINPUT_ESC)){			
-			if(!_MenuStack.empty())
-				CancelMenu();
-			else
-				OpenMenu(quitMenu);
+	if(GetCurrentState()==GS_OVERWORLD){
+		if(DEBUG){
+			if(InputPressed(PPINPUT_ESC)){			
+				if(!CurrentScene()->MenuStack.empty())
+					CancelMenu();
+				else
+					done = 1;
+			}
+		}else{
+			if(InputPressed(PPINPUT_ESC)){			
+				if(!CurrentScene()->MenuStack.empty())
+					CancelMenu();
+				else
+					OpenMenu(quitMenu);
+			}
 		}
 	}
 
 }
 
-Uint16 PollInputs(){
+Uint16 PollKeyInputs(){
 	Uint16 inputs = 0;
 	const Uint8 *keys = SDL_GetKeyboardState(NULL);
 	if(DEBUG)
@@ -279,13 +282,13 @@ void DrawGame(){
 		
 	
 
-	RenderCurrentFrame();
+	Graphics::RenderCurrentFrame();
 }
 
-
+/*
 bool InCombat(){
-	return (_SceneStack.back()->type == COMBAT);
-}
+	return (_SceneStack.back()->type == GS_COMBAT);
+}*/
 /*
 void EnterCombat(){
 	//only go to combat if enemies are loaded
@@ -327,30 +330,30 @@ void LoadLevel(){
 }
 
 void Overworld::Update(){
-	/*if(InputPressed(PPINPUT_B))
+	if(InputPressed(PPINPUT_B))
 		if(!_Dialogue){
-			if(_MenuStack.empty()){
+			if(this->MenuStack.empty()){
 				OpenPauseMenu();
-				ShowWallet();
+			//	ShowWallet();
 			}else
-				if(_MenuStack.back()->type == MENU_PAUSE){
+				//if(this->MenuStack.back()->type == MENU_PAUSE){
 					CancelMenu();
-					HideWallet();
-				}
-		}*/
+				//	HideWallet();
+			//	}
+		}
 	UpdateWorld();
+
+	if(!this->MenuStack.empty()){
+		_CurrentMenu = this->MenuStack.back();
+		UpdateMenu(this->MenuStack.back());
+	}
 
 	for(int i = 0; i < MAX_CHARACTERS; i++){
 		if(CharList[i] != NULL)
 			CharList[i]->Update();
 	}
 
-	if(!_MenuStack.empty()){
-		_CurrentMenu = _MenuStack.back();
-		UpdateMenu(_MenuStack.back());
-	}else{
-	//	UpdatePlayer(_Player);
-	}
+	
 	UpdateCamera(&mainCamera);
 }
 
@@ -361,10 +364,10 @@ void Overworld::Draw(){
 	}
 
 	if(_Dialogue)
-		DrawTextboxEX(&mainTextbox);
-	if(!_MenuStack.empty()){
-		for(int i = 0; i < (int)_MenuStack.size(); i++){
-			DrawMenu(_MenuStack[i]);
+		mainTextbox.Draw();
+	if(!this->MenuStack.empty()){
+		for(int i = 0; i < (int)this->MenuStack.size(); i++){
+			this->MenuStack[i]->Draw();
 		}
 	}
 
@@ -377,26 +380,4 @@ void Overworld::Draw(){
 
 
 
-/*
-Menu *LoadPauseMenu(){
-	char* names[6] =  {"Party ","Items ","FIGHT ","Save  ","Options","Exit "};
-	Menu *m = LoadMenu(MENU_PAUSE);
-	for(int i = 0; i < m->numItems; i++){
-		SetMenuItemAction(m->items[i],CancelMenu,names[i]);
-	}
-	SetMenuItemAction(m->items[0],OpenParty);
-	SetMenuItemAction(m->items[1],OpenInventory);
-//	SetMenuItemAction(m->items[2],EnterCombat);
-	return m;
-}
 
-void OpenPauseMenu(){
-	OpenMenu(pauseMenu);
-}*/
-
-
-//move this prob
-/*void FightBoss(){
-	SetEnemies(1,enemylist.at(0)->chardata->id);
-	EnterCombat();
-}*/

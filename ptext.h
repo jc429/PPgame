@@ -38,6 +38,11 @@ typedef struct Textbox{
 	int cursor;						//For drawing text one character at a time - set to -1 to draw all text at once
 	bool donewriting;				//checks if we have finished writing text
 
+	//functions
+	void Draw(int offset_x = 0, int offset_y = 0);
+	void DrawText();
+	void SetText(char *text, bool scroll, bool prompt = 0);
+
 }Textbox;
 
 typedef struct TextboxEX:public Textbox{	// a textbox with much more functionality than normal
@@ -54,18 +59,19 @@ typedef struct TextboxEX:public Textbox{	// a textbox with much more functionali
 	int curline;					//the line number of the top line drawn in the textbox currently - for vscroll
 */
 	struct Message_T *msg;			//if the textbox's text came from a message, it will be referenced here 
+
+	//functions
+	void Draw(int offset_x = 0, int offset_y = 0);
+	void SetTextEX(char *text, bool scroll, bool prompt = 0, struct Message_T *msg = NULL);
+
 }TextboxEX;
 
 void InitFont();
 void InitMainTextbox(TextboxEX *t,int numLines,Sprite *spr);
 void LoadTextbox(Textbox *t, int numLines, SDL_Rect r, int buffer = 0);
 
-void TextboxSettings(Textbox *t, int buffer = 0, int just = 0, int vscroll = 0, int kerning = 0, bool useArrow = false);
+void SetTextboxSettings(Textbox *t, int buffer = 0, int just = 0, int vscroll = 0, int kerning = 0, bool useArrow = false);
 
-void DrawTextbox(Textbox *t, int offset_x = 0, int offset_y = 0);
-void DrawTextboxEX(TextboxEX *t, int offset_x = 0, int offset_y = 0);
-void DrawText(Textbox *t);
-void DrawTextEX(TextboxEX *t);
-void DrawLine(string msg,SDL_Rect location, int kerning);
+void DrawTextLine(string msg,SDL_Rect location, int kerning);
 
 #endif
