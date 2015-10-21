@@ -95,7 +95,7 @@ NPC **LoadEntitiesCFG(char *path){
 	assert(doc.IsObject());
 	fclose(pFile);
 
-	NPC *npclist[16];
+	NPC *npclist[16];	//bad - replace with dynamic list 
 	for(int i = 0; i < 16; i++)
 		npclist[i] = NULL;
 
@@ -122,7 +122,7 @@ NPC **LoadEntitiesCFG(char *path){
 			npclist[i] = new NPC(posx,posy,name);
 
 			if(npc_parse.HasMember("sprite")){
-				printf("yo \n");
+				Logger::Log("yo");
 				char sprpath[40];
 				copy_string(sprpath,npc_parse["sprite"].GetString());
 				Sprite *spr = GetSprite(sprpath);

@@ -20,7 +20,7 @@ void InitAudio(){
 		// handle error
 	}
 
-	if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,AUDIO_U16SYS,2,4096) == -1){
+	if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,AUDIO_U16SYS,2,1024/*this affects how immediately sfx plays*/) == -1){
 		fprintf(stderr, "Unable to init SDL Mixer: %s\n", Mix_GetError());
 		exit(1);
 	}
@@ -33,20 +33,22 @@ void InitAudio(){
 	Mix_VolumeMusic(MIX_MAX_VOLUME);
 }
 
-void PlaySound(Sound *s){
+void PlaySound(Sound *s, bool looping){
 	if(s==NULL) return;
 	if(DEBUG && DEBUG_MUTE) return;
 	if(SOUNDS_ON){
-		int ch = 1;
-		Mix_PlayChannel(ch,s->sound,-1);
+		int ch = -1;	// -1 finds the first available channel
+		int loopcount = (looping ? -1 : 0);
+		Mix_PlayChannel(ch,s->sound,loopcount);
 	}
 }
 
-void PlayMusic(Music *m){
+void PlayMusic(Music *m, bool looping){
 	if(m==NULL) return;
 	if(DEBUG && DEBUG_MUTE) return;
 	if(MUSIC_ON){
-		Mix_PlayMusic(m->song,-1);
+		int loopcount = (looping ? -1 : 0);
+		Mix_PlayMusic(m->song,loopcount);
 	}
 }
 
@@ -63,17 +65,17 @@ void InitMusicList(){
 	int i;
 	for(i = 0;i < MAX_MUSIC;i++){
 		MusicList[i].song = NULL;
-		copy_string(SoundList[i].filename,"\0");
+		//copy_string(SoundList[i].filename,"\0");
 		MusicList[i].used = 0;
 		MusicList[i].volume = 0;
 	}
 }
 
-Music *LoadMusic(char filename[20],int volume){
+Music *LoadMusic(std::string filepath,int volume){
 	int i;
 	/*first search to see if the requested sound is already loaded*/
 	for(i = 0; i < MAX_MUSIC; i++){
-		if((strncmp(filename,MusicList[i].filename,19)==0)&&(MusicList[i].used >= 1)){
+		if((filepath == MusicList[i].filename)&&(MusicList[i].used >= 1)){
 			MusicList[i].used++;
 			return &MusicList[i];
 		}
@@ -90,12 +92,12 @@ Music *LoadMusic(char filename[20],int volume){
 		if(!MusicList[i].used)
 			break;
 	}
-	MusicList[i].song = Mix_LoadMUS(filename);
+	MusicList[i].song = Mix_LoadMUS(filepath.c_str());
 	if(MusicList[i].song == NULL){
-		fprintf(stderr, "FAILED TO LOAD A VITAL SOUND: %s\n", filename);
+		fprintf(stderr, "FAILED TO LOAD A VITAL SOUND: %s\n", filepath);
 //		exit(4);
 	}
-	copy_string(MusicList[i].filename,filename);
+	MusicList[i].filename = filepath;
 	MusicList[i].volume = volume;
 	MusicList[i].used = 1;
 	Mix_VolumeMusic(volume);
@@ -120,7 +122,7 @@ void ClearMusicList(){
 			Mix_FreeMusic(MusicList[i].song);
 			MusicList[i].song = NULL;
 		}
-		copy_string(MusicList[i].filename,"\0");
+		MusicList[i].filename = "";
 		MusicList[i].used = 0;
 		MusicList[i].volume = 0;
 	}
@@ -131,18 +133,19 @@ void InitSoundList(){
 	int i;
 	for(i = 0;i < MAX_SOUNDS;i++){
 		SoundList[i].sound = NULL;
-		copy_string(SoundList[i].filename,"\0");
+		SoundList[i].filename = "";
 		SoundList[i].used = 0;
 		SoundList[i].volume = 0;
 	}
 	numSounds = 0;
 }
 
-Sound *LoadSound(char filename[20],int volume){
+Sound *LoadSound(std::string filepath,int volume){
 	int i;
 	/*first search to see if the requested sound is already loaded*/
 	for(i = 0; i < MAX_SOUNDS; i++){
-		if((strncmp(filename,SoundList[i].filename,19)==0)&&(SoundList[i].used >= 1)){
+		if((filepath == SoundList[i].filename)&&(SoundList[i].used >= 1)){
+
 			SoundList[i].used++;
 			return &SoundList[i];
 		}
@@ -159,12 +162,12 @@ Sound *LoadSound(char filename[20],int volume){
 		if(!SoundList[i].used)
 			break;
 	}
-	SoundList[i].sound = Mix_LoadWAV(filename);
+	SoundList[i].sound = Mix_LoadWAV(filepath.c_str());
 	if(SoundList[i].sound == NULL){
 		fprintf(stderr, "FAILED TO LOAD A VITAL SOUND.\n");
 		exit(1);
 	}
-	copy_string(SoundList[i].filename,filename);
+	SoundList[i].filename = filepath;
 	SoundList[i].volume = volume;
 	SoundList[i].used = 1;
 	Mix_VolumeChunk(SoundList[i].sound,volume);
@@ -189,7 +192,7 @@ void ClearSoundList(){
 			Mix_FreeChunk(SoundList[i].sound);
 			SoundList[i].sound = NULL;
 		}
-		copy_string(SoundList[i].filename,"\0");
+		SoundList[i].filename = "";
 		SoundList[i].used = 0;
 		SoundList[i].volume = 0;
 	}

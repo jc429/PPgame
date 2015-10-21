@@ -4,7 +4,6 @@
 extern Camera mainCamera;
 extern Tile *World[WORLD_W][WORLD_H];
 
-MoveType _GlobalMoveType = MoveType_Grid;
 
 OverworldCharacter *_Player;
 OverworldCharacter *CharList[MAX_CHARACTERS];
@@ -87,14 +86,14 @@ void OverworldCharacter::Draw(){
 void OverworldCharacter::SetPlayer(bool p){
 	isPlayer = p;
 	movelock = !p;
-	printf("%s \n", chardata->name);
+	Logger::Log(chardata->name);
 	_Player = this;
 
 }
 
 void OverworldCharacter::Movement(){
-	switch(_GlobalMoveType){
-	case MoveType_Grid:
+	switch(_GlobalMovementType){
+	case MovementType_Grid:
 		if(moving){
 			if(animation != ANIM_CHAR_WALK)
 				animation = ANIM_CHAR_WALK;
@@ -108,8 +107,13 @@ void OverworldCharacter::Movement(){
 		UpdateDirection();
 		UpdateWorldPosition();
 		break;
-	case MoveType_Free:
-
+	case MovementType_Free:
+		FreeMove();
+		UpdateTile();
+		UpdateWorldPosition();
+		break;
+	case MovementType_Platformer:
+		PlatformerMove();
 		break;
 	}
 
@@ -187,6 +191,30 @@ void OverworldCharacter::MoveToTile(Tile *src, Tile *dest){
 		movex = false;
 		movey = false;
 	}
+}
+
+void OverworldCharacter::FreeMove(){
+	Vec2f movement;
+	movement.x = (float)tomove.x * movespeed*(FRAMEDELAY/TILE_W);
+	movement.y = (float)tomove.y * movespeed*(FRAMEDELAY/TILE_H);
+
+	localposition.x += movement.x;
+	localposition.y += movement.y;
+
+	UpdateDirection();
+
+
+}
+
+void OverworldCharacter::PlatformerMove(){	//movement function	with physics
+	Vec2f movement;
+	movement.x = tomove.x*movespeed;
+	
+	
+	//do some gravity shit for movement.y
+
+	localposition.x += movement.x;
+	localposition.y += movement.y;	
 }
 
 void OverworldCharacter::UpdateTile(){

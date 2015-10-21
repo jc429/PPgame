@@ -443,37 +443,55 @@ void DrawAnimFrame(Animation *anim, Vec2i pos, Camera *c){	//identical to drawan
 	SDL_RenderCopyEx(mainRenderer,anim->sprite->image,&src,&targetarea,0,NULL,flip);
 }
 
-void DrawRect(SDL_Rect rect, Camera *c, Uint32 color){
+void Renderer::DrawRect(SDL_Rect rect, Camera *c, Uint32 color){
 	rect.x -= c->viewport.x;
 	rect.y -= c->viewport.y;
 	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
 	SDL_RenderDrawRect(mainRenderer, &rect);
 }
 
-void DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color){
+void Renderer::DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color){
 	rect.x -= c->viewport.x;
 	rect.y -= c->viewport.y;
 	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
 	SDL_RenderFillRect(mainRenderer, &rect);
 }
 
+void Renderer::DrawPixel(int x, int y, Camera *c, Uint32 color){
+	x -= c->viewport.x;
+	y -= c->viewport.y;
+	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
+	SDL_RenderDrawPoint(mainRenderer,x,y);
+}
+
+void Renderer::DrawLine(int x1, int y1, int x2, int y2, Camera *c, Uint32 color){
+	x1 -= c->viewport.x;
+	x2 -= c->viewport.x;
+	y1 -= c->viewport.y;
+	y2 -= c->viewport.y;
+	SDL_SetRenderDrawColor(mainRenderer, (color & COL_MASK_R) >> R_SHIFT , (color & COL_MASK_G) >> G_SHIFT, (color & COL_MASK_B) >> B_SHIFT, 255);
+	SDL_RenderDrawLine(mainRenderer,x1,y1,x2,y2);
+}
+
+	
+
 void DrawTile(Vec2i pos){
 	SDL_Rect tile = {pos.x*TILE_W,pos.y*TILE_H,TILE_W,TILE_H}; // Just some random rect
 
 	tile.y -= World[pos.x][pos.y]->structure->height<<2;
-	DrawRect(tile,&mainCamera);
+	Renderer::DrawRect(tile,&mainCamera);
 }
 
 void DrawFacingCursor(Vec2i pos){
-	SDL_Rect tile = {pos.x*TILE_W+0.4*TILE_W,pos.y*TILE_H+0.4*TILE_H,TILE_W*0.2,TILE_H*0.2}; // Just some random rect
+	Vec2i point((pos.x+0.5)*TILE_W,(pos.y+0.5)*TILE_H);
 	if(World[pos.x][pos.y] != NULL)
-		tile.y -= World[pos.x][pos.y]->structure->height<<2;
-	DrawRect(tile,&mainCamera);
+		point.y -= World[pos.x][pos.y]->structure->height<<2;
+	Renderer::DrawPixel(point.x,point.y,&mainCamera);
 }
 
 
 void DrawPanel(SDL_Rect rect, Sprite *spr){		//takes a spritesheet (3 tiles x 3 tiles) and draws the specified rect using it
-//	DrawRect(rect,&uiCamera);
+//	Renderer::DrawRect(rect,&uiCamera);
 
 	Vec2i tile_size;		//the size of the sprite tiles
 	SDL_Rect subrect;		//used when only part of the sprite may end up being drawn
@@ -540,7 +558,7 @@ void DrawPanel(SDL_Rect rect, Sprite *spr){		//takes a spritesheet (3 tiles x 3 
 
 void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking south are drawn beneath the tile they're walking into
 	int row;
-	static OverworldEnt *ents_drawn[MAX_ENTS];
+	static OverworldEntity *ents_drawn[MAX_ENTS];
 	static int num_ents;
 
 	for(int i = 0; i < MAX_ENTS; i++){
@@ -574,7 +592,7 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking so
 			for(int col = 0; col < WORLD_W; col++){
 				if (World[col][row] != NULL){
 					if(World[col][row]->contents!=NULL){
-						OverworldEnt *contents = World[col][row]->contents;
+						OverworldEntity *contents = World[col][row]->contents;
 						if(contents == NULL) continue;
 
 						Vec2i pos;
@@ -623,7 +641,7 @@ void DrawWorld(){	//Draws the world row by row. Limitations: Entities walking so
 /*
 void DrawWorld2(){	//draws the game in stacked layers based on their height. doesn't work.
 	int row;
-	static OverworldEnt *ents_drawn[MAX_ENTS];
+	static OverworldEntity *ents_drawn[MAX_ENTS];
 	static int num_ents;
 
 	for(int i = 0; i < MAX_ENTS; i++){
@@ -677,7 +695,7 @@ void DrawWorld2(){	//draws the game in stacked layers based on their height. doe
 					if(World[col][row]->contents!=NULL){
 						if(World[col][row]->structure->height != currentLayer)
 							continue;
-						OverworldEnt *contents = World[col][row]->contents;
+						OverworldEntity *contents = World[col][row]->contents;
 						bool drawn = false;
 						for(int i = 0; i < num_ents; i++){
 							if(contents == ents_drawn[i])
@@ -716,10 +734,10 @@ void DrawRow(int row, int layer){
 	}
 	//draw tile contents after drawing the row
 	for(int col = 0; col < WORLD_W; col++){
-		static OverworldEnt *last_drawn = NULL;
+		static OverworldEntity *last_drawn = NULL;
 		if (World[col][row] != NULL){
 			if(World[col][row]->contents!=NULL){
-				OverworldEnt *contents = World[col][row]->contents;
+				OverworldEntity *contents = World[col][row]->contents;
 				if(contents != last_drawn){
 					contents->Draw();
 					last_drawn = contents;
@@ -750,7 +768,7 @@ void DrawTilesLower(){
 //					fprintf(stdout,"%i, %i \n",loc.x,loc.y);
 					World[i][j]->lowerframe = DrawSprite(World[i][j]->lowerspr,World[i][j]->lowerframe,loc,&mainCamera);
 					if(World[i][j]->contents!=NULL){
-						OverworldEnt *contents = World[i][j]->contents;
+						OverworldEntity *contents = World[i][j]->contents;
 						DrawAnimation(contents->animlist[contents->animation][contents->direction],contents->worldposition-contents->s_offset,&mainCamera);
 					}
 				}

@@ -4,6 +4,10 @@
 #include "SDL.h"
 #include <math.h>
 
+
+#define MATH_RADTODEG  57.295779513082
+#define MATH_DEGTORAD  0.017453292519943295769236907684886
+
 //Custom 2 dimensional int vector type (feat. operators)
 typedef struct Vec2i{
 	int x;
@@ -15,9 +19,6 @@ typedef struct Vec2i{
 	float Length(){
 		return sqrt((float)(x * x) + (float)(y * y));
 	};
-/*	operator Vec2f() const { 
-		Vec2f vf;		vf.x = x;		vf.y = y;		return vf;
-	};*/
 }Vec2i;
 
 static Vec2i operator + (Vec2i a, Vec2i b){

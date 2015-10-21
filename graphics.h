@@ -46,9 +46,14 @@ namespace Graphics{
 	//void InitTG();
 	//void TestGraphics(int x);
 }
-void DrawRect(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
-void DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
 
+namespace Renderer{
+	void DrawRect(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
+	void DrawRectFill(SDL_Rect rect, Camera *c, Uint32 color = pCol_White);
+	void DrawPixel(int x, int y, Camera *c, Uint32 color = pCol_White);
+	void DrawLine(int x1, int y1, int x2, int y2, Camera *c, Uint32 color = pCol_White);
+
+}
 
 
 #endif

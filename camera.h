@@ -4,11 +4,11 @@
 #include "player.h"
 
 typedef struct Camera_T{
-	Vec2i position;
+	Vec2f position;
 	SDL_Rect viewport;
 	
 	bool trackTarget;		//does this camera follow a specified target in the game?
-	OverworldEnt *target;	//overworldent for now, hopefully i'll change this
+	OverworldEntity *target;	//OverworldEntity for now, hopefully i'll change this
 	bool hardTracking;		//if you want the camera to literally follow the target every pixel - absolutely precise, but looks bad
 	SDL_Rect trackingRect;	//if you want the camera to only move when the target leaves a predefined border - much prettier	
 	SDL_Rect smoothingRect;	//helps the camera smoothly reach the target rather than jerking to it 
@@ -17,7 +17,7 @@ typedef struct Camera_T{
 	
 } Camera;
 
-void InitCamera(Camera *c,int w, int h, bool tracks = false, OverworldEnt *targ = NULL, SDL_Rect *tr = NULL, SDL_Rect *sr = NULL);
+void InitCamera(Camera *c,int w, int h, bool tracks = false, OverworldEntity *targ = NULL, SDL_Rect *tr = NULL, SDL_Rect *sr = NULL);
 void UpdateCamera(Camera *c);
 
 int DrawSprite(Sprite* spr, int frame, Vec2i pos, Camera *c);

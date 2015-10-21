@@ -34,7 +34,7 @@ Message *NewMessage(){
 	return msg;
 }
 
-void CreateMessage(Message *msg, char* text, OverworldEnt *speaker){
+void CreateMessage(Message *msg, char* text, OverworldEntity *speaker){
 	if(msg != NULL)
 		delete(msg);
 	msg = NewMessage();
@@ -63,7 +63,7 @@ void Message::SetSpeaker(CharData *speakerData){
 	}
 }
 
-void CreateMonologue(Message *msg, OverworldEnt *speaker, int numMessages, ...){
+void CreateMonologue(Message *msg, OverworldEntity *speaker, int numMessages, ...){
 	va_list args;
 	char* text;
 	speaker->talks = true;
@@ -172,7 +172,7 @@ char* ParseText(char *text){
 			return ParseText(newText);
 		}
 		if(newText[textcursor] == '\0') {
-			printf(parse_key);
+			Logger::Log(parse_key);
 			break;
 		}
 	}

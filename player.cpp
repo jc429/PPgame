@@ -10,6 +10,7 @@ extern TextboxEX mainTextbox; //the main dialogue box for now
 extern InputNode *_Inputs;
 extern OverworldCharacter *CharList[MAX_CHARACTERS];
 extern bool _Dialogue;	//are we currently talking?
+
 //extern vector<struct Menu_T*> _OverworldMenuStack;
 /*
 Player::Player(int xpos, int ypos, char *entName):NPC(xpos,ypos, entName){
@@ -127,12 +128,49 @@ void UpdatePlayer(OverworldCharacter *p){
 		}
 	}
 
-	if((!p->talking)&&(!p->movelock))
-		PlayerMovement(p);
+	if((!p->talking)&&(!p->movelock)){
+		switch(_GlobalMovementType){
+		case MovementType_Grid:
+			PlayerMovementGrid(p);
+			break;
+		case MovementType_Free:
+			PlayerMovementFree(p);
+			break;
+		}
+
+	}
 }
 
-void PlayerMovement(OverworldCharacter *p){
+Vec2i GetIntendedMovement(OverworldCharacter *p){
+	Vec2i want_to_move(0,0);
+	if((_Inputs->input & PPINPUT_LEFT)&&!(_Inputs->input & PPINPUT_RIGHT)){
+		p->facing.x = -1;
+		if(_GlobalMovementType != MovementType_Grid || InputBuffered(_Inputs, PPINPUT_LEFT, INPUT_BUFFER)
+			||InputBuffered(_Inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_DOWN, INPUT_BUFFER))
+			want_to_move.x = -1;
+	}
+	else if((_Inputs->input & PPINPUT_RIGHT)&&!(_Inputs->input & PPINPUT_LEFT)){
+		p->facing.x = 1;
+		if(_GlobalMovementType != MovementType_Grid || InputBuffered(_Inputs, PPINPUT_RIGHT, INPUT_BUFFER)
+			||InputBuffered(_Inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_DOWN, INPUT_BUFFER))
+			want_to_move.x = 1;
+	}
+	if((_Inputs->input & PPINPUT_UP)&&!(_Inputs->input & PPINPUT_DOWN)){
+		p->facing.y = -1;
+		if(_GlobalMovementType != MovementType_Grid || InputBuffered(_Inputs, PPINPUT_UP, INPUT_BUFFER)
+			||InputBuffered(_Inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_RIGHT, INPUT_BUFFER))
+			want_to_move.y = -1;
+	}
+	else if((_Inputs->input & PPINPUT_DOWN)&&!(_Inputs->input & PPINPUT_UP)){
+		p->facing.y = 1;
+		if(_GlobalMovementType != MovementType_Grid || InputBuffered(_Inputs, PPINPUT_DOWN, INPUT_BUFFER)
+			||InputBuffered(_Inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_RIGHT, INPUT_BUFFER))
+			want_to_move.y = 1;
+	}
+	return want_to_move;
+}
 
+void PlayerMovementGrid(OverworldCharacter *p){
 	if(!p->moving){
 		if(!CurrentScene()->MenuStack.empty())
 			return;
@@ -147,28 +185,8 @@ void PlayerMovement(OverworldCharacter *p){
 			p->facing.x = 0;
 			p->facing.y = 0;
 		}
-		Vec2i want_to_move;
-		SetVec2i(want_to_move,0,0);
-		if((_Inputs->input & PPINPUT_LEFT)&&!(_Inputs->input & PPINPUT_RIGHT)){
-			p->facing.x = -1;
-			if(InputBuffered(_Inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_DOWN, INPUT_BUFFER))
-				want_to_move.x = -1;
-		}
-		else if((_Inputs->input & PPINPUT_RIGHT)&&!(_Inputs->input & PPINPUT_LEFT)){
-			p->facing.x = 1;
-			if(InputBuffered(_Inputs, PPINPUT_RIGHT, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_DOWN, INPUT_BUFFER))
-				want_to_move.x = 1;
-		}
-		if((_Inputs->input & PPINPUT_UP)&&!(_Inputs->input & PPINPUT_DOWN)){
-			p->facing.y = -1;
-			if(InputBuffered(_Inputs, PPINPUT_UP, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_RIGHT, INPUT_BUFFER))
-				want_to_move.y = -1;
-		}
-		else if((_Inputs->input & PPINPUT_DOWN)&&!(_Inputs->input & PPINPUT_UP)){
-			p->facing.y = 1;
-			if(InputBuffered(_Inputs, PPINPUT_DOWN, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_LEFT, INPUT_BUFFER)||InputBuffered(_Inputs, PPINPUT_RIGHT, INPUT_BUFFER))
-				want_to_move.y = 1;
-		}
+		Vec2i want_to_move = GetIntendedMovement(p);
+		
 		if(want_to_move.x * want_to_move.y != 0){ //if we want to move diagonally, 
 			if((CheckTileAvailable(World[p->tile.x+want_to_move.x][p->tile.y+want_to_move.y])) //and we can move diagonally,
 			&&(CheckTileHeights(World[p->tile.x+want_to_move.x][p->tile.y+want_to_move.y],World[p->tile.x][p->tile.y]))){
@@ -222,4 +240,26 @@ void PlayerMovement(OverworldCharacter *p){
 	p->UpdateWorldPosition();
 //	p->worldposition.x = p->tile.x*TILE_W+p->localposition.x;
 //	p->worldposition.y = p->tile.y*TILE_H+p->localposition.y - (World[p->tile.x][p->tile.y]->structure->height<<2);
+}
+
+void PlayerMovementFree(OverworldCharacter *p){
+	p->tomove = GetIntendedMovement(p);
+	
+	if(!CurrentScene()->MenuStack.empty())
+		return;
+
+	if((p->tomove.x != 0)||(p->tomove.y!=0)){
+		p->animation = ANIM_CHAR_WALK;
+		p->moving = true;
+		p->movex = (p->tomove.x != 0);
+		p->movey = (p->tomove.y != 0);
+		p->UpdateTile();
+
+	
+		p->facing = p->tomove;
+	}else{
+		p->animation = ANIM_CHAR_IDLE;
+		p->moving = false;
+	}
+	
 }

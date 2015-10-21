@@ -140,23 +140,19 @@ float Remainder(float dividend, float divisor){	//idk if i trust this
 
 
 int Max(int a, int b){
-	if(a > b) return a;
-	return b;
+	return (a > b ? a : b);
 }
 
 float Max(float a, float b){
-	if(a > b) return a;
-	return b;
+	return (a > b ? a : b);
 }
 
 int Min(int a, int b){
-	if(a < b) return a;
-	return b;
+	return (a <= b ? a : b);
 }
 
 float Min(float a, float b){
-	if(a < b) return a;
-	return b;
+	return (a <= b ? a : b);
 }
 ///////////////////////////
 

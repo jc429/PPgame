@@ -292,7 +292,7 @@ void UpdateWorld(){
 		for(int j = 0; j < WORLD_H; j++){
 			if(World[i][j] != NULL){
 				if(World[i][j]->contents!=NULL){
-					OverworldEnt *contents = World[i][j]->contents;
+					OverworldEntity *contents = World[i][j]->contents;
 				//	contents->Update();	//this shouldn't be here
 				}
 			}

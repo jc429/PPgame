@@ -29,7 +29,7 @@ typedef struct Tile_T{
 
 //changing stuff	
 	bool free;				//is the tile unoccupied?
-	OverworldEnt *contents;		//who or what is in this tile?
+	OverworldEntity *contents;		//who or what is in this tile?
 	class OverworldCharacter *character;	//if it's a who put it here
 }Tile;
 

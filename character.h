@@ -16,7 +16,7 @@ typedef enum CharAnim{
 	ANIM_CHAR_WALK = 1,
 };
 
-class OverworldCharacter: public OverworldEnt{
+class OverworldCharacter: public OverworldEntity{
 private:	
 	bool isPlayer;
 
@@ -37,7 +37,9 @@ public:
 
 	void StepOutOfTile(Tile *tile);
 	void StepIntoTile(Tile *tile);
-	void MoveToTile(Tile *src, Tile *dest);
+	void MoveToTile(Tile *src, Tile *dest);		//grid-based movement function
+	void FreeMove();							//free roam movement function
+	void PlatformerMove();						//movement function	with physics
 	void UpdateTile();
 	void UpdateDirection();
 

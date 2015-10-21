@@ -4,30 +4,30 @@
 
 #include <stdio.h>
 
-OverworldEnt EntList[MAX_ENTS];
+OverworldEntity EntList[MAX_ENTS];
 int numEnts;
 
 extern Tile* World[WORLD_W][WORLD_H];
 extern Camera mainCamera;
 
-void OverworldEnt::Update(){
+void OverworldEntity::Update(){
 	return;
 }
-void OverworldEnt::Draw(){
+void OverworldEntity::Draw(){
 	return;
 }
-void OverworldEnt::Talk(TextboxEX *t){
+void OverworldEntity::Talk(TextboxEX *t){
 	return;
 }
-void OverworldEnt::UpdateWorldPosition(){
+void OverworldEntity::UpdateWorldPosition(){
 	worldposition.x = tile.x*TILE_W+localposition.x;
 	worldposition.y = tile.y*TILE_H+localposition.y;
 }
-Vec2f OverworldEnt::WorldPosition(){
+Vec2f OverworldEntity::WorldPosition(){
 	return (this->worldposition);
 }
 
-void OverworldEnt::AddToWorld(int xpos, int ypos){
+void OverworldEntity::AddToWorld(int xpos, int ypos){
 	if(World[xpos][ypos] == NULL) return;
 	World[xpos][ypos]->contents = this;
 	World[xpos][ypos]->free = false;
@@ -127,7 +127,7 @@ void InitEntList(){
 	}
 }
 
-OverworldEnt *NewOverworldEnt(){
+OverworldEntity *NewOverworldEntity(){
 	int i;
 	if(numEnts+1 >= MAX_ENTS){
 		fprintf(stderr, "Too many Ents!\n");
@@ -143,7 +143,7 @@ OverworldEnt *NewOverworldEnt(){
 	return &EntList[i];
 }
 
-void FreeOverworldEnt(OverworldEnt *ent){
+void FreeOverworldEntity(OverworldEntity *ent){
 	if(ent->used > 1) {
 		ent->used--;
 		return;
@@ -161,7 +161,7 @@ void ClearEntList(){
 	numEnts = 0;
 }
 
-void OverworldEnt::SetEntAnims(Sprite *s){
+void OverworldEntity::SetEntAnims(Sprite *s){
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_S] = LoadAnimation(s,0,0,1);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_N] = LoadAnimation(s,5,5,1);
 	animlist[ANIM_CHAR_IDLE][ANIM_DIR_W] = LoadAnimation(s,10,10,1);

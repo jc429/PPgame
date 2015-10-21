@@ -4,7 +4,7 @@
 #include "graphics.h"
 extern Camera mainCamera;
 
-void InitCamera(Camera *c,int w, int h, bool tracks, OverworldEnt *targ, SDL_Rect *tr, SDL_Rect *sr){
+void InitCamera(Camera *c,int w, int h, bool tracks, OverworldEntity *targ, SDL_Rect *tr, SDL_Rect *sr){
 	c->viewport.w = w;
 	c->viewport.h = h;
 	c->trackTarget = tracks;
@@ -60,6 +60,6 @@ void UpdateCamera(Camera *c){
 		}
 	}
 
-	c->viewport.x = c->position.x - (c->viewport.w>>1);
-	c->viewport.y = c->position.y - (c->viewport.h>>1);
+	c->viewport.x = c->position.x - (c->viewport.w*0.5);
+	c->viewport.y = c->position.y - (c->viewport.h*0.5);
 }

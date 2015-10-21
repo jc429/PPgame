@@ -39,9 +39,10 @@ NPC **LoadEntitiesCFG(char *path);
 
 void UpdatePlayer(OverworldCharacter *p);
 
+Vec2i GetIntendedMovement(OverworldCharacter *p);
 
-void PlayerMovement(OverworldCharacter *p);
-
+void PlayerMovementGrid(OverworldCharacter *p);
+void PlayerMovementFree(OverworldCharacter *p);
 
 
 void GiveNPCMessage(NPC *npc, Message *msg);

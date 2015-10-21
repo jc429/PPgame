@@ -9,6 +9,7 @@ Uint16 PollKeyInputs();
 void UpdateGame();
 void DrawGame();
 
+
 bool done;
 bool pause;
 
@@ -49,6 +50,7 @@ extern Menu *_CurrentMenu;
 
 bool _Dialogue;	//are we currently talking?
 Menu *quitMenu;
+
 
 
 typedef enum Program_Mode{
@@ -132,23 +134,21 @@ void InitGame(){
 
 	LoadDialogue();
 
-	
-	//Music *m = LoadMusic("sounds/GV.mp3",40);
-	//Sound *s = LoadSound("sounds/gui.wav",35);	
-	//PlayMusic(m);
-	//PlaySound(s);
-	
-	_MessageStack = NULL;
+	DebugLoads();
+
+	_MessageStack = NULL;	// ?
 /////////////////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*
 	_Player = new NPC(2,3,"Hero");
 	Message *msg;
 	CreateMessage(msg,". . .",_Player); 
 	GiveNPCMessage(_Player,msg);*/
-	Sprite *s = LoadSprite("sprites/player.png",32,32,5,16,24);
-	CharList[0]->SetEntAnims(s);
+
+	/**** terrible way to set the player - FIXME ****/
+	Sprite *psprite = LoadSprite("sprites/player.png",32,32,5,16,24);
+	CharList[0]->SetEntAnims(psprite);
 	CharList[0]->SetPlayer(true);
-	
+	/******/
 	SDL_Rect tr = {0,10,40,20};	//x and y are the offset from center
 	SDL_Rect sr = {0,10,48,24};	//x and y dont matter
 	InitCamera(&mainCamera,GAME_RES_X,GAME_RES_Y,true,CharList[0],&tr,&sr);
@@ -246,11 +246,19 @@ Uint16 PollKeyInputs(){
 		inputs |= PPINPUT_X;
 	if(keys[PPKEY_Y])
 		inputs |= PPINPUT_Y;
+	
+	if(keys[PPKEY_DEBUG1])
+		inputs |= PPINPUT_DEBUG1;
+	if(keys[PPKEY_DEBUG2])
+		inputs |= PPINPUT_DEBUG2;
+
 	return inputs;
 }
 
 //This is where the meat of the game will be
 void UpdateGame(){
+	DebugUpdates();
+
 	if(_GamePause)
 		return;
 	//
@@ -260,6 +268,7 @@ void UpdateGame(){
 	}
 	//
 }
+
 
 //Put the Drawing functions for everything here 
 void DrawGame(){

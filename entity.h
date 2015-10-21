@@ -6,10 +6,14 @@
 #include "sprites.h"
 #include "dialogue.h"
 
-typedef enum MoveType{
-	MoveType_Grid,
-	MoveType_Free,
+typedef enum MovementType{
+	MovementType_Grid,		//completely grid-based movement, move from tile to tile (like Pokemon)
+	MovementType_Free,		//completely free movement, move anywhere and everywhere
+	MovementType_Platformer,	//movement with gravity, i.e. a 2D platformer
 };
+
+const MovementType _GlobalMovementType = MovementType_Platformer;
+
 
 typedef enum EntAnim{
 	ANIM_ENT_DEFAULT = 0,
@@ -25,7 +29,7 @@ public:
 	int entID; //unique integer referring to this entity?
 };
 
-class OverworldEnt:public Entity{
+class OverworldEntity:public Entity{
 private:
 	Vec2f worldposition;	//current position within the world in pixel-sized units
 public:
@@ -36,14 +40,16 @@ public:
 
 	//position stuff
 	Vec2i tile;				//tile of the world we are currently standing on
-	Vec2i tile_src;			//source tile when moving
-	Vec2i tile_dest;		//dest tile when moving 
+	Vec2i tile_src;			//source tile when moving	-- Grid Movement only
+	Vec2i tile_dest;		//dest tile when moving		-- Grid Movement only
 	Vec2f localposition;	//current position within the tile in pixel-sized units
-	MoveType moveType;
+	MovementType MovementType;
 	bool moving;
 	bool movex;
 	bool movey;
-	
+	bool grounded;
+
+
 	//graphics stuff
 	Animation *animlist[MAX_ANIMS][NUM_ANIM_DIRS]; //all animations this entity can have
 	AnimDir direction;				//direction facing (default: south)
@@ -63,11 +69,11 @@ public:
 	void UpdateWorldPosition();
 	Vec2f WorldPosition();
 	void AddToWorld(int xpos, int ypos);
-	void SetEntAnims(Sprite *spr);
+	void SetEntAnims(Sprite *spr);	//idk if this is the best way to do this
 
 };
 
-class InteractableObject: public OverworldEnt{
+class InteractableObject: public OverworldEntity{
 public:
 //	char name[32];
 	Message *flavortext;
@@ -83,8 +89,8 @@ public:
 
 
 void InitEntList();
-OverworldEnt* NewOverworldEnt();
-void FreeOverworldEnt();
+OverworldEntity* NewOverworldEntity();
+void FreeOverworldEntity();
 void ClearEntList();
 
 /*** these functions are dumb and probably bad ***/

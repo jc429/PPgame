@@ -54,8 +54,8 @@ typedef struct Message_T{
 
 
 Message *NewMessage();
-void CreateMessage(Message *msg = NULL, char* text = NULL, class OverworldEnt *speaker = NULL);
-void CreateMonologue(Message *msg, OverworldEnt *speaker, int numMessages, ...);
+void CreateMessage(Message *msg = NULL, char* text = NULL, class OverworldEntity *speaker = NULL);
+void CreateMonologue(Message *msg, OverworldEntity *speaker, int numMessages, ...);
 void SetPrompt(Message *msg, MenuType type, int numitems = 0,Vec2i *loc = NULL);
 
 //this function is bad and probably pointless tbh

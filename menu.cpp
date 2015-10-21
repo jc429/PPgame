@@ -236,27 +236,27 @@ Vec2i GetAnchorLocation(AnchorPoint a){
 		SetVec2i(loc,0,0);
 		break;
 	case ANCHOR_TOP_CENTER:
-		SetVec2i(loc,0.5*GAME_RES_X,0);
+		SetVec2i(loc,(int)(0.5*GAME_RES_X),0);
 		break;
 	case ANCHOR_TOP_RIGHT:
 		SetVec2i(loc,GAME_RES_X,0);
 		break;
 
 	case ANCHOR_CENTER_LEFT:
-		SetVec2i(loc,0,0.5*GAME_RES_Y);
+		SetVec2i(loc,0,(int)(0.5*GAME_RES_Y));
 		break;
 	case ANCHOR_CENTER_CENTER:
-		SetVec2i(loc,0.5*GAME_RES_X,0.5*GAME_RES_Y);
+		SetVec2i(loc,(int)(0.5*GAME_RES_X),(int)(0.5*GAME_RES_Y));
 		break;
 	case ANCHOR_CENTER_RIGHT:
-		SetVec2i(loc,GAME_RES_X,0.5*GAME_RES_Y);
+		SetVec2i(loc,GAME_RES_X,(int)(0.5*GAME_RES_Y));
 		break;
 
 	case ANCHOR_BOTTOM_LEFT:
 		SetVec2i(loc,0,GAME_RES_Y);
 		break;
 	case ANCHOR_BOTTOM_CENTER:
-		SetVec2i(loc,0.5*GAME_RES_X,GAME_RES_Y);
+		SetVec2i(loc,(int)(0.5*GAME_RES_X),GAME_RES_Y);
 		break;
 	case ANCHOR_BOTTOM_RIGHT:
 		SetVec2i(loc,GAME_RES_X,GAME_RES_Y);
@@ -266,7 +266,7 @@ Vec2i GetAnchorLocation(AnchorPoint a){
 		SetVec2i(loc,0,GAME_RES_Y - TEXTAREA_H);
 		break;
 	case ANCHOR_TEXTBOX_CENTER:
-		SetVec2i(loc,0.5*GAME_RES_X,GAME_RES_Y - TEXTAREA_H);
+		SetVec2i(loc,(int)(0.5*GAME_RES_X),GAME_RES_Y - TEXTAREA_H);
 		break;
 	case ANCHOR_TEXTBOX_RIGHT:
 		SetVec2i(loc,GAME_RES_X,GAME_RES_Y - TEXTAREA_H);
@@ -289,13 +289,13 @@ SDL_Rect AnchorRect(SDL_Rect src, AnchorPoint a, int padding){
 	case ANCHOR_CENTER_CENTER:
 	case ANCHOR_BOTTOM_CENTER:
 	case ANCHOR_TEXTBOX_CENTER:
-		src.x = anchorbase.x - (0.5*src.w);
+		src.x = (int)(anchorbase.x - (0.5*src.w));
 		break;
 	case ANCHOR_TOP_RIGHT:
 	case ANCHOR_CENTER_RIGHT:
 	case ANCHOR_BOTTOM_RIGHT:
 	case ANCHOR_TEXTBOX_RIGHT:
-		src.x = anchorbase.x - (src.w + padding);
+		src.x = (int)(anchorbase.x - (src.w + padding));
 		break;
 	}
 	switch(a){		//y positioning
@@ -307,7 +307,7 @@ SDL_Rect AnchorRect(SDL_Rect src, AnchorPoint a, int padding){
 	case ANCHOR_CENTER_LEFT:
 	case ANCHOR_CENTER_CENTER:
 	case ANCHOR_CENTER_RIGHT:
-		src.y = anchorbase.y + (0.5*src.h);
+		src.y = (int)(anchorbase.y + (0.5*src.h));
 		break;
 	case ANCHOR_BOTTOM_LEFT:
 	case ANCHOR_BOTTOM_CENTER:
@@ -315,7 +315,7 @@ SDL_Rect AnchorRect(SDL_Rect src, AnchorPoint a, int padding){
 	case ANCHOR_TEXTBOX_LEFT:
 	case ANCHOR_TEXTBOX_CENTER:
 	case ANCHOR_TEXTBOX_RIGHT:
-		src.y = anchorbase.y - (src.h + padding);
+		src.y = (int)(anchorbase.y - (src.h + padding));
 		break;
 	}
 	return src;
@@ -408,7 +408,7 @@ void DrawMenuCursor(Menu *m){
 	switch(m->cursor.type){
 	case CURSTYPE_ARROW_LEFT:
 		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x - 6; 
-		loc.y = m->location.y + m->items.at(m->cursor.location)->bounds.y + m->items.at(m->cursor.location)->bounds.h*0.5;
+		loc.y = m->location.y + m->items.at(m->cursor.location)->bounds.y + (int)(m->items.at(m->cursor.location)->bounds.h*0.5);
 		DrawAnimation(m->cursor.anim[DIR_RIGHT],loc,&uiCamera);
 		break;
 	case CURSTYPE_RECT:
@@ -431,7 +431,7 @@ void DrawScrollingMenuCursor(Menu *m){
 	switch(m->cursor.type){
 	case CURSTYPE_ARROW_LEFT:
 		loc.x = m->location.x + m->items.at(m->cursor.location)->bounds.x - 6; 
-		loc.y = m->location.y - m->item_offset_y + m->items.at(m->cursor.location)->bounds.y + m->items.at(m->cursor.location)->bounds.h*0.5;
+		loc.y = m->location.y - m->item_offset_y + m->items.at(m->cursor.location)->bounds.y + (int)(m->items.at(m->cursor.location)->bounds.h*0.5);
 		DrawAnimation(m->cursor.anim[DIR_RIGHT],loc,&uiCamera);
 		break;
 	case CURSTYPE_RECT:
